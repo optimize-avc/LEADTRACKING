@@ -1,0 +1,21 @@
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Outfit', system-ui, sans-serif;
+
+  --color-primary: hsl(220 90% 60%);
+  --color-primary-glow: hsl(220 90% 60% / 0.5);
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #0f172a;
+  --color-secondary-foreground: #94a3b8;
+
+  --color-accent: hsl(260 90% 65%);
+  --color-accent-glow: hsl(260 90% 65% / 0.5);
+
+  --color-background: #020617;
+  --color-foreground: #f8fafc;
+
+  --color-success: hsl(150 60% 50%);
+  --color-warning: hsl(45 90% 50%);
+  --color-danger: hsl(0 85% 60%);
+}

@@ -1,0 +1,101 @@
+
+> app@0.1.0 lint
+> eslint
+
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\activities\page.tsx
+  23:13  error  Error: Cannot access variable before it is declared
+
+`loadActivities` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\activities\page.tsx:23:13
+  21 |     useEffect(() => {
+  22 |         if (user) {
+> 23 |             loadActivities();
+     |             ^^^^^^^^^^^^^^ `loadActivities` accessed before it is declared
+  24 |             loadStats();
+  25 |         }
+  26 |     }, [user]);
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\activities\page.tsx:28:5
+  26 |     }, [user]);
+  27 |
+> 28 |     async function loadActivities() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |         const data = await ActivitiesService.getActivities();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |         setRecentActivities(data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |     }
+     | ^^^^^^ `loadActivities` is declared here
+  32 |
+  33 |     async function loadStats() {
+  34 |         // Ideally fetch specific user stats. Reusing dashboard service for simplicity or simple calc here                                                                                                                                                                                                                                                                react-hooks/immutability
+  24:13  error  Error: Cannot access variable before it is declared
+
+`loadStats` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\activities\page.tsx:24:13
+  22 |         if (user) {
+  23 |             loadActivities();
+> 24 |             loadStats();
+     |             ^^^^^^^^^ `loadStats` accessed before it is declared
+  25 |         }
+  26 |     }, [user]);
+  27 |
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\activities\page.tsx:33:5
+  31 |     }
+  32 |
+> 33 |     async function loadStats() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |         // Ideally fetch specific user stats. Reusing dashboard service for simplicity or simple calc here
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |         const metrics = await DashboardService.getMetrics();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |         setStats({ dials: metrics.dials, talkTime: 52 }); // Mock talk time for now
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |     }
+     | ^^^^^^ `loadStats` is declared here
+  38 |
+  39 |     const handleLogActivity = async (e: React.FormEvent) => {
+  40 |         e.preventDefault();  react-hooks/immutability
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\page.tsx
+  20:10  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\resources\page.tsx
+  6:10  warning  'Resource' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\ui\Header.tsx
+    6:49  warning  'UserIcon' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   25:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\ui\Header.tsx:25:9
+  23 |     // Close mobile menu on path change
+  24 |     useEffect(() => {
+> 25 |         setMobileMenuOpen(false);
+     |         ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |     }, [pathname]);
+  27 |
+  28 |     return (  react-hooks/set-state-in-effect
+   72:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @next/next/no-img-element
+  121:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @next/next/no-img-element
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\lib\firebase\services.ts
+  12:5   warning  'Timestamp' is defined but never used            @typescript-eslint/no-unused-vars
+  13:5   warning  'serverTimestamp' is defined but never used      @typescript-eslint/no-unused-vars
+  14:5   warning  'getDoc' is defined but never used               @typescript-eslint/no-unused-vars
+  16:26  warning  'ActivityType' is defined but never used         @typescript-eslint/no-unused-vars
+  16:40  warning  'ActivityOutcome' is defined but never used      @typescript-eslint/no-unused-vars
+  16:57  warning  'LeadStatus' is defined but never used           @typescript-eslint/no-unused-vars
+  57:25  warning  'limitCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 15 problems (3 errors, 12 warnings)
+

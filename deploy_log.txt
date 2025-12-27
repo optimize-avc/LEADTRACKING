@@ -1,0 +1,151 @@
+No Firebase app associated with site antigrav-tracking-final, injecting project default config.
+  You can link a Web app to a Hosting site here https://console.firebase.google.com/project/antigrav-tracking-final/settings/general/web
+
+   Thank you for trying our [3mearly preview[23m of Next.js support on Firebase Hosting.
+   [31mDuring the preview, support is best-effort and breaking changes can be expected. Proceed with caution.[39m[33m
+   The integration is known to work with Next.js version [3m12 - 15.0[23m. You may encounter errors.[39m
+
+   [1mDocumentation:[22m https://firebase.google.com/docs/hosting/frameworks/nextjs
+   [1mFile a bug:[22m https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   [1mSubmit a feature request:[22m https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\tryst\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\tryst\Downloads\antigrav-tracking\package-lock.json
+
+
+   ▲ Next.js 16.0.10 (Turbopack)
+
+   - Environments: .env.local
+
+
+   Creating an optimized production build ...
+
+ ✓ Compiled successfully in 17.0s
+
+   Running TypeScript ...
+
+   Collecting page data using 11 workers ...
+
+   Generating static pages using 11 workers (0/19) ...
+
+   Generating static pages using 11 workers (4/19) 
+
+   Generating static pages using 11 workers (9/19) 
+
+   Generating static pages using 11 workers (14/19) 
+
+ ✓ Generating static pages using 11 workers (19/19) in 2.4s
+
+   Finalizing page optimization ...
+
+
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /activities
+├ ○ /analytics
+├ ƒ /api/auth/gmail
+├ ƒ /api/auth/gmail/callback
+├ ƒ /api/twilio/call
+├ ƒ /api/twilio/incoming-message
+├ ƒ /api/twilio/lookup
+├ ƒ /api/twilio/sms
+├ ƒ /api/twilio/sms-webhook
+├ ƒ /api/twilio/webhook
+├ ○ /leads
+├ ○ /login
+├ ○ /resources
+├ ○ /settings
+└ ○ /training
+
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+Building a Cloud Function to run this application. This is needed due to:
+ • non-static component /api/auth/gmail/callback/route
+ • non-static component /api/auth/gmail/route
+ • non-static component /api/twilio/call/route
+ • non-static component /api/twilio/incoming-message/route
+ • non-static component /api/twilio/lookup/route
+ • and 3 other reasons, use --debug to see more
+
+[33m[1m! [22m[39m This integration expects Node version 20, 22, or 24. You're running version 25, problems may be encountered.
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'app@0.1.0',
+npm warn EBADENGINE   required: { node: '24' },
+npm warn EBADENGINE   current: { node: 'v25.2.1', npm: '11.5.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'firebase-frameworks@0.11.8',
+npm warn EBADENGINE   required: { node: '^16.0.0 || ^18.0.0 || ^20.0.0 || ^22.0.0' },
+npm warn EBADENGINE   current: { node: 'v25.2.1', npm: '11.5.2' }
+npm warn EBADENGINE }
+
+up to date in 2s
+
+73 packages are looking for funding
+  run `npm fund` for details
+
+[1m[37m===[39m Deploying to 'antigrav-tracking-final'...[22m
+
+[36m[1mi [22m[39m deploying [1mfunctions, storage, firestore, hosting, apphosting[22m
+[36m[1mi  functions:[22m[39m preparing codebase [1mfirebase-frameworks-antigrav-tracking-final[22m for deployment
+[36m[1mi  functions:[22m[39m ensuring required API [1mcloudfunctions.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m ensuring required API [1mcloudbuild.googleapis.com[22m is enabled...
+[36m[1mi  artifactregistry:[22m[39m ensuring required API [1martifactregistry.googleapis.com[22m is enabled...
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[36m[1mi  functions:[22m[39m Loading and analyzing source code for codebase firebase-frameworks-antigrav-tracking-final to determine what to deploy
+Serving at port 8395
+
+[36m[1mi  extensions:[22m[39m ensuring required API [1mfirebaseextensions.googleapis.com[22m is enabled...
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+[36m[1mi  functions:[22m[39m preparing [1m.firebase\antigrav-tracking-final\functions[22m directory for uploading...
+[36m[1mi [22m[39m [36m[1mfunctions:[22m[39m packaged [1mC:\Users\tryst\Downloads\antigrav-tracking\.firebase\antigrav-tracking-final\functions[22m (11 MB) for uploading
+[36m[1mi  functions:[22m[39m ensuring required API [1mrun.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m ensuring required API [1meventarc.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m ensuring required API [1mpubsub.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m ensuring required API [1mstorage.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m generating the service identity for [1mpubsub.googleapis.com[22m...
+[36m[1mi  functions:[22m[39m generating the service identity for [1meventarc.googleapis.com[22m...
+[36m[1mi  storage:[22m[39m ensuring required API [1mfirebasestorage.googleapis.com[22m is enabled...
+[36m[1mi  firebase.storage:[22m[39m checking [1mstorage.rules[22m for compilation errors...
+[32m[1m+  firebase.storage:[22m[39m rules file [1mstorage.rules[22m compiled successfully
+[36m[1mi  firestore:[22m[39m ensuring required API [1mfirestore.googleapis.com[22m is enabled...
+[36m[1mi  firestore:[22m[39m ensuring required API [1mfirestore.googleapis.com[22m is enabled...
+[36m[1mi [22m[39m [1m[36mfirestore:[39m[22m reading indexes from [1mfirestore.indexes.json[22m...
+[36m[1mi  cloud.firestore:[22m[39m checking [1mfirestore.rules[22m for compilation errors...
+[32m[1m+  cloud.firestore:[22m[39m rules file [1mfirestore.rules[22m compiled successfully
+[36m[1mi  apphosting:[22m[39m Found backend(s) prod-lead-tracker
+[32m[1m+  functions:[22m[39m [1m.firebase\antigrav-tracking-final\functions[22m source uploaded successfully
+[36m[1mi  storage:[22m[39m latest version of [1mstorage.rules[22m already up to date, skipping upload...
+[36m[1mi  firestore:[22m[39m uploading rules [1mfirestore.rules[22m...
+[36m[1mi [22m[39m [1m[36mfirestore: [39m[22mdeploying indexes...
+[32m[1m+ [22m[39m [1m[32mfirestore:[39m[22m deployed indexes in [1mfirestore.indexes.json[22m successfully for (default) database
+[36m[1mi  hosting[antigrav-tracking-final]:[22m[39m beginning deploy...
+[36m[1mi  hosting[antigrav-tracking-final]:[22m[39m found 46 files in [1m.firebase\antigrav-tracking-final\hosting[22m
+[36m[1mi  hosting:[22m[39m adding files to version [0/46] ([1m[32m0%[39m[22m)
+[36m[1mi  hosting:[22m[39m upload complete
+[32m[1m+  hosting[antigrav-tracking-final]:[22m[39m file upload complete
+[36m[1mi  apphosting:[22m[39m Zipped source for backend prod-lead-tracker
+[36m[1mi  apphosting:[22m[39m Uploading source for backend prod-lead-tracker...
+[36m[1mi  apphosting:[22m[39m Uploaded at gs://firebaseapphosting-sources-813307578320-us-central1/prod-lead-tracker--43912-19gJ2Cr52QLY-.zip
+[36m[1mi  functions:[22m[39m updating Node.js 24 (2nd Gen) function [1mfirebase-frameworks-antigrav-tracking-final:ssrantigravtrackingfina(us-central1)[22m...
+Build failed with status: FAILURE. Could not build the function due to a missing permission on the build service account. If you didn't revoke that permission explicitly, this could be caused by a change in the organization policies. Please refer to the following documentation for more details and resolution: https://cloud.google.com/functions/docs/troubleshooting#build-service-account
+ You can also view the logs at https://console.cloud.google.com/cloud-build/builds;region=us-central1/9ac93833-dd65-4143-a137-4ad5440c81db?project=813307578320.
+
+
+Functions deploy had errors with the following functions:
+	firebase-frameworks-antigrav-tracking-final:ssrantigravtrackingfina(us-central1)
+
+[1m[31mError:[39m[22m There was an error deploying functions

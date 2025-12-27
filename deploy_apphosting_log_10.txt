@@ -1,0 +1,18 @@
+
+[1m[37m===[39m Deploying to 'antigrav-tracking-final'...[22m
+
+[36m[1mi [22m[39m deploying [1mapphosting[22m
+[36m[1mi  apphosting:[22m[39m Found backend(s) prod-lead-tracker
+[36m[1mi  apphosting:[22m[39m Zipped source for backend prod-lead-tracker
+[36m[1mi  apphosting:[22m[39m Uploading source for backend prod-lead-tracker...
+[36m[1mi  apphosting:[22m[39m Uploaded at gs://firebaseapphosting-sources-813307578320-us-central1/prod-lead-tracker--18856-UJktdCRVv806-.zip
+[36m[1mi  apphosting:[22m[39m You may also track the rollout(s) at:
+	https://console.firebase.google.com/project/antigrav-tracking-final/apphosting
+- Starting rollout(s) for backend(s) prod-lead-tracker; this may take a few minutes. It's safe to exit now.
+
+[33m[1m!  apphosting:[22m[39m Rollout for backend prod-lead-tracker failed.
+[31m[1m!!  apphosting:[22m[39m Failed to build your app. Please inspect the build logs at https://console.cloud.google.com/cloud-build/builds;region=us-central1/99a3c038-fcc2-4da6-993b-c9cac8dd999b?project=813307578320.
+
+[32m[1m+ [22m[39m [1m[4mDeploy complete![24m[22m
+
+[1mProject Console:[22m https://console.firebase.google.com/project/antigrav-tracking-final/overview

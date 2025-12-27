@@ -1,0 +1,2 @@
+src/lib/twilio/lookup-service.ts(31,54): error TS2551: Property 'carrier_name' does not exist on type 'LineTypeIntelligenceInfo'. Did you mean 'carrierName'?
+src/lib/twilio/lookup-service.ts(34,47): error TS2551: Property 'caller_name' does not exist on type 'CallerNameInfo'. Did you mean 'callerName'?

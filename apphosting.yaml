@@ -1,0 +1,34 @@
+runConfig:
+  cpu: 1
+  memoryMiB: 4096
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+
+environmentVariables:
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: antigrav-tracking-final
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIza..." # Set this in Firebase Console environment variables
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: antigrav-tracking-final.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: antigrav-tracking-final.firebasestorage.app
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: 813307578320
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:813307578320:web:5932e5a25b74de48c91bd5
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app
+  - variable: GOOGLE_CLIENT_ID
+    value: 343608443426-qd6f4kkvvkfbeb71ncuug9ldse4ob7cn.apps.googleusercontent.com
+  - variable: TWILIO_PHONE_NUMBER
+    value: "+17086947326"
+  - variable: TWILIO_TWIML_APP_SID
+    value: "" # Set in Firebase Console
+  - variable: TWILIO_ACCOUNT_SID
+    value: "" # Set in Firebase Console
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: "" # Set in Firebase Console secrets
+  - variable: FIREBASE_PRIVATE_KEY
+    value: "" # Set in Firebase Console secrets

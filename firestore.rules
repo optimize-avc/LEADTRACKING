@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user owns the document (via path)
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection: Users can only read/write their own profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Leads subcollection: Users can only access their own leads
+      match /leads/{leadId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Activities subcollection: Users can only access their own activities
+      match /activities/{activityId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Email threads subcollection
+      match /emailThreads/{threadId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Email messages subcollection
+      match /emailMessages/{messageId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Integrations subcollection (Gmail, Twilio tokens)
+      match /integrations/{integrationId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Default deny for any unmatched paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

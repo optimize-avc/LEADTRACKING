@@ -1,0 +1,11 @@
+Usage: firebase apphosting:backends:create [options]
+
+create a Firebase App Hosting backend
+
+Options:
+  -a, --app <webAppId>                    specify an existing Firebase web app's ID to associate your App Hosting backend with
+  --backend <backend>                     specify the name of the new backend. Required with --non-interactive.
+  -s, --service-account <serviceAccount>  specify the service account used to run the server (default: "")
+  --primary-region <primaryRegion>        specify the primary region for the backend. Required with --non-interactive.
+  --root-dir <rootDir>                    specify the root directory for the backend.
+  -h, --help                              display help for command

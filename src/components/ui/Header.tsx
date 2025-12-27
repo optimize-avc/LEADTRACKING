@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../providers/AuthProvider';
 import { Menu, X, ChevronRight, LogOut, LayoutDashboard, Database, Activity, BookOpen } from 'lucide-react';
@@ -76,7 +77,14 @@ export function Header() {
                                 title="Sign Out"
                             >
                                 {user.photoURL ? (
-                                    <img src={user.photoURL} alt="User" className="w-full h-full rounded-full object-cover" />
+                                    <div className="relative w-full h-full">
+                                        <Image
+                                            src={user.photoURL}
+                                            alt="User"
+                                            fill
+                                            className="rounded-full object-cover"
+                                        />
+                                    </div>
                                 ) : (
                                     <span className="font-bold text-slate-300">{user.displayName?.[0] || 'U'}</span>
                                 )}
@@ -88,8 +96,9 @@ export function Header() {
                             onClick={async () => {
                                 try {
                                     await signInWithGoogle();
-                                } catch (error: any) {
-                                    if (error?.code !== 'auth/popup-closed-by-user') {
+                                } catch (error: unknown) {
+                                    const authError = error as { code?: string };
+                                    if (authError?.code !== 'auth/popup-closed-by-user') {
                                         console.error('Sign in failed:', error);
                                     }
                                 }
@@ -125,7 +134,14 @@ export function Header() {
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-slate-800 border border-white/10 overflow-hidden">
                                     {user.photoURL ? (
-                                        <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
+                                        <div className="relative w-full h-full">
+                                            <Image
+                                                src={user.photoURL}
+                                                alt="User"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">{user.displayName?.[0] || 'U'}</div>
                                     )}
@@ -148,8 +164,9 @@ export function Header() {
                                 onClick={async () => {
                                     try {
                                         await signInWithGoogle();
-                                    } catch (error: any) {
-                                        if (error?.code !== 'auth/popup-closed-by-user') {
+                                    } catch (error: unknown) {
+                                        const authError = error as { code?: string };
+                                        if (authError?.code !== 'auth/popup-closed-by-user') {
                                             console.error('Sign in failed:', error);
                                         }
                                     }

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Mic, Square, Play, BarChart3, TrendingUp, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { AIPitchAnalysis } from '@/types/ai';
 
 interface PitchRecorderProps {
     onClose: () => void;
@@ -15,22 +16,25 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
     const [state, setState] = useState<RecordingState>('idle');
     const [duration, setDuration] = useState(0);
     const [transcript, setTranscript] = useState('');
-    const [analysis, setAnalysis] = useState<any>(null);
+    const [analysis, setAnalysis] = useState<AIPitchAnalysis | null>(null);
     const { user } = useAuth();
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const recognitionRef = useRef<any>(null); // SpeechRecognition type is erratic in TS
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognitionRef = useRef<any>(null); // SpeechRecognition type is erratic in standard TS configs
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (SpeechRecognition) {
                 const recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
 
-                recognition.onresult = (event: any) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                recognition.onresult = (event: any) => { // SpeechRecognitionEvent is not always available in global types
                     let currentTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         currentTranscript += event.results[i][0].transcript;
@@ -84,8 +88,11 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                 setDuration(prev => prev + 1);
             }, 1000);
         } else if (state === 'idle') {
-            setDuration(0);
-            setTranscript('');
+            const timeout = setTimeout(() => {
+                setDuration(0);
+                setTranscript('');
+            }, 0);
+            return () => clearTimeout(timeout);
         } else {
             if (timerRef.current) clearInterval(timerRef.current);
         }

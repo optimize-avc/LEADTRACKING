@@ -65,9 +65,9 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
             setReplyContent('');
             setSentiment('positive');
             setNextStep('');
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error logging reply:', error);
-            toast.error('Failed to log reply');
+            toast.error(error instanceof Error ? error.message : 'Error logging reply');
         } finally {
             setIsSaving(false);
         }
@@ -108,10 +108,10 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
                             ].map((s) => (
                                 <button
                                     key={s.value}
-                                    onClick={() => setSentiment(s.value as any)}
+                                    onClick={() => setSentiment(s.value as 'positive' | 'neutral' | 'negative')}
                                     className={`flex-1 p-3 rounded-lg border text-center transition-all ${sentiment === s.value
-                                            ? `bg-${s.color}-500/20 border-${s.color}-500/50 text-${s.color}-300`
-                                            : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
+                                        ? `bg-${s.color}-500/20 border-${s.color}-500/50 text-${s.color}-300`
+                                        : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
                                         }`}
                                     style={{
                                         backgroundColor: sentiment === s.value

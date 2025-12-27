@@ -1,27 +1,8 @@
-import { TWILIO_CONFIG, isTwilioConfigured, SMSMessage, SMSResult, CallResult, TwilioCredentials } from './twilio-config';
+import { TWILIO_CONFIG, isTwilioConfigured, SMSMessage, SMSResult, CallResult, TwilioCredentials, getTwilioClient } from './twilio-config';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
-import type { Twilio } from 'twilio';
 
-// ============================================
-// TWILIO CLIENT INITIALIZATION
-// ============================================
-
-let twilioClient: Twilio | null = null;
-
-async function getTwilioClient() {
-    if (!isTwilioConfigured()) {
-        throw new Error('Twilio is not configured. Please add credentials to .env.local');
-    }
-
-    if (!twilioClient) {
-        // Dynamic import to avoid issues on client side
-        const twilio = await import('twilio');
-        twilioClient = twilio.default(TWILIO_CONFIG.accountSid, TWILIO_CONFIG.authToken);
-    }
-
-    return twilioClient;
-}
+// Twilio Client is now managed via twilio-config.ts helper
 
 // ============================================
 // SMS FUNCTIONS
@@ -89,7 +70,7 @@ export async function sendSMSWithLogging(
  * Initiate an outbound call via Twilio
  * Note: This creates a call but requires TwiML for call handling
  */
-export async function initiateCall(to: string, callbackUrl?: string): Promise<CallResult> {
+export async function initiateCall(to: string): Promise<CallResult> {
     try {
         const client = await getTwilioClient();
 

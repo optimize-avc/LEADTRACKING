@@ -195,8 +195,8 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                                         >
                                             <div className="flex items-start gap-4">
                                                 <div className={`mt-1 min-w-[24px] h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${showExplanation && isCorrect ? 'border-green-500 bg-green-500 text-black' :
-                                                        showExplanation && isSelected ? 'border-red-500 bg-red-500 text-white' :
-                                                            'border-slate-600 text-slate-400'
+                                                    showExplanation && isSelected ? 'border-red-500 bg-red-500 text-white' :
+                                                        'border-slate-600 text-slate-400'
                                                     }`}>
                                                     {["A", "B", "C", "D"][idx]}
                                                 </div>
@@ -211,8 +211,8 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                             {showExplanation && (
                                 <div className="mt-8 animate-in slide-in-from-bottom-4 fade-in duration-300">
                                     <div className={`p-6 rounded-xl border mb-6 ${selectedOption === currentQ.correctOptionIndex
-                                            ? 'bg-green-950/30 border-green-500/30'
-                                            : 'bg-red-950/30 border-red-500/30'
+                                        ? 'bg-green-950/30 border-green-500/30'
+                                        : 'bg-red-950/30 border-red-500/30'
                                         }`}>
                                         <div className="flex items-center gap-2 font-bold mb-2">
                                             {selectedOption === currentQ.correctOptionIndex ? (
@@ -251,7 +251,7 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                     </div>
 
                     <h2 className="text-3xl font-bold text-white mb-2">Checkpoint Cleared!</h2>
-                    <p className="text-slate-400 mb-8">Great work. Here's how you performed.</p>
+                    <p className="text-slate-400 mb-8">Great work. Here&apos;s how you performed.</p>
 
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <div className="glass-panel p-4 rounded-xl">

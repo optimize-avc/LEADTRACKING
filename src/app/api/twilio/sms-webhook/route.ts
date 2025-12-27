@@ -36,14 +36,8 @@ export async function POST(request: NextRequest) {
                 headers: { 'Content-Type': 'text/xml' }
             }
         );
-    } catch (error) {
-        console.error('Error processing SMS webhook:', error);
-        return new NextResponse(
-            '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
-            {
-                status: 200,
-                headers: { 'Content-Type': 'text/xml' }
-            }
-        );
+    } catch (error: unknown) {
+        console.error('Webhook Error:', error);
+        return NextResponse.json({ error: 'Webhook failed' }, { status: 500 });
     }
 }

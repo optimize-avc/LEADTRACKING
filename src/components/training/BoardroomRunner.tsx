@@ -5,33 +5,19 @@ import {
     X, Users, MessageSquare, Mic, MicOff,
     BrainCircuit, AlertCircle, Play, Send
 } from 'lucide-react';
+import Image from 'next/image';
 import { GeminiService } from '@/lib/ai/gemini';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { AIBoardroomAgent, AIBoardroomTranscriptItem } from '@/types/ai';
 import { TimeMachine } from '@/components/training/TimeMachine';
 
 interface BoardroomRunnerProps {
     onClose: () => void;
 }
 
-type Agent = {
-    id: string;
-    name: string;
-    role: string;
-    archetype: string;
-    avatar: string;
-    dominance: number;
-    patience: number;
-    hiddenAgenda: string;
-};
+type Agent = AIBoardroomAgent;
 
-type TranscriptItem = {
-    id: string;
-    speaker: string; // 'User' or Agent Name
-    speakerId?: string; // 'user' or Agent ID
-    message: string;
-    type: 'speech' | 'whisper' | 'sidebar';
-    targetId?: string; // For sidebars
-};
+type TranscriptItem = AIBoardroomTranscriptItem;
 
 export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
     const { user } = useAuth();
@@ -52,12 +38,12 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
                     setAgents(scenario.stakeholders);
                     setStatus('playing');
                     // Initial welcome message from the Champion
-                    const champion = scenario.stakeholders.find((s: any) => s.archetype === 'Champion') || scenario.stakeholders[0];
+                    const champion = scenario.stakeholders.find((s: AIBoardroomAgent) => s.archetype === 'Champion') || scenario.stakeholders[0];
                     setTranscript([{
                         id: 'init',
                         speaker: champion.name,
                         speakerId: champion.id,
-                        message: "Thanks for coming in. We're all here. Why don't you kick us off?",
+                        message: "Thanks for coming in. We&apos;re all here. Why don&apos;t you kick us off?",
                         type: 'speech'
                     }]);
                 }
@@ -115,7 +101,7 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
 
                 // 3. Whispers (Thoughts)
                 if (result.whispers) {
-                    result.whispers.forEach((w: any, idx: number) => {
+                    result.whispers.forEach((w: { agentId: string; thought: string }, idx: number) => {
                         const agent = agents.find(a => a.id === w.agentId);
                         updates.push({
                             id: `whisp-${turnId}-${idx}`,
@@ -129,8 +115,8 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
 
                 // 4. Sidebar
                 if (result.sidebar) {
-                    const from = agents.find(a => a.id === result.sidebar.fromId);
-                    const to = agents.find(a => a.id === result.sidebar.toId);
+                    const from = agents.find(a => a.id === result.sidebar!.fromId);
+                    const to = agents.find(a => a.id === result.sidebar!.toId);
                     updates.push({
                         id: `side-${turnId}`,
                         speaker: from?.name || 'Unknown',
@@ -274,7 +260,12 @@ function AgentAvatar({ agent, isSpeaking }: { agent: Agent, isSpeaking: boolean 
                         'border-blue-500/30 group-hover:border-blue-500'}
                 ${isSpeaking ? 'scale-110 shadow-[0_0_30px_rgba(255,255,255,0.2)]' : ''}
             `}>
-                <img src={agent.avatar} alt={agent.name} className="w-full h-full object-cover" />
+                <Image
+                    src={agent.avatar}
+                    alt={agent.name}
+                    fill
+                    className="object-cover"
+                />
             </div>
 
             {/* Nameplate */}
@@ -297,8 +288,8 @@ function ChatBubble({ item }: { item: TranscriptItem }) {
             <div className="flex justify-center my-2">
                 <div className="bg-slate-900/40 border border-slate-700/50 rounded-full px-4 py-1.5 flex items-center gap-2 max-w-lg backdrop-blur-sm animate-in fade-in zoom-in-95">
                     <BrainCircuit size={12} className="text-purple-400" />
-                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">{item.speaker}'s Thought:</span>
-                    <span className="text-xs text-slate-300 italic">"{item.message}"</span>
+                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">{item.speaker}&apos;s Thought:</span>
+                    <span className="text-xs text-slate-300 italic">&ldquo;{item.message}&rdquo;</span>
                 </div>
             </div>
         );
@@ -310,7 +301,7 @@ function ChatBubble({ item }: { item: TranscriptItem }) {
                 <div className="bg-amber-900/20 border border-amber-500/30 rounded-full px-4 py-1.5 flex items-center gap-2 max-w-lg backdrop-blur-sm animate-in fade-in zoom-in-95">
                     <MessageSquare size={12} className="text-amber-500" />
                     <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Sidebar ({item.speaker}):</span>
-                    <span className="text-xs text-amber-200/80 italic">"{item.message}"</span>
+                    <span className="text-xs text-amber-200/80 italic">&ldquo;{item.message}&rdquo;</span>
                 </div>
             </div>
         );

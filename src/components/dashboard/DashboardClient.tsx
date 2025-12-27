@@ -173,7 +173,17 @@ export default function DashboardClient() {
 
 // --- Subcomponents for Cleanliness ---
 
-function KpiCard({ title, value, subvalue, subtext, glowColor, percent, textColor = "text-slate-100" }: any) {
+interface KpiCardProps {
+    title: string;
+    value: string | number;
+    subvalue?: string;
+    subtext?: string;
+    glowColor: string;
+    percent?: number;
+    textColor?: string;
+}
+
+function KpiCard({ title, value, subvalue, subtext, glowColor, percent, textColor = "text-slate-100" }: KpiCardProps) {
     return (
         <div className="glass-card group relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">

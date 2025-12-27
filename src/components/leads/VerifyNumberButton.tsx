@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 interface VerifyNumberButtonProps {
     phoneNumber: string;
-    onVerified?: (data: any) => void;
+    onVerified?: (data: unknown) => void;
 }
 
 export function VerifyNumberButton({ phoneNumber, onVerified }: VerifyNumberButtonProps) {
@@ -53,8 +53,8 @@ export function VerifyNumberButton({ phoneNumber, onVerified }: VerifyNumberButt
                 toast.error('Invalid phone number');
             }
 
-        } catch (error) {
-            console.error('Verification error:', error);
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Failed to send code');
             setStatus('invalid');
             toast.error('Verification failed');
         } finally {

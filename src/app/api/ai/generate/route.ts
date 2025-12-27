@@ -6,14 +6,14 @@ import { verifyIdToken } from '@/lib/firebase/admin';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
 // Vertex AI client (lazy initialized)
-let vertexAIClient: any = null;
+let vertexAIClient: unknown = null;
 let vertexInitAttempted = false;
 let vertexInitError: string | null = null;
 
 // Google GenAI client (lazy initialized)  
 let genAI: GoogleGenerativeAI | null = null;
 
-async function tryInitializeVertexAI(): Promise<any> {
+async function tryInitializeVertexAI(): Promise<unknown> {
     if (vertexAIClient) return vertexAIClient;
     if (vertexInitAttempted) return null; // Don't retry if already failed
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         try {
             const vertexAI = await tryInitializeVertexAI();
             if (vertexAI) {
-                const model = vertexAI.getGenerativeModel({ model: modelName });
+                const model = (vertexAI as any).getGenerativeModel({ model: modelName });
                 const result = await model.generateContent(prompt);
                 const text = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
                 return NextResponse.json({ text });

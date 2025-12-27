@@ -6,6 +6,7 @@ import {
     getDoc,
     getDocs,
     updateDoc,
+    setDoc,
     deleteDoc,
     query,
     where,
@@ -325,3 +326,38 @@ export async function getActivities(userId: string, limit: number = 50): Promise
 export async function getLeads(userId: string): Promise<Lead[]> {
     return LeadsService.getLeads(userId);
 }
+
+// ============================================
+// PROFILE SERVICE
+// ============================================
+
+export interface UserProfile {
+    uid: string;
+    email: string;
+    onboarded: boolean;
+    tier: 'free' | 'pro' | 'enterprise';
+    createdAt: number;
+    updatedAt: number;
+}
+
+export const ProfileService = {
+    async getProfile(userId: string): Promise<UserProfile | null> {
+        const profileRef = doc(db, 'users', userId);
+        const snapshot = await getDoc(profileRef);
+        if (!snapshot.exists()) return null;
+        return { uid: snapshot.id, ...snapshot.data() } as UserProfile;
+    },
+
+    async updateProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
+        const profileRef = doc(db, 'users', userId);
+        const now = Date.now();
+        await setDoc(profileRef, {
+            ...data,
+            updatedAt: now
+        }, { merge: true });
+    },
+
+    async setOnboarded(userId: string): Promise<void> {
+        await this.updateProfile(userId, { onboarded: true });
+    }
+};

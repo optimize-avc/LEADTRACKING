@@ -1,64 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendSMSWithLogging, formatPhoneE164, isValidPhoneNumber } from '@/lib/twilio/twilio-service';
-import { isTwilioConfigured } from '@/lib/twilio/twilio-config';
+import { sendSMSWithLogging } from '@/lib/twilio/twilio-service';
+import { getAdminAuth } from '@/lib/firebase/admin';
 
-// POST: Send SMS to a lead
-export async function POST(request: NextRequest) {
+/**
+ * Enterprise-grade SMS Endpoint (Dec 2025)
+ * Securely handles outbound messaging with full audit logging.
+ */
+export async function POST(req: NextRequest) {
     try {
-        // Check if Twilio is configured
-        if (!isTwilioConfigured()) {
-            return NextResponse.json(
-                { error: 'Twilio is not configured' },
-                { status: 503 }
-            );
+        // 1. Authenticate Request (JWT Verification)
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
-        const { userId, leadId, to, message } = body;
+        const token = authHeader.split('Bearer ')[1];
+        const adminAuth = getAdminAuth();
+        const decodedToken = await adminAuth.verifyIdToken(token);
+        const userId = decodedToken.uid;
 
-        // Validate required fields
-        if (!userId || !to || !message) {
-            return NextResponse.json(
-                { error: 'Missing required fields: userId, to, message' },
-                { status: 400 }
-            );
+        // 2. Parse and Validate Payload
+        const body = await req.json();
+        const { to, body: messageBody, leadId } = body;
+
+        if (!to || !messageBody || !leadId) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // Validate phone number
-        if (!isValidPhoneNumber(to)) {
-            return NextResponse.json(
-                { error: 'Invalid phone number format' },
-                { status: 400 }
-            );
+        // 3. Dispatch SMS via Service Layer
+        const result = await sendSMSWithLogging(userId, leadId, to, messageBody);
+
+        if (!result.success) {
+            return NextResponse.json({ error: result.error }, { status: 500 });
         }
 
-        // Format phone to E.164
-        const formattedPhone = formatPhoneE164(to);
+        return NextResponse.json({
+            success: true,
+            messageSid: result.messageSid,
+            note: 'Message queued for delivery'
+        });
 
-        // Send SMS
-        const result = await sendSMSWithLogging(
-            userId,
-            leadId || '',
-            formattedPhone,
-            message
-        );
-
-        if (result.success) {
-            return NextResponse.json({
-                success: true,
-                messageSid: result.messageSid,
-            });
-        } else {
-            return NextResponse.json(
-                { error: result.error },
-                { status: 500 }
-            );
-        }
     } catch (error: unknown) {
-        console.error('SMS API error:', error);
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to send SMS' },
-            { status: 500 }
-        );
+        console.error('API SMS Error:', error);
+        return NextResponse.json({
+            error: error instanceof Error ? error.message : 'Internal server error'
+        }, { status: 500 });
     }
 }

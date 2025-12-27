@@ -1,6 +1,6 @@
 import { GmailMessage, GmailThread, GmailTokens, refreshAccessToken } from './gmail-auth';
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 // ============================================
 // TOKEN MANAGEMENT
@@ -210,7 +210,6 @@ export async function syncEmailsForLead(
     for (const message of messages) {
         const headers = parseEmailHeaders(message.payload.headers);
         const fromEmail = extractEmailAddress(headers.from);
-        const toEmail = extractEmailAddress(headers.to);
 
         const direction = fromEmail.toLowerCase() === userEmail.toLowerCase() ? 'sent' : 'received';
 

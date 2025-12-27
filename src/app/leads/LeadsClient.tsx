@@ -1,0 +1,677 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { Badge } from '@/components/ui/Badge';
+import { Lead, Activity, LeadStatus } from '@/types';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { AddLeadModal } from '@/components/leads/AddLeadModal';
+import { LogCallModal } from '@/components/leads/LogCallModal';
+import { LogMeetingModal } from '@/components/leads/LogMeetingModal';
+import { LogReplyModal } from '@/components/leads/LogReplyModal';
+import { AIEmailDraft } from '@/components/ai/AIEmailDraft';
+import { LeadsService, ActivitiesService } from '@/lib/firebase/services';
+import { formatCurrency } from '@/lib/utils/formatters';
+import { toast } from 'sonner';
+import { analytics } from '@/lib/analytics';
+import { Gauge, Sparkles, TrendingUp as VelocityUp, Minus, TrendingDown as VelocityDown, Activity as PulseIcon, Download, CheckSquare, Square, Trash2, Mail as MailIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { calculateLeadVelocity } from '@/lib/utils/scoring';
+import { analyzeLeadIntelligence } from '@/lib/firebase/ai-service';
+import { getLeadEmails, EmailRecord, isGmailConnected } from '@/lib/gmail/gmail-service';
+
+// Fallback mock data when not logged in
+const MOCK_LEADS: Lead[] = [
+    {
+        id: '1',
+        companyName: 'Tech Corp Global',
+        contactName: 'John Doe',
+        email: 'john@techcorp.com',
+        phone: '555-0123',
+        value: 5000,
+        status: 'New',
+        assignedTo: 'demo',
+        industry: 'SaaS',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+    },
+    {
+        id: '2',
+        companyName: 'AI Solutions Inc',
+        contactName: 'Jane Smith',
+        email: 'jane@aisolutions.io',
+        phone: '555-9876',
+        value: 12000,
+        status: 'Qualified',
+        assignedTo: 'demo',
+        industry: 'Generative AI',
+        createdAt: Date.now() - 86400000,
+        updatedAt: Date.now(),
+    },
+    {
+        id: '3',
+        companyName: 'Enterprise Logistics',
+        contactName: 'Bob Wilson',
+        email: 'bob@logisticsco.com',
+        phone: '555-4567',
+        value: 35000,
+        status: 'Negotiation',
+        assignedTo: 'demo',
+        industry: 'Logistics',
+        createdAt: Date.now() - 172800000,
+        updatedAt: Date.now(),
+    }
+];
+
+export default function LeadsClient() {
+    const { user, loading: authLoading } = useAuth();
+    const [isLoading, setIsLoading] = useState(true);
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [activities, setActivities] = useState<Record<string, Activity[]>>({});
+    const [leadIntel, setLeadIntel] = useState<Record<string, { score: number; signal: string; justification: string }>>({});
+    const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+    const [gmailHistory, setGmailHistory] = useState<Record<string, EmailRecord[]>>({});
+    const [gmailConnected, setGmailConnected] = useState(false);
+
+    // Modal states
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [isEmailDraftOpen, setIsEmailDraftOpen] = useState(false);
+    const [isCallModalOpen, setIsCallModalOpen] = useState(false);
+    const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+    const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+
+    const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user) {
+            isGmailConnected(user.uid).then(setGmailConnected);
+        }
+    }, [user]);
+
+    const loadLeads = useCallback(async () => {
+        if (!user) return;
+        setIsLoading(true);
+        try {
+            const data = await LeadsService.getLeads(user.uid);
+            setLeads(data.length > 0 ? data : MOCK_LEADS);
+        } catch (error) {
+            console.error('Error loading leads:', error);
+            toast.error('Failed to load leads');
+            setLeads(MOCK_LEADS);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [user]);
+
+    const loadLeadActivities = useCallback(async (leadId: string) => {
+        if (!user) return;
+        try {
+            const data = await ActivitiesService.getLeadActivities(user.uid, leadId);
+            setActivities(prev => ({ ...prev, [leadId]: data }));
+        } catch (error) {
+            console.error('Error loading activities:', error);
+        }
+    }, [user]);
+
+    // Load leads
+    useEffect(() => {
+        if (authLoading) return;
+
+        if (!user) {
+            setLeads(MOCK_LEADS);
+            setIsLoading(false);
+            return;
+        }
+
+        loadLeads();
+    }, [user, authLoading, loadLeads]);
+
+    const handleAddLead = async (leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>) => {
+        if (!user) {
+            const newLead: Lead = {
+                ...leadData,
+                id: `lead_${Date.now()}`,
+                assignedTo: 'demo',
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            };
+            setLeads([newLead, ...leads]);
+            toast.success('Lead added (demo mode)');
+            analytics.track('lead_added', { mode: 'demo', industry: leadData.industry });
+            return;
+        }
+
+        try {
+            await LeadsService.createLead(user.uid, leadData);
+            toast.success('Lead created successfully!');
+            analytics.track('lead_added', { mode: 'prod', industry: leadData.industry });
+            loadLeads();
+        } catch (error) {
+            console.error('Error creating lead:', error);
+            toast.error('Failed to create lead');
+        }
+    };
+
+    const handleExpandLead = (leadId: string) => {
+        // Only expand if NOT in selection mode or clicking the same expanded lead
+        if (selectedLeadIds.size > 0 && !selectedLeadIds.has(leadId)) return;
+
+        if (expandedLeadId === leadId) {
+            setExpandedLeadId(null);
+        } else {
+            setExpandedLeadId(leadId);
+            if (leadId && !activities[leadId]) {
+                loadLeadActivities(leadId);
+            }
+
+            if (leadId && gmailConnected && !gmailHistory[leadId]) {
+                loadGmailHistory(leadId);
+            }
+        }
+    };
+
+    const loadGmailHistory = async (leadId: string) => {
+        if (!user) return;
+        try {
+            const emails = await getLeadEmails(user.uid, leadId);
+            setGmailHistory(prev => ({ ...prev, [leadId]: emails }));
+        } catch (error) {
+            console.error('Gmail history load failed', error);
+        }
+    };
+
+    const handleActivitySuccess = () => {
+        loadLeads();
+        if (selectedLead) {
+            loadLeadActivities(selectedLead.id);
+            // Re-run AI intel on activity update
+            handleIntelRequest(selectedLead);
+        }
+    };
+
+    const handleIntelRequest = async (lead: Lead) => {
+        if (!user) return;
+        try {
+            const leadActivities = activities[lead.id] || await ActivitiesService.getLeadActivities(user.uid, lead.id);
+            const intel = await analyzeLeadIntelligence(lead, leadActivities);
+            setLeadIntel(prev => ({ ...prev, [lead.id]: intel }));
+        } catch (error) {
+            console.error('Intelligence analysis failed', error);
+        }
+    };
+
+    const handleExportCSV = () => {
+        if (leads.length === 0) {
+            toast.error('No leads to export');
+            return;
+        }
+
+        const headers = ['Company', 'Contact', 'Email', 'Phone', 'Value', 'Status', 'Industry', 'Created At'];
+        const csvContent = [
+            headers.join(','),
+            ...leads.map(lead => [
+                `"${lead.companyName}"`,
+                `"${lead.contactName}"`,
+                `"${lead.email}"`,
+                `"${lead.phone || ''}"`,
+                lead.value,
+                `"${lead.status}"`,
+                `"${lead.industry || ''}"`,
+                new Date(lead.createdAt).toLocaleDateString()
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Leads exported successfully');
+        analytics.track('leads_exported', { count: leads.length });
+    };
+
+    const toggleSelectLead = (leadId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newSelected = new Set(selectedLeadIds);
+        if (newSelected.has(leadId)) {
+            newSelected.delete(leadId);
+        } else {
+            newSelected.add(leadId);
+        }
+        setSelectedLeadIds(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+        if (!user) {
+            setLeads(leads.filter(l => !selectedLeadIds.has(l.id)));
+            setSelectedLeadIds(new Set());
+            toast.success('Leads removed (demo mode)');
+            return;
+        }
+
+        const confirm = window.confirm(`Are you sure you want to delete ${selectedLeadIds.size} leads?`);
+        if (!confirm) return;
+
+        try {
+            await Promise.all(
+                Array.from(selectedLeadIds).map(id => LeadsService.deleteLead(user.uid, id))
+            );
+            toast.success('Leads deleted successfully');
+            setSelectedLeadIds(new Set());
+            loadLeads();
+        } catch (error) {
+            console.error('Bulk delete failed', error);
+            toast.error('Failed to delete some leads');
+        }
+    };
+
+    const handleBulkStatusUpdate = async (newStatus: LeadStatus) => {
+        if (!user) {
+            setLeads(leads.map(l => selectedLeadIds.has(l.id) ? { ...l, status: newStatus } : l));
+            setSelectedLeadIds(new Set());
+            toast.success('Status updated (demo mode)');
+            return;
+        }
+
+        try {
+            await Promise.all(
+                Array.from(selectedLeadIds).map(id => LeadsService.updateLead(user.uid, id, { status: newStatus }))
+            );
+            toast.success(`Leads moved to ${newStatus}`);
+            setSelectedLeadIds(new Set());
+            loadLeads();
+        } catch (error) {
+            console.error('Bulk update failed', error);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="p-8 min-h-screen flex items-center justify-center">
+                <div className="text-slate-500">Loading leads...</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-8 min-h-screen">
+            <header className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
+                        Leads Pipeline
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-1">
+                        {user ? `${leads.length} leads` : 'Demo Mode - Log in to save data'}
+                    </p>
+                </div>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleExportCSV}
+                        className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white"
+                        title="Export leads to CSV"
+                    >
+                        <Download size={16} /> Export CSV
+                    </button>
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="glass-button"
+                    >
+                        + Add New Lead
+                    </button>
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {leads.map((lead) => (
+                    <GlassCard
+                        key={lead.id}
+                        onClick={() => expandedLeadId !== lead.id && handleExpandLead(lead.id)}
+                        className={`cursor-pointer group relative overflow-hidden transition-all border-l-4 ${selectedLeadIds.has(lead.id) ? 'border-l-blue-500 bg-blue-500/5' : 'border-l-transparent'
+                            } ${expandedLeadId === lead.id ? 'md:col-span-2 lg:col-span-2' : ''}`}
+                    >
+                        {/* Multi-select checkbox */}
+                        <div
+                            onClick={(e) => toggleSelectLead(lead.id, e)}
+                            className="absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            {selectedLeadIds.has(lead.id) ? (
+                                <CheckSquare size={16} className="text-blue-400" />
+                            ) : (
+                                <Square size={16} className="text-slate-600 hover:text-blue-400" />
+                            )}
+                        </div>
+
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        {/* Velocity Gauge Overlay */}
+                        {(() => {
+                            const velocity = calculateLeadVelocity(lead, activities[lead.id]);
+                            return (
+                                <div className="absolute top-0 right-0 p-2 opacity-30 group-hover:opacity-100 transition-all">
+                                    <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 ${velocity.status === 'hot' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                                        velocity.status === 'warm' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                            'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                                        }`}>
+                                        <Gauge size={10} />
+                                        Velocity: {velocity.score}%
+                                        {velocity.momentum === 'rising' ? <VelocityUp size={10} /> : velocity.momentum === 'dropping' ? <VelocityDown size={10} /> : <Minus size={10} />}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        <div className="relative z-10">
+                            {/* Lead Header */}
+                            <div
+                                className="flex justify-between items-start mb-3"
+                                onClick={() => handleExpandLead(lead.id)}
+                            >
+                                <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                                    {lead.companyName}
+                                </h3>
+                                <Badge variant={lead.status === 'New' ? 'info' : lead.status === 'Qualified' ? 'success' : lead.status === 'Closed' ? 'success' : 'warning'}>
+                                    {lead.status}
+                                </Badge>
+                            </div>
+
+                            {/* Lead Info */}
+                            <div className="mb-4">
+                                <p className="text-slate-300 text-sm font-medium">{lead.contactName}</p>
+                                <p className="text-slate-500 text-xs">{lead.email}</p>
+                                {lead.industry && (
+                                    <span className="inline-block mt-2 text-[10px] uppercase tracking-wider text-slate-500 border border-slate-700 px-1.5 py-0.5 rounded">
+                                        {lead.industry}
+                                    </span>
+                                )}
+                                {lead.nextStep && (
+                                    <p className="text-xs text-amber-400 mt-2 font-medium flex items-center gap-1">
+                                        <PulseIcon size={12} /> {lead.nextStep}
+                                    </p>
+                                )}
+
+                                {/* AI Intelligence Signal */}
+                                {leadIntel[lead.id] ? (
+                                    <div className="mt-3 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 relative group/intel animate-in fade-in zoom-in-95 duration-300">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                            <Sparkles size={12} className="text-blue-400" />
+                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">AI Intelligence</span>
+                                            <Badge variant="info" className="ml-auto text-[8px] py-0 px-1 border-blue-500/20">{leadIntel[lead.id].signal}</Badge>
+                                        </div>
+                                        <p className="text-[11px] text-slate-400 leading-tight italic line-clamp-2">
+                                            &ldquo;{leadIntel[lead.id].justification}&rdquo;
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleIntelRequest(lead); }}
+                                        className="mt-3 w-full py-1 text-[10px] text-slate-500 hover:text-blue-400 border border-dashed border-slate-700 hover:border-blue-500/40 rounded transition-all italic flex items-center justify-center gap-1"
+                                    >
+                                        <Sparkles size={10} /> Analyze Deal Sentiment
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Value & Date */}
+                            <div className="flex justify-between items-center border-t border-slate-700/50 pt-3 mt-2">
+                                <span className="text-xl font-bold text-emerald-400">
+                                    {formatCurrency(lead.value)}
+                                </span>
+                                <span className="text-xs text-slate-600">
+                                    {lead.lastContact
+                                        ? `Last: ${new Date(lead.lastContact).toLocaleDateString()}`
+                                        : new Date(lead.updatedAt).toLocaleDateString()
+                                    }
+                                </span>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="mt-3 flex gap-2">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedLead(lead);
+                                        setIsEmailDraftOpen(true);
+                                    }}
+                                    className="flex-1 py-2 text-xs bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 hover:from-violet-600/40 hover:to-fuchsia-600/40 border border-violet-500/30 rounded-lg text-violet-300 transition-all flex items-center justify-center gap-1"
+                                >
+                                    ✨ Email
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!user) { toast.info('Log in to track calls'); return; }
+                                        setSelectedLead(lead);
+                                        setIsCallModalOpen(true);
+                                    }}
+                                    className="px-3 py-2 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 transition-all"
+                                    title="Log Call"
+                                >
+                                    📞
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!user) { toast.info('Log in to track meetings'); return; }
+                                        setSelectedLead(lead);
+                                        setIsMeetingModalOpen(true);
+                                    }}
+                                    className="px-3 py-2 text-xs bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 transition-all"
+                                    title="Log Meeting"
+                                >
+                                    📅
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!user) { toast.info('Log in to track replies'); return; }
+                                        setSelectedLead(lead);
+                                        setIsReplyModalOpen(true);
+                                    }}
+                                    className="px-3 py-2 text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-amber-400 transition-all"
+                                    title="Log Reply Received"
+                                >
+                                    📩
+                                </button>
+                            </div>
+
+                            {/* Expanded Activity Timeline */}
+                            {expandedLeadId === lead.id && (
+                                <div className="mt-4 pt-4 border-t border-slate-700/50">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <PulseIcon size={14} className="text-blue-400" />
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Unified Engagement History</h4>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {/* Combined Timeline: Activities + Gmail */}
+                                        {(() => {
+                                            const leadActivities = activities[lead.id] || [];
+                                            const leadEmails = gmailHistory[lead.id] || [];
+
+                                            const timeline = [
+                                                ...leadActivities.map(a => ({ ...a, sortKey: a.timestamp, timelineType: 'activity' as const })),
+                                                ...leadEmails.map(e => ({ ...e, sortKey: e.timestamp, timelineType: 'email' as const }))
+                                            ].sort((a, b) => b.sortKey - a.sortKey);
+
+                                            if (timeline.length === 0) {
+                                                return <p className="text-xs text-slate-600 italic py-4">No recent engagement recorded.</p>;
+                                            }
+
+                                            return timeline.map((item, idx) => (
+                                                <div key={idx} className="flex gap-3 group/item">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${item.timelineType === 'email' ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' :
+                                                            'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                                            }`}>
+                                                            {item.timelineType === 'email' ? <MailIcon size={12} /> : <PulseIcon size={12} />}
+                                                        </div>
+                                                        {idx < timeline.length - 1 && <div className="w-px flex-1 bg-slate-800 my-1" />}
+                                                    </div>
+                                                    <div className="flex-1 pb-4">
+                                                        <div className="flex justify-between items-start mb-1">
+                                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">
+                                                                {item.timelineType === 'email' ? (item as EmailRecord).subject : (item as unknown as Activity).type}
+                                                            </span>
+                                                            <span className="text-[9px] text-slate-500">
+                                                                {new Date(item.sortKey).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2 italic">
+                                                            {item.timelineType === 'email' ? (item as EmailRecord).snippet : (item as unknown as Activity).notes}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ));
+                                        })()}
+                                    </div>
+
+                                    {!gmailConnected && (
+                                        <div className="mt-4 p-3 bg-purple-500/5 border border-purple-500/10 rounded-xl flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-purple-400">
+                                                <MailIcon size={14} />
+                                                <span className="text-[10px] font-medium">Connect Gmail for live thread sync</span>
+                                            </div>
+                                            <button
+                                                onClick={() => window.location.href = `/api/auth/gmail?userId=${user?.uid}`}
+                                                className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] rounded-lg transition-all"
+                                            >
+                                                Connect
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </GlassCard>
+                ))}
+            </div>
+
+            {
+                leads.length === 0 && (
+                    <div className="text-center py-20">
+                        <p className="text-slate-500 mb-4">No leads yet. Add your first lead to get started!</p>
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="glass-button"
+                        >
+                            + Add New Lead
+                        </button>
+                    </div>
+                )
+            }
+
+            {/* Bulk Action Bar */}
+            <AnimatePresence>
+                {selectedLeadIds.size > 0 && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-slate-900/90 backdrop-blur-xl border border-blue-500/30 rounded-full shadow-2xl flex items-center gap-6"
+                    >
+                        <div className="flex items-center gap-2 border-r border-slate-700 pr-6">
+                            <span className="text-blue-400 font-bold">{selectedLeadIds.size}</span>
+                            <span className="text-slate-300 text-xs uppercase tracking-widest font-medium">Selected</span>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-slate-500 uppercase font-bold">Move to:</span>
+                                <div className="flex gap-1">
+                                    {(['Qualified', 'Proposal', 'Negotiation'] as LeadStatus[]).map(status => (
+                                        <button
+                                            key={status}
+                                            onClick={() => handleBulkStatusUpdate(status)}
+                                            className="px-2 py-1 text-[10px] bg-slate-800 hover:bg-blue-600/20 border border-slate-700 hover:border-blue-500/40 rounded-md text-slate-300 hover:text-blue-300 transition-all font-medium"
+                                        >
+                                            {status}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleBulkDelete}
+                                className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                                title="Bulk Delete"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setSelectedLeadIds(new Set())}
+                                className="text-xs text-slate-500 hover:text-white transition-colors ml-2"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Modals */}
+            <AddLeadModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSave={handleAddLead}
+            />
+
+            {
+                selectedLead && (
+                    <>
+                        <AIEmailDraft
+                            lead={selectedLead}
+                            isOpen={isEmailDraftOpen}
+                            onClose={() => {
+                                setIsEmailDraftOpen(false);
+                                setSelectedLead(null);
+                            }}
+                        />
+
+                        {user && (
+                            <>
+                                <LogCallModal
+                                    lead={selectedLead}
+                                    userId={user.uid}
+                                    isOpen={isCallModalOpen}
+                                    onClose={() => {
+                                        setIsCallModalOpen(false);
+                                        setSelectedLead(null);
+                                    }}
+                                    onSuccess={handleActivitySuccess}
+                                />
+
+                                <LogMeetingModal
+                                    lead={selectedLead}
+                                    userId={user.uid}
+                                    isOpen={isMeetingModalOpen}
+                                    onClose={() => {
+                                        setIsMeetingModalOpen(false);
+                                        setSelectedLead(null);
+                                    }}
+                                    onSuccess={handleActivitySuccess}
+                                />
+
+                                <LogReplyModal
+                                    lead={selectedLead}
+                                    userId={user.uid}
+                                    isOpen={isReplyModalOpen}
+                                    onClose={() => {
+                                        setIsReplyModalOpen(false);
+                                        setSelectedLead(null);
+                                    }}
+                                    onSuccess={handleActivitySuccess}
+                                />
+                            </>
+                        )}
+                    </>
+                )
+            }
+        </div >
+    );
+}

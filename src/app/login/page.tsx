@@ -21,9 +21,11 @@ export default function LoginPage() {
             await signInWithGoogle();
             toast.success('Signed in successfully!');
             router.push('/');
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const authError = error as { code?: string; message?: string };
+            toast.error(authError.message || "Login failed");
             // Ignore if user closed the popup
-            if (error?.code === 'auth/popup-closed-by-user' || error?.message?.includes('closed-by-user')) {
+            if (authError.code === 'auth/popup-closed-by-user' || authError.message?.includes('closed-by-user')) {
                 return;
             }
             console.error('Sign in error:', error);

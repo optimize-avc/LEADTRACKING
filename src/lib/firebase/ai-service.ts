@@ -1,7 +1,8 @@
 import { app } from './config';
 import { getAI, getGenerativeModel, VertexAIBackend, AI, GenerativeModel } from 'firebase/ai';
-import { Lead, Resource } from '@/types';
+import { Lead, Resource, Activity } from '@/types';
 import { MOCK_RESOURCES } from '@/lib/mock-data/resources';
+import { RAGService } from '@/lib/ai/rag-service';
 
 // Initialize Firebase AI with Vertex AI backend (Gemini)
 // Note: User has Vertex AI Gemini API enabled in Firebase Console
@@ -102,11 +103,62 @@ LEAD INFORMATION:
 - Deal Value: $${lead.value?.toLocaleString() || 'Unknown'}
 - Current Status: ${lead.status}
 - Probability: ${lead.probability || 'Not set'}%
-- Notes: ${lead.notes || 'None'}
+    - Notes: ${lead.notes || 'None'}
 - Tags: ${lead.tags?.join(', ') || 'None'}
 - Next Step: ${lead.nextStep || 'Not defined'}
 ${daysSinceContact !== null ? `- Days Since Last Contact: ${daysSinceContact}` : ''}
 `;
+}
+
+// Analyze lead intelligence (health, sentiment, closing signal)
+export async function analyzeLeadIntelligence(
+    lead: Lead,
+    activities: Activity[]
+): Promise<{ score: number; signal: string; justification: string }> {
+
+    if (!model) {
+        return {
+            score: 50,
+            signal: 'Neutral',
+            justification: 'AI intelligence currently offline. Scoring based on activity metadata.'
+        };
+    }
+
+    const leadContext = buildLeadContext(lead);
+    const activityContext = activities.length > 0
+        ? `RECENT ACTIVITIES: \n${activities.slice(0, 5).map(a => `- ${a.type} (${a.outcome}): ${a.notes || 'No notes'}`).join('\n')} `
+        : 'No recent activity recorded.';
+
+    const prompt = `You are a high - level Sales Intelligence AI.Analyze this lead and their recent activity to determine their "Closing Signal" strength.
+
+    ${leadContext}
+    
+    ${activityContext}
+
+TASK:
+- Assess the sentiment of the last few interactions.
+    - Identify potential "Closing Signals"(budget confirmed, decision maker involved, timeline stated).
+    - Identify "Deal Blockers"(no response, technical hurdle, competitor mentioned).
+    
+    OUTPUT FORMAT:
+    Return ONLY a JSON object:
+{ "score": number(0 - 100), "signal": "Strong Buy" | "Interested" | "Neutral" | "At Risk" | "Stalled", "justification": "One sentence summarizing why." } `;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const cleanText = text.replace(/```json\n ? /g, '').replace(/```\n?/g, '').trim();
+        const parsed = JSON.parse(cleanText);
+
+        return {
+            score: typeof parsed.score === 'number' ? parsed.score : 50,
+            signal: parsed.signal || 'Neutral',
+            justification: parsed.justification || 'Analysis complete.'
+        };
+    } catch (error: unknown) {
+        console.error('AI Intelligence analysis failed:', error);
+        return { score: 50, signal: 'Neutral', justification: 'Critical analysis failure. Verify lead data.' };
+    }
 }
 
 // Generate email draft using Gemini with full context
@@ -119,18 +171,22 @@ export async function generateEmail(
     if (!model) {
         // Fallback if AI not available
         return {
-            subject: `Following up - ${lead.companyName}`,
+            subject: `Following up - ${lead.companyName} `,
             body: getDefaultEmailBody(lead, senderName)
         };
     }
 
     const emailType = getEmailTypeFromStatus(lead.status);
-    const companyContext = buildCompanyContext(MOCK_RESOURCES);
+
+    // 2025 Best Practice: Augment mock resources with Real RAG context from personal playbooks
+    const ragContext = await RAGService.queryContext(`Sales strategy for ${lead.companyName} in ${lead.industry} at stage ${lead.status} `);
+
+    const companyContext = buildCompanyContext(MOCK_RESOURCES) + `\n\nPROPRIETARY STRATEGY(RAG): \n${ragContext} `;
     const leadContext = buildLeadContext(lead);
 
-    const prompt = `You are an expert sales email writer for our company. Use the following context about our company and sales approach to craft highly personalized emails.
+    const prompt = `You are an expert sales email writer for our company.Use the following context about our company and sales approach to craft highly personalized emails.
 
-${companyContext}
+    ${companyContext}
 
 ${leadContext}
 
@@ -141,34 +197,34 @@ ${customPrompt ? `USER REQUEST: ${customPrompt}` : ''}
 
 INSTRUCTIONS:
 - Write a ${emailType} sales email personalized to this specific lead
-- Use insights from our sales playbooks and scripts
-- Reference our value propositions naturally
-- Keep it concise (under 150 words)
-- Include a clear, specific call-to-action
-- Match the tone to the lead's industry
-- If there are notes about the lead, reference them subtly
+    - Use insights from our sales playbooks and scripts
+        - Reference our value propositions naturally
+            - Keep it concise(under 150 words)
+                - Include a clear, specific call - to - action
+                    - Match the tone to the lead's industry
+                        - If there are notes about the lead, reference them subtly
 
 OUTPUT FORMAT:
-Return ONLY a JSON object with exactly this structure (no markdown, no code blocks):
-{"subject": "Your subject line here", "body": "Your email body here"}`;
+Return ONLY a JSON object with exactly this structure(no markdown, no code blocks):
+{ "subject": "Your subject line here", "body": "Your email body here" } `;
 
     try {
         const result = await model.generateContent(prompt);
         const text = result.response.text();
 
         // Parse the JSON response
-        const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const cleanText = text.replace(/```json\n ? /g, '').replace(/```\n?/g, '').trim();
         const parsed = JSON.parse(cleanText);
 
         return {
-            subject: parsed.subject || `Following up - ${lead.companyName}`,
+            subject: parsed.subject || `Following up - ${lead.companyName} `,
             body: parsed.body || getDefaultEmailBody(lead, senderName)
         };
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('AI email generation failed:', error);
         // Fallback to template
         return {
-            subject: `Following up - ${lead.companyName}`,
+            subject: `Following up - ${lead.companyName} `,
             body: getDefaultEmailBody(lead, senderName)
         };
     }
@@ -181,8 +237,8 @@ export async function enhanceEmail(email: string, action: EnhancementAction, lea
     const companyContext = buildCompanyContext(MOCK_RESOURCES);
 
     const prompts: Record<EnhancementAction, string> = {
-        'shorter': `Make this email more concise while keeping the key message. Reduce to under 100 words:\n\n${email}`,
-        'professional': `Rewrite this email in a more formal, professional business tone. Maintain our company's positioning:\n\n${companyContext}\n\nEmail to rewrite:\n${email}`,
+        'shorter': `Make this email more concise while keeping the key message.Reduce to under 100 words: \n\n${email} `,
+        'professional': `Rewrite this email in a more formal, professional business tone.Maintain our company's positioning:\n\n${companyContext}\n\nEmail to rewrite:\n${email}`,
         'friendly': `Rewrite this email in a warmer, more friendly and conversational tone while staying professional:\n\n${email}`,
         'urgency': `Add subtle urgency to this email (time-sensitive language, limited availability) without being pushy. Keep it authentic:\n\n${email}`,
         'social-proof': `Add social proof elements to this email naturally. Reference success with similar companies, results, or credibility signals. Use our competitive positioning:\n\n${companyContext}\n\nEmail to enhance:\n${email}`

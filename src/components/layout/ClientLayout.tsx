@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
     LayoutDashboard, Target, Activity, Database, BarChart3, GraduationCap,
     ChevronLeft, ChevronRight, Menu, LogOut, Settings, LogIn
@@ -10,6 +11,8 @@ import {
 import { AuthProvider, useAuth } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { CookieConsent } from '@/components/ui/CookieConsent';
+import { WelcomeTour } from '@/components/onboarding/WelcomeTour';
 import { toast, Toaster } from 'sonner';
 import { AIContextProvider } from '@/components/providers/AIContext';
 
@@ -17,12 +20,24 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
     const { user, loading, logout, signInWithGoogle } = useAuth();
     const router = useRouter();
 
+    const checkUserRole = async (userId: string) => {
+        try {
+            // This function's implementation seems to be a placeholder or incomplete based on its name.
+            // It currently performs a logout operation.
+            await logout();
+            toast.success('Signed out successfully');
+            router.push('/');
+        } catch (error: unknown) { // Changed to unknown
+            toast.error('Failed to sign out');
+        }
+    };
+
     const handleLogout = async () => {
         try {
             await logout();
             toast.success('Signed out successfully');
             router.push('/');
-        } catch (error) {
+        } catch (error: unknown) { // Changed to unknown
             toast.error('Failed to sign out');
         }
     };
@@ -31,8 +46,8 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
         try {
             await signInWithGoogle();
             toast.success('Signed in successfully!');
-        } catch (error: any) {
-            if (error?.code === 'auth/popup-closed-by-user' || error?.message?.includes('closed-by-user')) return;
+        } catch (error: unknown) {
+            if (error instanceof Error && (error as { code?: string }).code === 'auth/popup-closed-by-user') return;
             toast.error('Failed to sign in');
         }
     };
@@ -68,11 +83,14 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
                         {/* User Profile */}
                         <div className={`flex items-center gap-3 mb-3 ${collapsed && !mobileMenuOpen ? 'justify-center' : ''}`}>
                             {user.photoURL ? (
-                                <img
-                                    src={user.photoURL}
-                                    alt={user.displayName || 'User'}
-                                    className="w-9 h-9 flex-shrink-0 rounded-full border border-white/10 shadow-lg"
-                                />
+                                <div className="relative w-9 h-9 flex-shrink-0">
+                                    <Image
+                                        src={user.photoURL}
+                                        alt={user.displayName || 'User'}
+                                        fill
+                                        className="rounded-full border border-white/10 shadow-lg object-cover"
+                                    />
+                                </div>
                             ) : (
                                 <div className="w-9 h-9 flex-shrink-0 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 border border-white/10 shadow-lg shadow-indigo-500/20 flex items-center justify-center text-white font-medium text-sm">
                                     {user.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
@@ -124,14 +142,22 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
+        const timeout = setTimeout(() => {
+            setMounted(true);
+        }, 0);
+        return () => clearTimeout(timeout);
     }, []);
 
     // Close mobile menu on route change
     const pathname = usePathname();
     useEffect(() => {
-        setMobileMenuOpen(false);
-    }, [pathname]);
+        if (mobileMenuOpen) {
+            const timeout = setTimeout(() => {
+                setMobileMenuOpen(false);
+            }, 0);
+            return () => clearTimeout(timeout);
+        }
+    }, [pathname, mobileMenuOpen]);
 
     // Simple loading state for SSR
     if (!mounted) {
@@ -202,6 +228,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                         {/* Collapse Toggle (Desktop Only) */}
                         <button
                             onClick={() => setCollapsed(!collapsed)}
+                            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                             className="hidden md:flex absolute -right-3 top-24 w-6 h-6 rounded-full bg-slate-800 border border-slate-600 items-center justify-center text-slate-400 hover:text-white hover:border-white/50 transition-all shadow-lg z-50"
                         >
                             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -223,6 +250,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                             </div>
                             <button
                                 onClick={() => setMobileMenuOpen(true)}
+                                aria-label="Open mobile menu"
                                 className="p-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                             >
                                 <Menu size={24} />
@@ -234,7 +262,25 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                                 {children}
                             </ErrorBoundary>
                         </div>
+
+                        {/* Professional Footer */}
+                        <footer className="mt-auto border-t border-white/5 p-8 text-center md:text-left">
+                            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                <div className="text-sm text-slate-500">
+                                    © {new Date().getFullYear()} SalesTracker AI. All rights reserved.
+                                </div>
+                                <div className="flex items-center gap-6 text-sm">
+                                    <Link href="/privacy" className="text-slate-500 hover:text-indigo-400 transition-colors">Privacy Policy</Link>
+                                    <Link href="/terms" className="text-slate-500 hover:text-indigo-400 transition-colors">Terms of Service</Link>
+                                    <a href="mailto:support@salestracker-ai.com" className="text-slate-500 hover:text-indigo-400 transition-colors">Support</a>
+                                </div>
+                            </div>
+                        </footer>
                     </main>
+
+                    {/* Overlay components */}
+                    <CookieConsent />
+                    <WelcomeTour />
 
                     {/* Toast notifications */}
                     <Toaster position="top-right" theme="dark" closeButton richColors />
@@ -254,6 +300,7 @@ function NavLink({ href, icon, label, collapsed, mobile }: { href: string; icon:
         <Link
             href={href}
             title={!showLabel ? label : ''}
+            aria-label={label}
             className={`
                 group flex items-center rounded-xl transition-all duration-300 ease-out relative
                 ${!showLabel ? 'justify-center p-3' : 'px-4 py-3'}

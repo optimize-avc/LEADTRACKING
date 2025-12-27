@@ -1,11 +1,22 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+    AIPersona,
+    AIPitchAnalysis,
+    AIScenario,
+    AITurnResult,
+    AIBoardroomTurnResult,
+    AIBoardroomScenario,
+    AIFutureArtifact,
+    AIStakeholder,
+    AIBoardroomAgent,
+    AIBoardroomTranscriptItem
+} from "@/types/ai";
 
 export const GeminiService = {
     async generateText(prompt: string, token?: string): Promise<string> {
         try {
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
             if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+                headers['Authorization'] = `Bearer ${token} `;
             }
 
             const response = await fetch('/api/ai/generate', {
@@ -31,35 +42,35 @@ export const GeminiService = {
         }
     },
 
-    async generatePersona(role: string, industry: string, contextMaterials?: string, token?: string): Promise<any> {
+    async generatePersona(role: string, industry: string, contextMaterials?: string, token?: string): Promise<AIPersona | null> {
         let contextPrompt = "";
         if (contextMaterials) {
             contextPrompt = `
-                CONTEXT MATERIALS (PRODUCT/ENABLEMENT):
+                CONTEXT MATERIALS(PRODUCT / ENABLEMENT):
                 ${contextMaterials.substring(0, 30000)}
-                
-                INSTRUCTION: The user is selling the product described above.
-                The persona should be a likely buyer (or blocker) for THIS specific product.
-                Their "pain points" should be problems this product solves.
-                Their "objections" should be specific weaknesses or common doubts about this type of product.
+
+INSTRUCTION: The user is selling the product described above.
+                The persona should be a likely buyer(or blocker) for THIS specific product.
+    Their "pain points" should be problems this product solves.
+        Their "objections" should be specific weaknesses or common doubts about this type of product.
             `;
         }
 
         const prompt = `
             Generate a detailed sales prospect persona for a ${role} in the ${industry} industry.
-            ${contextPrompt}
+    ${contextPrompt}
 
             Return ONLY a JSON object with this structure:
-            {
-                "name": "Full Name",
-                "role": "${role}",
-                "company": "Company Name",
+{
+    "name": "Full Name",
+        "role": "${role}",
+            "company": "Company Name",
                 "personality": "Brief description of their communication style (e.g., direct, skeptical, friendly)",
-                "painPoints": ["Point 1", "Point 2"],
-                "objections": ["Objection 1", "Objection 2"],
-                 "hiddenAgenda": "A secret motivation they won't say outright"
-            }
-        `;
+                    "painPoints": ["Point 1", "Point 2"],
+                        "objections": ["Objection 1", "Objection 2"],
+                            "hiddenAgenda": "A secret motivation they won't say outright"
+}
+`;
         const text = await this.generateText(prompt, token);
         if (!text || text.startsWith("Error")) return null;
         try {
@@ -67,13 +78,12 @@ export const GeminiService = {
             const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to parse persona JSON", e);
-            console.error("Raw text was:", text);
+            console.error("Gemini Parse Error", e);
             return null;
         }
     },
 
-    async generateReply(persona: any, history: { role: string, content: string }[], userMessage: string, contextMaterials?: string, token?: string): Promise<string> {
+    async generateReply(persona: AIPersona, history: { role: string, content: string }[], userMessage: string, contextMaterials?: string, token?: string): Promise<string> {
         let contextPrompt = "";
         if (contextMaterials) {
             contextPrompt = `
@@ -114,33 +124,38 @@ export const GeminiService = {
         return await this.generateText(fullPrompt, token);
     },
 
-    async analyzePitch(transcript: string, token?: string): Promise<any> {
+    async analyzePitch(transcript: string, token?: string): Promise<AIPitchAnalysis | null> {
         const prompt = `
             Analyze this sales pitch transcript: "${transcript}"
             
             Return ONLY a JSON object with this structure:
             {
                 "score": 85, // 0-100 based on clarity, persuasion, and confidence
-                "pace": 130, // Estimated words per minute (just estimate relative to text length if no time data, or assume average speaking speed)
+                "pace": 130, // Estimated words per minute 
                 "fillerWords": ["um", "like"], // List detected filler words
                 "confidence": "High", // High, Medium, Low
                 "strengths": ["Strength 1", "Strength 2"], // 3 key strengths
                 "improvements": ["Tip 1", "Tip 2"], // 3 specific improvements
-                "oneLine feedback": "Excellent delivery but watch the 'ums'."
+                "oneLineFeedback": "Excellent delivery but watch the 'ums'."
             }
         `;
         const text = await this.generateText(prompt, token);
         if (!text || text.startsWith("Error")) return null;
         try {
             const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            return JSON.parse(cleanText);
+            const data = JSON.parse(cleanText);
+            // Fallback for legacy format or AI inconsistencies
+            if (data.feedback && !data.oneLineFeedback) {
+                data.oneLineFeedback = data.feedback;
+            }
+            return data as AIPitchAnalysis;
         } catch (e) {
             console.error("Failed to parse pitch analysis", e);
             return null;
         }
     },
 
-    async generateDealScenario(level: string, context?: { company: string, industry: string, value: string, stage?: string, contact?: string }, contextMaterials?: string, token?: string): Promise<any> {
+    async generateDealScenario(level: string, context?: { company: string, industry: string, value: string, stage?: string, contact?: string }, contextMaterials?: string, token?: string): Promise<AIScenario | null> {
         let contextPrompt = "";
         if (context) {
             contextPrompt = `
@@ -202,15 +217,15 @@ export const GeminiService = {
         }
     },
 
-    async evaluateTurn(gameState: any, action: string, targetId: string, token?: string): Promise<any> {
+    async evaluateTurn(gameState: { company: string; stakeholders: AIStakeholder[] }, action: string, targetId: string, token?: string): Promise<AITurnResult | null> {
         const prompt = `
             You are the Dungeon Master for a B2B Sales Wargame.
             
             Current Scenario:
             Company: ${gameState.company}
-            Target Stakeholder: ${gameState.stakeholders.find((s: any) => s.id === targetId)?.name} (${gameState.stakeholders.find((s: any) => s.id === targetId)?.role})
-            Stakeholder Traits: ${gameState.stakeholders.find((s: any) => s.id === targetId)?.traits.join(', ')}
-            Current Sentiment: ${gameState.stakeholders.find((s: any) => s.id === targetId)?.sentiment}/100
+            Target Stakeholder: ${gameState.stakeholders.find((s: AIStakeholder) => s.id === targetId)?.name} (${gameState.stakeholders.find((s: AIStakeholder) => s.id === targetId)?.role})
+            Stakeholder Traits: ${gameState.stakeholders.find((s: AIStakeholder) => s.id === targetId)?.traits.join(', ')}
+            Current Sentiment: ${gameState.stakeholders.find((s: AIStakeholder) => s.id === targetId)?.sentiment}/100
             
             Player Action: "${action}"
 
@@ -241,7 +256,7 @@ export const GeminiService = {
         }
     },
 
-    async evaluateBoardroomTurn(agents: any[], userMessage: string, history: any[], token?: string): Promise<any> {
+    async evaluateBoardroomTurn(agents: AIBoardroomAgent[], userMessage: string, history: AIBoardroomTranscriptItem[], token?: string): Promise<AIBoardroomTurnResult | null> {
         const historyText = history.map(h => `${h.speaker}: ${h.message}`).join('\n');
         const agentProfiles = agents.map(a => `${a.name} (${a.role}, ${a.archetype}): ${a.hiddenAgenda}`).join('\n');
 
@@ -284,7 +299,7 @@ export const GeminiService = {
         }
     },
 
-    async generateBoardroomScenario(token?: string): Promise<any> {
+    async generateBoardroomScenario(token?: string): Promise<AIBoardroomScenario | null> {
         const prompt = `
             Generate a 3-agent B2B buying committee for a "Boardroom" simulation.
             They must have CONFLICTING goals.
@@ -327,7 +342,7 @@ export const GeminiService = {
         }
     },
 
-    async generateFutureArtifact(transcriptHistory: any[], outcome: 'win' | 'loss', token?: string): Promise<any> {
+    async generateFutureArtifact(transcriptHistory: AIBoardroomTranscriptItem[], outcome: 'win' | 'loss', token?: string): Promise<AIFutureArtifact | null> {
         const historyText = transcriptHistory.map(t => `${t.speaker}: ${t.message}`).join('\n');
 
         const prompt = `

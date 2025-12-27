@@ -6,6 +6,7 @@ import { GeminiService } from '@/lib/ai/gemini';
 import { ResourcesService } from '@/lib/firebase/resources';
 import { Resource } from '@/types';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { AIPersona } from '@/types/ai';
 
 interface DojoRunnerProps {
     onClose: () => void;
@@ -24,13 +25,14 @@ type Message = {
 };
 
 // Default persona if generation fails
-const DEFAULT_PERSONA = {
+const DEFAULT_PERSONA: AIPersona = {
     name: "Marcus Steele",
     role: "CFO",
     company: "Nexus Financial",
     personality: "Direct, skeptical, focused on bottom-line ROI. Impatient with fluff.",
     painPoints: ["Rising operational costs", "Vendor sprawl"],
-    hiddenAgenda: "Looking to cut 10% of budget to meet Q4 targets"
+    hiddenAgenda: "Looking to cut 10% of budget to meet Q4 targets",
+    objections: ["Price is too high", "Timing isn't right"]
 };
 
 export function DojoRunner({ onClose }: DojoRunnerProps) {
@@ -39,7 +41,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
     const [isRecording, setIsRecording] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [loadingPersona, setLoadingPersona] = useState(false); // Start false, wait for setup
-    const [persona, setPersona] = useState<any>(null);
+    const [persona, setPersona] = useState<AIPersona | null>(null);
     const [status, setStatus] = useState<'setup' | 'playing'>('setup');
 
     // Setup State
@@ -295,7 +297,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                                 <User size={14} /> Application Context
                             </h4>
                             <p className="text-xs text-slate-300 italic">
-                                "{persona.personality}"
+                                &ldquo;{persona.personality}&rdquo;
                                 <br />
                                 <span className="opacity-75">Agenda: {persona.painPoints[0]}</span>
                             </p>
@@ -379,7 +381,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                             </button>
                         </div>
                         <div className="text-center mt-2 text-xs text-slate-500">
-                            Tip: Use "Tactical Empathy" to disarm the prospect.
+                            Tip: Use &ldquo;Tactical Empathy&rdquo; to disarm the prospect.
                         </div>
                     </div>
                 </div>
@@ -423,10 +425,10 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                             <h4 className="font-bold text-white text-sm mb-3">AI Suggestions</h4>
                             <div className="space-y-2">
                                 <button onClick={() => setInputText("It sounds like budget is a major concern specifically for Q4.")} className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all">
-                                    "It sounds like budget is a major concern..."
+                                    &ldquo;It sounds like budget is a major concern...&rdquo;
                                 </button>
                                 <button onClick={() => setInputText("What if we structured this to start billing in January?")} className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all">
-                                    "What if we structured this to start billing in Jan?"
+                                    &ldquo;What if we structured this to start billing in Jan?&rdquo;
                                 </button>
                             </div>
                         </div>

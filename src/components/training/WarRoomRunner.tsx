@@ -11,6 +11,7 @@ import { GeminiService } from '@/lib/ai/gemini';
 import { ResourcesService } from '@/lib/firebase/resources';
 import { LeadsService } from '@/lib/firebase/services';
 import { Resource, Lead } from '@/types';
+import { AIStakeholder, AIScenario, DominanceLevel } from '@/types/ai';
 import { useAuth } from '@/components/providers/AuthProvider';
 
 interface WarRoomRunnerProps {
@@ -26,14 +27,7 @@ interface WarRoomRunnerProps {
 
 // --- GAME TYPES ---
 
-type Stakeholder = {
-    id: string;
-    name: string;
-    role: string;
-    dominance: 'High' | 'Medium' | 'Low';
-    sentiment: number; // 0-100
-    traits: string[];
-    hiddenAgenda: string;
+type Stakeholder = AIStakeholder & {
     status: 'unlocked' | 'locked'; // locked until engaged?
 };
 
@@ -59,13 +53,7 @@ type LogEntry = {
 type GameState = {
     status: 'setup' | 'initializing' | 'playing' | 'won' | 'lost';
     dealHealth: number;
-    scenario: {
-        company: string;
-        industry: string;
-        dealValue: string;
-        description: string;
-        difficulty: string;
-    } | null;
+    scenario: Omit<AIScenario, 'stakeholders'> | null;
     stakeholders: Stakeholder[];
     logs: LogEntry[];
     turnCount: number;
@@ -186,7 +174,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                         description: scenario.description,
                         difficulty: scenario.difficulty
                     },
-                    stakeholders: scenario.stakeholders || [],
+                    stakeholders: (scenario.stakeholders || []).map((s: AIStakeholder) => ({ ...s, status: 'unlocked' as const })),
                     dealHealth: 50, // Start neutral
                     logs: [{
                         id: 'init',
@@ -258,7 +246,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
             // AI Evaluation
             const result = await GeminiService.evaluateTurn(
                 {
-                    company: gameState.scenario?.company,
+                    company: gameState.scenario?.company || 'Unknown',
                     stakeholders: gameState.stakeholders
                 },
                 actionCard.label,
@@ -325,7 +313,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                             <span className="p-2 bg-blue-600/20 rounded-lg text-blue-400"><Database className="w-6 h-6" /></span>
                             Mission Parameters
                         </h2>
-                        <p className="text-slate-400">Configure your simulation environment. Run "Crisis Ops" on live deals or standard training.</p>
+                        <p className="text-slate-400">Configure your simulation environment. Run &ldquo;Crisis Ops&rdquo; on live deals or standard training.</p>
                     </div>
 
                     <div className="space-y-6">

@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
                 },
             }
         );
-    } catch (error) {
-        console.error('Error processing Twilio webhook:', error);
+    } catch (error: unknown) {
+        console.error('Twilio Voice Webhook Error:', error);
         return new NextResponse(
             '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
             {

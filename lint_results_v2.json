@@ -1,0 +1,238 @@
+
+> leadtracking@0.1.0 validate
+> npm run lint && npm run typecheck && npm run test
+
+
+> leadtracking@0.1.0 lint
+> eslint . --ext .ts,.tsx
+
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\list-models-full.js
+  1:9   warning  'GoogleGenerativeAI' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1:32  error    A `require()` style import is forbidden                  @typescript-eslint/no-require-imports
+  2:1   error    A `require()` style import is forbidden                  @typescript-eslint/no-require-imports
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\poll-reply.js
+  1:27  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:70  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\test-gemini.js
+  1:32  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:1   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\verify-client.js
+   1:27  error    A `require()` style import is forbidden                   @typescript-eslint/no-require-imports
+   2:82  error    A `require()` style import is forbidden                   @typescript-eslint/no-require-imports
+   3:16  error    A `require()` style import is forbidden                   @typescript-eslint/no-require-imports
+  16:7   warning  'TWILIO_ACCOUNT_SID' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  17:7   warning  'TWILIO_AUTH_TOKEN' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  18:7   warning  'TWILIO_PHONE_NUMBER' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\actions\gmail.ts
+    3:10  warning  'db' is defined but never used            @typescript-eslint/no-unused-vars
+    4:10  warning  'doc' is defined but never used           @typescript-eslint/no-unused-vars
+    4:15  warning  'getDoc' is defined but never used        @typescript-eslint/no-unused-vars
+    4:23  warning  'setDoc' is defined but never used        @typescript-eslint/no-unused-vars
+    4:31  warning  'updateDoc' is defined but never used     @typescript-eslint/no-unused-vars
+    4:42  warning  'collection' is defined but never used    @typescript-eslint/no-unused-vars
+    4:54  warning  'query' is defined but never used         @typescript-eslint/no-unused-vars
+    4:61  warning  'where' is defined but never used         @typescript-eslint/no-unused-vars
+    4:68  warning  'getDocs' is defined but never used       @typescript-eslint/no-unused-vars
+  270:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\analytics\AnalyticsClient.tsx
+   7:46  warning  'Mail' is defined but never used                @typescript-eslint/no-unused-vars
+   8:45  warning  'PieChart' is defined but never used            @typescript-eslint/no-unused-vars
+   9:5   warning  'Sparkles' is defined but never used            @typescript-eslint/no-unused-vars
+   9:15  warning  'ShieldCheck' is defined but never used         @typescript-eslint/no-unused-vars
+   9:28  warning  'Zap' is defined but never used                 @typescript-eslint/no-unused-vars
+  20:5   warning  'Cell' is defined but never used                @typescript-eslint/no-unused-vars
+  20:11  warning  'Pie' is defined but never used                 @typescript-eslint/no-unused-vars
+  20:28  warning  'RePieChart' is defined but never used          @typescript-eslint/no-unused-vars
+  33:7   warning  'COLORS' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  38:12  warning  'isLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  48:22  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\ai\generate\route.ts
+   9:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\resources\upload\route.ts
+  51:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\stripe\portal\route.ts
+  32:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\incoming-message\route.ts
+  1:23  warning  'NextResponse' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\lookup\route.ts
+  4:10  warning  'withAuth' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\sms-webhook\route.ts
+  13:15  warning  'leadId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  19:81  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\sms\route.ts
+  43:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\webhook\route.ts
+  38:15  warning  'leadId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  54:63  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\leads\LeadsClient.tsx
+  238:11   warning  'getActivityIcon' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  247:11   warning  'formatDuration' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  533:107  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  533:131  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  540:103  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  540:127  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\login\page.tsx
+  24:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\page.tsx
+  53:6  warning  React Hook useEffect has a missing dependency: 'loadMetrics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\privacy\page.tsx
+  23:42  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  23:46  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  23:48  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  23:53  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  23:58  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  23:61  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\reality-link\page.tsx
+   9:5   warning  'Mic' is defined but never used                     @typescript-eslint/no-unused-vars
+   9:18  warning  'Radio' is defined but never used                   @typescript-eslint/no-unused-vars
+   9:25  warning  'Zap' is defined but never used                     @typescript-eslint/no-unused-vars
+  10:5   warning  'AlertTriangle' is defined but never used           @typescript-eslint/no-unused-vars
+  10:20  warning  'Shield' is defined but never used                  @typescript-eslint/no-unused-vars
+  10:28  warning  'CheckCircle' is defined but never used             @typescript-eslint/no-unused-vars
+  22:24  warning  'setActiveLead' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  23:12  warning  'loading' is assigned a value but never used        @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\resources\ResourcesClient.tsx
+  27:12  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\settings\SettingsClient.tsx
+   7:36  warning  'ShieldCheck' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  38:8   warning  React Hook useEffect has a missing dependency: 'checkConnections'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  72:82  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\training\TrainingClient.tsx
+  5:10  warning  'toast' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\ai\AIEmailDraft.tsx
+  42:8   warning  React Hook useEffect has missing dependencies: 'email' and 'handleGenerate'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  51:18  warning  'err' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+  66:18  warning  'err' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\dashboard\DashboardClient.tsx
+  8:10  warning  'Skeleton' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\layout\ClientLayout.tsx
+   28:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+   38:53  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  306:64  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\CallButton.tsx
+   4:27  warning  'Loader2' is defined but never used           @typescript-eslint/no-unused-vars
+  30:12  warning  'callSid' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\EmailThreadsPanel.tsx
+  35:8   warning  React Hook useEffect has a missing dependency: 'loadEmails'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  84:18  warning  'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\LogReplyModal.tsx
+  111:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\SMSChatWindow.tsx
+    4:25  warning  'Phone' is defined but never used            @typescript-eslint/no-unused-vars
+    4:35  warning  'MoreVertical' is defined but never used     @typescript-eslint/no-unused-vars
+    5:57  warning  'addDoc' is defined but never used           @typescript-eslint/no-unused-vars
+    5:65  warning  'serverTimestamp' is defined but never used  @typescript-eslint/no-unused-vars
+   15:16  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  107:36  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\VerifyNumberButton.tsx
+  9:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\onboarding\WelcomeTour.tsx
+  6:23  warning  'Target' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\BoardroomRunner.tsx
+  5:30  warning  'Mic' is defined but never used          @typescript-eslint/no-unused-vars
+  5:35  warning  'MicOff' is defined but never used       @typescript-eslint/no-unused-vars
+  6:19  warning  'AlertCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  6:32  warning  'Play' is defined but never used         @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\DojoRunner.tsx
+  4:61  warning  'RefreshCw' is defined but never used  @typescript-eslint/no-unused-vars
+  4:81  warning  'Database' is defined but never used   @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\EndlessQuizRunner.tsx
+  3:27  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\LMSPlayer.tsx
+    4:18  warning  'Module' is defined but never used       @typescript-eslint/no-unused-vars
+    4:26  warning  'Lesson' is defined but never used       @typescript-eslint/no-unused-vars
+    5:13  warning  'ChevronLeft' is defined but never used  @typescript-eslint/no-unused-vars
+  167:42  warning  'score' is defined but never used        @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\PitchRecorder.tsx
+   4:26  warning  'Play' is defined but never used          @typescript-eslint/no-unused-vars
+   4:32  warning  'BarChart3' is defined but never used     @typescript-eslint/no-unused-vars
+  24:35  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:50  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:87  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:48  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\QuizComponent.tsx
+  46:15  warning  'finalScore' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\TimeMachine.tsx
+   7:13  warning  'ExternalLink' is defined but never used  @typescript-eslint/no-unused-vars
+   7:27  warning  'RefreshCw' is defined but never used     @typescript-eslint/no-unused-vars
+   7:38  warning  'Send' is defined but never used          @typescript-eslint/no-unused-vars
+   7:73  warning  'TrendingUp' is defined but never used    @typescript-eslint/no-unused-vars
+   7:85  warning  'Lock' is defined but never used          @typescript-eslint/no-unused-vars
+  11:47  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\WarRoomRunner.tsx
+    5:40  warning  'Send' is defined but never used                                                                                                                                        @typescript-eslint/no-unused-vars
+    6:32  warning  'Unlock' is defined but never used                                                                                                                                      @typescript-eslint/no-unused-vars
+    7:5   warning  'TrendingUp' is defined but never used                                                                                                                                  @typescript-eslint/no-unused-vars
+    7:17  warning  'TrendingDown' is defined but never used                                                                                                                                @typescript-eslint/no-unused-vars
+    7:31  warning  'Clock' is defined but never used                                                                                                                                       @typescript-eslint/no-unused-vars
+    7:44  warning  'RotateCcw' is defined but never used                                                                                                                                   @typescript-eslint/no-unused-vars
+    8:15  warning  'Phone' is defined but never used                                                                                                                                       @typescript-eslint/no-unused-vars
+    8:56  warning  'ChevronRight' is defined but never used                                                                                                                                @typescript-eslint/no-unused-vars
+   14:37  warning  'DominanceLevel' is defined but never used                                                                                                                              @typescript-eslint/no-unused-vars
+  218:8   warning  React Hook useEffect has missing dependencies: 'gameState.scenario', 'gameState.status', and 'gameState.turnCount'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\ui\Sidebar.tsx
+  71:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\ai\courseGenerator.ts
+   1:18  warning  'Module' is defined but never used               @typescript-eslint/no-unused-vars
+   1:26  warning  'Lesson' is defined but never used               @typescript-eslint/no-unused-vars
+  17:11  warning  'isPlaybook' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\ai\rag-service.ts
+  20:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\analytics\index.ts
+  6:6  warning  'AnalyticsEvent' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\firebase\ai-service.ts
+  234:78  warning  'lead' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\firebase\resources.ts
+  3:37  warning  'where' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\gmail\email-analyzer.ts
+  12:10  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 135 problems (42 errors, 93 warnings)
+

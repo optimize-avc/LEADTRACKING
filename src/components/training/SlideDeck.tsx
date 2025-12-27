@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Slide } from '@/types/learning';
 import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 interface SlideDeckProps {
     slides: Slide[];
@@ -107,11 +108,14 @@ export function SlideDeck({ slides, onComplete }: SlideDeckProps) {
                             {/* Optional Image */}
                             {currentSlide.imageUrl && (
                                 <div className="w-full md:w-1/3 flex-shrink-0">
-                                    <img
-                                        src={currentSlide.imageUrl}
-                                        alt={currentSlide.title}
-                                        className="rounded-xl shadow-2xl border border-white/10 w-full object-cover aspect-video md:aspect-square"
-                                    />
+                                    <div className="relative rounded-xl shadow-2xl border border-white/10 w-full overflow-hidden aspect-video md:aspect-square">
+                                        <Image
+                                            src={currentSlide.imageUrl}
+                                            alt={currentSlide.title}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
                                 </div>
                             )}
                         </div>

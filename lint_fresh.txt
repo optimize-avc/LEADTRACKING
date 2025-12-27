@@ -1,0 +1,305 @@
+
+> leadtracking@0.1.0 lint
+> eslint . --ext .ts,.tsx
+
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\list-models-full.js
+  1:9   warning  'GoogleGenerativeAI' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1:32  error    A `require()` style import is forbidden                  @typescript-eslint/no-require-imports
+  2:1   error    A `require()` style import is forbidden                  @typescript-eslint/no-require-imports
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\poll-reply.js
+  1:27  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:70  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\test-gemini.js
+  1:32  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:1   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+c:\Users\tryst\Downloads\leadTrackingApp\scripts\verify-client.js
+   1:27  error    A `require()` style import is forbidden                   @typescript-eslint/no-require-imports
+   2:82  error    A `require()` style import is forbidden                   @typescript-eslint/no-require-imports
+   3:16  error    A `require()` style import is forbidden                   @typescript-eslint/no-require-imports
+  16:7   warning  'TWILIO_ACCOUNT_SID' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  17:7   warning  'TWILIO_AUTH_TOKEN' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  18:7   warning  'TWILIO_PHONE_NUMBER' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\actions\gmail.ts
+    3:10  warning  'db' is defined but never used            @typescript-eslint/no-unused-vars
+    4:10  warning  'doc' is defined but never used           @typescript-eslint/no-unused-vars
+    4:15  warning  'getDoc' is defined but never used        @typescript-eslint/no-unused-vars
+    4:23  warning  'setDoc' is defined but never used        @typescript-eslint/no-unused-vars
+    4:31  warning  'updateDoc' is defined but never used     @typescript-eslint/no-unused-vars
+    4:42  warning  'collection' is defined but never used    @typescript-eslint/no-unused-vars
+    4:54  warning  'query' is defined but never used         @typescript-eslint/no-unused-vars
+    4:61  warning  'where' is defined but never used         @typescript-eslint/no-unused-vars
+    4:68  warning  'getDocs' is defined but never used       @typescript-eslint/no-unused-vars
+  270:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\analytics\page.tsx
+  6:36  warning  'Target' is defined but never used  @typescript-eslint/no-unused-vars
+  6:51  warning  'Mail' is defined but never used    @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\ai\generate\route.ts
+   9:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\lookup\route.ts
+  4:10  warning  'withAuth' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\sms-webhook\route.ts
+  13:15  warning  'leadId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  19:81  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\api\twilio\webhook\route.ts
+  38:15  warning  'leadId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  54:63  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\layout.tsx
+  21:9  warning  Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\leads\page.tsx
+  87:8  warning  React Hook useEffect has a missing dependency: 'loadLeads'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\login\page.tsx
+  24:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\not-found.tsx
+  19:55  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\page.tsx
+  53:6  warning  React Hook useEffect has a missing dependency: 'loadMetrics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\reality-link\page.tsx
+   4:10  warning  'GlassCard' is defined but never used         @typescript-eslint/no-unused-vars
+   9:5   warning  'Mic' is defined but never used               @typescript-eslint/no-unused-vars
+   9:18  warning  'Radio' is defined but never used             @typescript-eslint/no-unused-vars
+   9:25  warning  'Zap' is defined but never used               @typescript-eslint/no-unused-vars
+  10:5   warning  'AlertTriangle' is defined but never used     @typescript-eslint/no-unused-vars
+  10:20  warning  'Shield' is defined but never used            @typescript-eslint/no-unused-vars
+  10:28  warning  'CheckCircle' is defined but never used       @typescript-eslint/no-unused-vars
+  11:15  warning  'Activity' is defined but never used          @typescript-eslint/no-unused-vars
+  11:25  warning  'Sparkles' is defined but never used          @typescript-eslint/no-unused-vars
+  21:12  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\resources\page.tsx
+  27:12  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\app\settings\page.tsx
+  48:8  warning  React Hook useEffect has a missing dependency: 'checkConnections'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\ai\AIEmailDraft.tsx
+  42:8   warning  React Hook useEffect has missing dependencies: 'email' and 'handleGenerate'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  51:18  warning  'err' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+  66:18  warning  'err' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\dashboard\DashboardClient.tsx
+    8:10   warning  'Skeleton' is defined but never used      @typescript-eslint/no-unused-vars
+  176:105  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\layout\ClientLayout.tsx
+   25:18  warning  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   34:25  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   71:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @next/next/no-img-element
+  127:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\layout\ClientLayout.tsx:127:9
+  125 |
+  126 |     useEffect(() => {
+> 127 |         setMounted(true);
+      |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  128 |     }, []);
+  129 |
+  130 |     // Close mobile menu on route change                                                        react-hooks/set-state-in-effect
+  133:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\layout\ClientLayout.tsx:133:9
+  131 |     const pathname = usePathname();
+  132 |     useEffect(() => {
+> 133 |         setMobileMenuOpen(false);
+      |         ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  134 |     }, [pathname]);
+  135 |
+  136 |     // Simple loading state for SSR  react-hooks/set-state-in-effect
+  271:64  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\CallButton.tsx
+   4:27  warning  'Loader2' is defined but never used           @typescript-eslint/no-unused-vars
+  30:12  warning  'callSid' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\EmailThreadsPanel.tsx
+  35:8   warning  React Hook useEffect has a missing dependency: 'loadEmails'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  84:18  warning  'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\LogReplyModal.tsx
+  111:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\SMSChatWindow.tsx
+    4:25  warning  'Phone' is defined but never used            @typescript-eslint/no-unused-vars
+    4:35  warning  'MoreVertical' is defined but never used     @typescript-eslint/no-unused-vars
+    5:57  warning  'addDoc' is defined but never used           @typescript-eslint/no-unused-vars
+    5:65  warning  'serverTimestamp' is defined but never used  @typescript-eslint/no-unused-vars
+   15:16  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  107:36  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\leads\VerifyNumberButton.tsx
+  9:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\BoardroomRunner.tsx
+    5:30   warning  'Mic' is defined but never used                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+    5:35   warning  'MicOff' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    6:19   warning  'AlertCircle' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+    6:32   warning  'Play' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  110:49   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  269:17   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  292:116  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  293:69   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  293:84   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  305:72   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  305:87   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\DojoRunner.tsx
+    4:61  warning  'RefreshCw' is defined but never used                            @typescript-eslint/no-unused-vars
+    4:81  warning  'Database' is defined but never used                             @typescript-eslint/no-unused-vars
+   42:44  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  298:33  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  298:55  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  382:38  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  382:55  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  426:37  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  426:81  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  429:37  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  429:89  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\EndlessQuizRunner.tsx
+    3:27  warning  'useEffect' is defined but never used                            @typescript-eslint/no-unused-vars
+  254:72  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\LMSPlayer.tsx
+    4:18  warning  'Module' is defined but never used       @typescript-eslint/no-unused-vars
+    4:26  warning  'Lesson' is defined but never used       @typescript-eslint/no-unused-vars
+    5:13  warning  'ChevronLeft' is defined but never used  @typescript-eslint/no-unused-vars
+  167:42  warning  'score' is defined but never used        @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\PitchRecorder.tsx
+   4:26  warning  'Play' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   4:32  warning  'BarChart3' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  18:46  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  23:35  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  27:50  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  27:87  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  33:48  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  87:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\PitchRecorder.tsx:87:13
+  85 |             }, 1000);
+  86 |         } else if (state === 'idle') {
+> 87 |             setDuration(0);
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  88 |             setTranscript('');
+  89 |         } else {
+  90 |             if (timerRef.current) clearInterval(timerRef.current);  react-hooks/set-state-in-effect
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\QuizComponent.tsx
+  46:15  warning  'finalScore' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\SlideDeck.tsx
+  110:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\TimeMachine.tsx
+    7:13   warning  'ExternalLink' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+    7:27   warning  'RefreshCw' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+    7:38   warning  'Send' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+    7:73   warning  'TrendingUp' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+    7:85   warning  'Lock' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   10:17   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-explicit-any
+  102:21   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @next/next/no-img-element
+  156:42   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-explicit-any
+  201:125  error    Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\TimeMachine.tsx:201:125
+  199 |             <div className="h-32 w-full flex items-end gap-1 mb-8">
+  200 |                 {[...Array(20)].map((_, i) => (
+> 201 |                     <div key={i} className="flex-1 bg-red-500/20 hover:bg-red-500/50 transition-colors" style={{ height: `${Math.random() * 80 + 20}%` }}></div>
+      |                                                                                                                             ^^^^^^^^^^^^^ Cannot call impure function
+  202 |                 ))}
+  203 |             </div>
+  204 |  react-hooks/purity
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\training\WarRoomRunner.tsx
+    5:40   warning  'Send' is defined but never used                                                                                                                                        @typescript-eslint/no-unused-vars
+    6:32   warning  'Unlock' is defined but never used                                                                                                                                      @typescript-eslint/no-unused-vars
+    7:5    warning  'TrendingUp' is defined but never used                                                                                                                                  @typescript-eslint/no-unused-vars
+    7:17   warning  'TrendingDown' is defined but never used                                                                                                                                @typescript-eslint/no-unused-vars
+    7:31   warning  'Clock' is defined but never used                                                                                                                                       @typescript-eslint/no-unused-vars
+    7:44   warning  'RotateCcw' is defined but never used                                                                                                                                   @typescript-eslint/no-unused-vars
+    8:15   warning  'Phone' is defined but never used                                                                                                                                       @typescript-eslint/no-unused-vars
+    8:56   warning  'ChevronRight' is defined but never used                                                                                                                                @typescript-eslint/no-unused-vars
+   14:37   warning  'DominanceLevel' is defined but never used                                                                                                                              @typescript-eslint/no-unused-vars
+  218:8    warning  React Hook useEffect has missing dependencies: 'gameState.scenario', 'gameState.status', and 'gameState.turnCount'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  316:98   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                         react/no-unescaped-entities
+  316:109  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                         react/no-unescaped-entities
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\ui\Header.tsx
+   79:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   91:49  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  128:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  151:53  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\components\ui\Sidebar.tsx
+  71:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\ai\courseGenerator.ts
+   1:18  warning  'Module' is defined but never used               @typescript-eslint/no-unused-vars
+   1:26  warning  'Lesson' is defined but never used               @typescript-eslint/no-unused-vars
+  17:11  warning  'isPlaybook' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\ai\gemini.ts
+    1:10   warning  'GoogleGenerativeAI' is defined but never used  @typescript-eslint/no-unused-vars
+  213:68   error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  219:67   error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  219:136  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  220:67   error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  221:66   error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  252:41   error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  252:78   error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  338:53   error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\firebase\ai-service.ts
+  178:78  warning  'lead' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\firebase\resources.ts
+  3:37  warning  'where' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\gmail\email-analyzer.ts
+  12:10  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\gmail\gmail-service.ts
+    3:77  warning  'addDoc' is defined but never used            @typescript-eslint/no-unused-vars
+  213:15  warning  'toEmail' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+c:\Users\tryst\Downloads\leadTrackingApp\src\lib\twilio\twilio-service.ts
+  92:48  warning  'callbackUrl' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 154 problems (62 errors, 92 warnings)
+

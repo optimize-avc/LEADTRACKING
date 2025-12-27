@@ -18,6 +18,8 @@ export default function RealityLinkPage() {
     const [transcript, setTranscript] = useState('');
     const [companyResources, setCompanyResources] = useState<Resource[]>([]);
     const [activeCards, setActiveCards] = useState<Resource[]>([]);
+    const [aiTactics, setAiTactics] = useState<string[]>([]);
+    const [activeLead, setActiveLead] = useState({ name: 'Jordan Smith', company: 'Global Tech Inc.', value: '$45,000', status: 'Negotiation' });
     const [loading, setLoading] = useState(true);
 
     // Simulating "Live" typing
@@ -71,6 +73,23 @@ export default function RealityLinkPage() {
                 }
                 return [...newCards, ...prev].slice(0, 5); // Keep top 5
             });
+
+            // Generate "Tactics" based on matches
+            const newTactics: string[] = [];
+            matched.forEach(res => {
+                if (res.title.toLowerCase().includes('competitor')) {
+                    newTactics.push("Strategy: Use 'The Differentiator' script to highlight our unique AI moat.");
+                }
+                if (res.category.toLowerCase().includes('pricing')) {
+                    newTactics.push("Tactic: Shift focus to 'Cost of Inaction' rather than Implementation Fee.");
+                }
+                if (res.title.toLowerCase().includes('security')) {
+                    newTactics.push("Advice: Mention our dual-layer encryption and ISO compliance immediately.");
+                }
+            });
+            if (newTactics.length > 0) {
+                setAiTactics(prev => [...new Set([...newTactics, ...prev])].slice(0, 3));
+            }
         }
 
     }, [transcript, companyResources]);
@@ -158,7 +177,7 @@ export default function RealityLinkPage() {
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10 min-h-0">
 
                 {/* Visualizer & Transcript (Left) */}
-                <div className="lg:col-span-8 flex flex-col gap-6">
+                <div className="lg:col-span-6 flex flex-col gap-6">
 
                     {/* Visualizer Area */}
                     <div className="h-48 rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur relative overflow-hidden flex items-center justify-center group">
@@ -221,8 +240,57 @@ export default function RealityLinkPage() {
 
                 </div>
 
+                {/* AI Strategy Stream & Lead Context (Center/Right) */}
+                <div className="lg:col-span-3 flex flex-col gap-6 h-full min-h-0">
+                    <h2 className="text-sm font-bold text-slate-400 opacity-50 uppercase tracking-widest flex items-center gap-2">
+                        <Activity size={14} className="text-blue-500" />
+                        AI Strategy Stream
+                    </h2>
+
+                    <div className="flex flex-col gap-4">
+                        {aiTactics.length === 0 ? (
+                            <div className="p-4 rounded-xl border border-white/5 bg-white/5 text-slate-600 text-xs font-mono italic animate-pulse">
+                                ANALYZING DEAL DYNAMICS...
+                            </div>
+                        ) : (
+                            aiTactics.map((tactic, i) => (
+                                <div key={i} className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 animate-in slide-in-from-top-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Sparkles size={12} className="text-blue-400" />
+                                        <span className="text-[10px] font-bold text-blue-400 uppercase">Live Intelligence</span>
+                                    </div>
+                                    <p className="text-xs text-slate-300 font-medium leading-relaxed">{tactic}</p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <h2 className="text-sm font-bold text-slate-400 opacity-50 uppercase tracking-widest mt-4">Active Lead Context</h2>
+                    <GlassCard className="!p-4 border-l-2 border-l-blue-500">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold">
+                                JS
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold text-white">{activeLead.name}</div>
+                                <div className="text-[10px] text-slate-500">{activeLead.company}</div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <div className="text-[10px] text-slate-500 uppercase">Deal Value</div>
+                                <div className="text-sm font-mono text-green-400 font-bold">{activeLead.value}</div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] text-slate-500 uppercase">Stage</div>
+                                <div className="text-sm text-blue-400 font-bold">{activeLead.status}</div>
+                            </div>
+                        </div>
+                    </GlassCard>
+                </div>
+
                 {/* Battle Cards (Right) */}
-                <div className="lg:col-span-4 flex flex-col h-full min-h-0">
+                <div className="lg:col-span-3 flex flex-col h-full min-h-0">
                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
                         <span>Live Battle Cards</span>
                         <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{activeCards.length}</span>

@@ -12,6 +12,7 @@ interface Message {
     body: string;
     direction: 'inbound' | 'outbound';
     status: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createdAt: any;
     leadId: string;
 }
@@ -21,6 +22,8 @@ interface SMSChatWindowProps {
     leadName: string;
     leadPhone: string;
     onClose: () => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onSent?: (msg: any) => void;
 }
 
 export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatWindowProps) {
@@ -89,7 +92,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
             // Optimistic update handled by snapshot listener mostly, 
             // but we could add a temp message if needed. 
             // Twilio API is fast enough usually.
-        } catch (error) {
+        } catch (error: unknown) {
             toast.error('Failed to send message');
             console.error(error);
         } finally {
@@ -104,6 +107,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
         }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatTime = (timestamp: any) => {
         if (!timestamp) return '';
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -153,8 +157,8 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                         >
                             <div
                                 className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm leading-relaxed ${isOutbound
-                                        ? 'bg-indigo-600 text-white rounded-br-none'
-                                        : 'bg-slate-800 text-slate-200 rounded-bl-none'
+                                    ? 'bg-indigo-600 text-white rounded-br-none'
+                                    : 'bg-slate-800 text-slate-200 rounded-bl-none'
                                     }`}
                             >
                                 <p>{msg.body}</p>
@@ -189,8 +193,8 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                         onClick={handleSend}
                         disabled={!newMessage.trim() || isSending}
                         className={`p-2 rounded-full mb-0.5 transition-all ${newMessage.trim()
-                                ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                                : 'bg-slate-800 text-slate-500'
+                            ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                            : 'bg-slate-800 text-slate-500'
                             }`}
                     >
                         {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}

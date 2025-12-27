@@ -1,7 +1,5 @@
 'use server';
 
-import { db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { GmailMessage, GmailTokens, refreshAccessToken } from '@/lib/gmail/gmail-auth';
 import { getAdminDb } from '@/lib/firebase/admin';
 
@@ -267,8 +265,8 @@ export async function sendEmailAction(userId: string, to: string, subject: strin
         await adminDb.collection('users').doc(userId).collection('emailMessages').doc(result.id).set(record);
 
         return { success: true, id: result.id };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Send Email Error:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: error instanceof Error ? error.message : 'Failed to send email' };
     }
 }

@@ -33,11 +33,13 @@ export async function lookupPhoneNumber(phoneNumber: string): Promise<LookupResu
             } : undefined,
             callerName: phoneInfo.callerName?.callerName || undefined
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Twilio Lookup Error:', error);
 
+        const twilioError = error as { status?: number; message?: string };
+
         // Handle 404 (Not Found) specifically - means number doesn't exist
-        if (error.status === 404) {
+        if (twilioError.status === 404) {
             return {
                 phoneNumber,
                 valid: false,

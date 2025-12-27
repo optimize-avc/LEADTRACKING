@@ -49,6 +49,7 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
                 <NavLink href="/resources" icon={<Database size={20} />} label="Enablement" collapsed={collapsed} mobile={mobileMenuOpen} />
                 <NavLink href="/analytics" icon={<BarChart3 size={20} />} label="Analytics" collapsed={collapsed} mobile={mobileMenuOpen} />
                 <NavLink href="/training" icon={<GraduationCap size={20} />} label="Training" collapsed={collapsed} mobile={mobileMenuOpen} />
+                <NavLink href="/reality-link" icon={<Activity size={20} />} label="Reality Link HUD" collapsed={collapsed} mobile={mobileMenuOpen} />
 
                 {/* Settings - show only when logged in */}
                 {user && (

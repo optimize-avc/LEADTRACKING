@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { Play, CheckCircle, Clock, BookOpen, Video, FileText, Award, ChevronRight, ShieldAlert, Target, Mic, Zap } from 'lucide-react';
+import { Play, CheckCircle, Clock, BookOpen, Video, FileText, Award, ChevronRight, ShieldAlert, Target, Mic, Zap, Users } from 'lucide-react';
 import { WarRoomRunner } from '@/components/training/WarRoomRunner';
 import { DojoRunner } from '@/components/training/DojoRunner';
 import { PitchRecorder } from '@/components/training/PitchRecorder';
+import { BoardroomRunner } from '@/components/training/BoardroomRunner';
 
 interface TrainingModule {
     id: string;
@@ -67,7 +68,7 @@ const TRAINING_COURSES: TrainingCourse[] = [
     },
 ];
 
-type ActiveTool = 'war-room' | 'dojo' | 'pitch' | null;
+type ActiveTool = 'war-room' | 'dojo' | 'pitch' | 'boardroom' | null;
 
 export default function TrainingPage() {
     const [selectedCourse, setSelectedCourse] = useState<TrainingCourse | null>(null);
@@ -96,6 +97,9 @@ export default function TrainingPage() {
     }
     if (activeTool === 'pitch') {
         return <PitchRecorder onClose={() => setActiveTool(null)} />;
+    }
+    if (activeTool === 'boardroom') {
+        return <BoardroomRunner onClose={() => setActiveTool(null)} />;
     }
 
     return (
@@ -154,6 +158,20 @@ export default function TrainingPage() {
                         </div>
                         <h3 className="font-bold text-lg text-white mb-1">Pitch Recorder</h3>
                         <p className="text-sm text-slate-400">Record your elevator pitch and get instant AI coaching on delivery.</p>
+                    </GlassCard>
+
+                    <GlassCard
+                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-amber-500"
+                        onClick={() => setActiveTool('boardroom')}
+                    >
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-3 bg-amber-500/20 rounded-lg group-hover:bg-amber-500/30 transition-colors">
+                                <Users className="w-6 h-6 text-amber-400" />
+                            </div>
+                            <Badge variant="warning">Venture Scale</Badge>
+                        </div>
+                        <h3 className="font-bold text-lg text-white mb-1">The Boardroom</h3>
+                        <p className="text-sm text-slate-400">Multi-agent simulation. Win over the CFO, CTO, and Champion simultaneously.</p>
                     </GlassCard>
                 </div>
             </div>

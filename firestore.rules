@@ -42,6 +42,11 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
     }
+
+    // Company Resources (Shared)
+    match /resources/{resourceId} {
+      allow read, write: if isAuthenticated();
+    }
     
     // Default deny for any unmatched paths
     match /{document=**} {

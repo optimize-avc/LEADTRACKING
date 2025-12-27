@@ -98,4 +98,8 @@ export interface Resource {
     url: string;
     tags?: string[];
     updatedAt: number;
+    createdAt?: string; // ISO String
+    createdBy?: string; // User ID
+    storagePath?: string; // Firebase Storage path
+    visibility?: 'private' | 'company';
 }

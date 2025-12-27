@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Mic, Send, User, Bot, AlertCircle, CheckCircle, RefreshCw, Loader2 } from 'lucide-react';
+import { X, Mic, Send, User, Bot, AlertCircle, CheckCircle, RefreshCw, Loader2, Database, FileText } from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
+import { ResourcesService } from '@/lib/firebase/resources';
+import { Resource } from '@/types';
 import { useAuth } from '@/components/providers/AuthProvider';
 
 interface DojoRunnerProps {
@@ -36,44 +38,86 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
     const [inputText, setInputText] = useState('');
     const [isRecording, setIsRecording] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [loadingPersona, setLoadingPersona] = useState(true);
+    const [loadingPersona, setLoadingPersona] = useState(false); // Start false, wait for setup
     const [persona, setPersona] = useState<any>(null);
+    const [status, setStatus] = useState<'setup' | 'playing'>('setup');
+
+    // Setup State
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+    const [loadingResources, setLoadingResources] = useState(false);
+    const [contextContent, setContextContent] = useState<string>("");
+
     const chatEndRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
 
-    // Initialize Persona and Greeting
+    // Fetch resources on mount
     useEffect(() => {
-        const initSession = async () => {
-            setLoadingPersona(true);
+        setLoadingResources(true);
+        const fetchData = async () => {
             try {
-                // In a future update, we can let the user pick the role/industry
-                const token = await user?.getIdToken();
-                const newPersona = await GeminiService.generatePersona("CFO", "SaaS Tech", token);
-                const activePersona = newPersona || DEFAULT_PERSONA;
+                const companyData = await ResourcesService.getCompanyResources();
+                let userData: Resource[] = [];
+                if (user) {
+                    userData = await ResourcesService.getUserResources(user.uid);
+                }
+                const allData = [...companyData, ...userData];
 
-                setPersona(activePersona);
-
-                // Initial AI Greeting
-                const greeting = await GeminiService.generateReply(activePersona, [], "Start the conversation by stating your main objection immediately.", token);
-
-                setMessages([{
-                    id: 'welcome',
-                    sender: 'ai',
-                    text: greeting,
-                    timestamp: Date.now()
-                }]);
-            } catch (error) {
-                console.error("Failed to init Dojo", error);
-                setPersona(DEFAULT_PERSONA);
+                // Filter for likely text-based files
+                const textBased = allData.filter(r => r.type === 'document' || r.type === 'sheet' || r.title.endsWith('.txt') || r.title.endsWith('.md'));
+                setResources(textBased);
+            } catch (err) {
+                console.error(err);
             } finally {
-                setLoadingPersona(false);
+                setLoadingResources(false);
             }
         };
 
-        if (!persona) {
-            initSession();
+        fetchData();
+    }, [user]);
+
+    const startSession = async () => {
+        setStatus('playing');
+        setLoadingPersona(true);
+
+        try {
+            // 1. Fetch text if selected
+            let content = "";
+            if (selectedResourceId) {
+                const res = resources.find(r => r.id === selectedResourceId);
+                if (res?.url) {
+                    try {
+                        const response = await fetch(res.url);
+                        content = await response.text();
+                        setContextContent(content); // Save for replies
+                    } catch (e) { console.error(e); }
+                }
+            }
+
+            // 2. Generate Persona
+            const token = await user?.getIdToken();
+            const newPersona = await GeminiService.generatePersona("CFO", "SaaS Tech", content, token);
+            const activePersona = newPersona || DEFAULT_PERSONA;
+
+            setPersona(activePersona);
+
+            // 3. Greeting
+            const greeting = await GeminiService.generateReply(activePersona, [], "Start the conversation by stating your main objection immediately.", content, token);
+
+            setMessages([{
+                id: 'welcome',
+                sender: 'ai',
+                text: greeting,
+                timestamp: Date.now()
+            }]);
+
+        } catch (error) {
+            console.error("Failed to init Dojo", error);
+            setPersona(DEFAULT_PERSONA);
+        } finally {
+            setLoadingPersona(false);
         }
-    }, []);
+    };
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -102,8 +146,9 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
             }));
 
             // Add latest user message to context implicitly or explicitly
+            // Add latest user message to context implicitly or explicitly
             const token = await user?.getIdToken();
-            const aiResponseText = await GeminiService.generateReply(persona, history, newUserMsg.text, token);
+            const aiResponseText = await GeminiService.generateReply(persona, history, newUserMsg.text, contextContent, token);
 
             const newAiMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -132,6 +177,79 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
             handleSend();
         }
     };
+
+    if (status === 'setup') {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
+                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white">
+                        <X className="w-6 h-6" />
+                    </button>
+
+                    <div className="mb-8">
+                        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                            <span className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400"><Bot className="w-6 h-6" /></span>
+                            Dojo Setup
+                        </h2>
+                        <p className="text-slate-400">Configure your sparring partner. Upload enablement docs to practice against real objections.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">Enablement Context (Optional)</label>
+
+                            {loadingResources ? (
+                                <div className="flex items-center gap-2 text-slate-500 p-4 border border-dashed border-slate-800 rounded-lg">
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Loading resources...
+                                </div>
+                            ) : resources.length === 0 ? (
+                                <div className="p-4 border border-dashed border-slate-800 rounded-lg text-slate-500 text-sm text-center">
+                                    No text-based resources found. Upload documents in the Resources tab.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                    {resources.map(res => (
+                                        <div
+                                            key={res.id}
+                                            onClick={() => setSelectedResourceId(selectedResourceId === res.id ? null : res.id)}
+                                            className={`
+                                                p-3 rounded-lg border cursor-pointer transition-all flex items-center gap-3
+                                                ${selectedResourceId === res.id
+                                                    ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]'
+                                                    : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800 hover:border-slate-600'}
+                                            `}
+                                        >
+                                            <FileText className={`w-5 h-5 ${selectedResourceId === res.id ? 'text-indigo-400' : 'text-slate-500'}`} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium truncate text-sm">{res.title}</div>
+                                                <div className="text-xs opacity-60 truncate">{res.category}</div>
+                                            </div>
+                                            {selectedResourceId === res.id && <CheckCircle className="w-4 h-4 text-indigo-400" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="pt-6 border-t border-slate-800 flex justify-end gap-3">
+                            <button onClick={onClose} className="px-6 py-3 rounded-lg text-slate-400 font-medium hover:text-white transition-colors">
+                                Cancel
+                            </button>
+                            <button
+                                onClick={startSession}
+                                className="px-8 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-900/20 flex items-center gap-2 transition-all transform hover:scale-[1.02]"
+                            >
+                                <Bot className="w-5 h-5" />
+                                Enter Dojo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (loadingPersona || !persona) {
         return (

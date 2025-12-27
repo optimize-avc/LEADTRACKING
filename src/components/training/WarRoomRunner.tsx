@@ -5,9 +5,12 @@ import {
     X, Mail, ShieldAlert, CheckCircle, Send, Users,
     Briefcase, Activity, Lock, Unlock, AlertTriangle,
     TrendingUp, TrendingDown, Clock, Play, RotateCcw,
-    FileText, Phone, MessageSquare
+    FileText, Phone, MessageSquare, Loader2, Database, ChevronRight
 } from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
+import { ResourcesService } from '@/lib/firebase/resources';
+import { LeadsService } from '@/lib/firebase/services';
+import { Resource, Lead } from '@/types';
 import { useAuth } from '@/components/providers/AuthProvider';
 
 interface WarRoomRunnerProps {
@@ -16,6 +19,8 @@ interface WarRoomRunnerProps {
         company: string;
         industry: string;
         value: string;
+        stage?: string;
+        contact?: string;
     };
 }
 
@@ -52,7 +57,7 @@ type LogEntry = {
 };
 
 type GameState = {
-    status: 'initializing' | 'playing' | 'won' | 'lost';
+    status: 'setup' | 'initializing' | 'playing' | 'won' | 'lost';
     dealHealth: number;
     scenario: {
         company: string;
@@ -78,7 +83,7 @@ const ACTION_DECK: ActionCard[] = [
 
 export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
     const [gameState, setGameState] = useState<GameState>({
-        status: 'initializing',
+        status: 'setup',
         dealHealth: 50,
         scenario: null,
         stakeholders: [],
@@ -92,49 +97,118 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
     const logsEndRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
 
-    // --- INITIALIZATION ---
-    useEffect(() => {
-        const initGame = async () => {
-            try {
-                // Generate a random difficulty level based on RNG
-                const level = Math.random() > 0.5 ? 'Hard' : 'Extreme';
-                const token = await user?.getIdToken();
-                const scenario = await GeminiService.generateDealScenario(level, initialContext, token);
+    // Setup State
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+    const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+    const [loadingResources, setLoadingResources] = useState(false);
 
-                if (scenario) {
-                    setGameState(prev => ({
-                        ...prev,
-                        status: 'playing',
-                        scenario: {
-                            company: scenario.company,
-                            industry: scenario.industry,
-                            dealValue: scenario.dealValue,
-                            description: scenario.description,
-                            difficulty: scenario.difficulty
-                        },
-                        stakeholders: scenario.stakeholders || [],
-                        dealHealth: 50, // Start neutral
-                        logs: [{
-                            id: 'init',
-                            type: 'system',
-                            title: 'MISSION START',
-                            description: `Target: ${scenario.company} (${scenario.industry}). Value: ${scenario.dealValue}.`,
-                            timestamp: 'Day 1'
-                        }]
-                    }));
-                    // Auto-select first stakeholder
-                    if (scenario.stakeholders && scenario.stakeholders.length > 0) {
-                        setSelectedStakeholderId(scenario.stakeholders[0].id);
-                    }
+    // Fetch resources and leads on mount
+    useEffect(() => {
+        setLoadingResources(true);
+        const fetchData = async () => {
+            try {
+                // Resources
+                const companyData = await ResourcesService.getCompanyResources();
+                let userData: Resource[] = [];
+                let userLeads: Lead[] = [];
+
+                if (user) {
+                    userData = await ResourcesService.getUserResources(user.uid);
+                    userLeads = await LeadsService.getLeads(user.uid);
                 }
-            } catch (error) {
-                console.error("Failed to init game", error);
-                // Fallback / Error state could be handled here
+                const allData = [...companyData, ...userData];
+
+                // Filter for likely text-based files
+                const textBased = allData.filter(r => r.type === 'document' || r.type === 'sheet' || r.title.endsWith('.txt') || r.title.endsWith('.md'));
+                setResources(textBased);
+                setLeads(userLeads);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoadingResources(false);
             }
         };
 
-        initGame();
-    }, []);
+        fetchData();
+    }, [user]);
+
+    // --- GAME START ---
+    const startGame = async () => {
+        setGameState(prev => ({ ...prev, status: 'initializing' }));
+
+        try {
+            // 1. Fetch Context Content if selected
+            let contextContent = "";
+            if (selectedResourceId) {
+                const res = resources.find(r => r.id === selectedResourceId);
+                if (res?.url) {
+                    try {
+                        const response = await fetch(res.url);
+                        contextContent = await response.text();
+                    } catch (e) {
+                        console.error("Failed to read resource text", e);
+                    }
+                }
+            }
+
+            // 2. Generate Scenario
+            const level = Math.random() > 0.5 ? 'Hard' : 'Extreme';
+            const token = await user?.getIdToken();
+
+            // Crisis Ops: Use Selected Lead Data if available
+            let leadContext = initialContext;
+            if (selectedLeadId) {
+                const lead = leads.find(l => l.id === selectedLeadId);
+                if (lead) {
+                    leadContext = {
+                        company: lead.companyName,
+                        industry: lead.industry || 'Tech',
+                        value: lead.value.toString(),
+                        // Additional context for the AI
+                        stage: lead.status,
+                        contact: lead.contactName
+                    };
+                }
+            }
+
+            const scenario = await GeminiService.generateDealScenario(level, leadContext, contextContent, token);
+
+            if (scenario) {
+                setGameState(prev => ({
+                    ...prev,
+                    status: 'playing',
+                    scenario: {
+                        company: scenario.company,
+                        industry: scenario.industry,
+                        dealValue: scenario.dealValue,
+                        description: scenario.description,
+                        difficulty: scenario.difficulty
+                    },
+                    stakeholders: scenario.stakeholders || [],
+                    dealHealth: 50, // Start neutral
+                    logs: [{
+                        id: 'init',
+                        type: 'system',
+                        title: 'MISSION START',
+                        description: `Target: ${scenario.company} (${scenario.industry}). Value: ${scenario.dealValue}. Mode: ${selectedLeadId ? 'CRISIS OPS (Real Deal)' : 'Standard Sim'}. Context: ${selectedResourceId ? 'Custom Data' : 'None'}.`,
+                        timestamp: 'Day 1'
+                    }]
+                }));
+                // Auto-select first stakeholder
+                if (scenario.stakeholders && scenario.stakeholders.length > 0) {
+                    setSelectedStakeholderId(scenario.stakeholders[0].id);
+                }
+            } else {
+                // Handle failure
+                setGameState(prev => ({ ...prev, status: 'setup' })); // Go back to setup?
+            }
+        } catch (error) {
+            console.error("Failed to init game", error);
+            setGameState(prev => ({ ...prev, status: 'setup' }));
+        }
+    };
 
     // --- SCROLL TO BOTTOM OF LOGS ---
     useEffect(() => {
@@ -232,6 +306,120 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
     };
 
     // --- RENDERING ---
+
+    // --- RENDERING ---
+
+    if (gameState.status === 'setup') {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
+                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+                    {/* Decorative Background */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white">
+                        <X className="w-6 h-6" />
+                    </button>
+
+                    <div className="mb-8">
+                        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                            <span className="p-2 bg-blue-600/20 rounded-lg text-blue-400"><Database className="w-6 h-6" /></span>
+                            Mission Parameters
+                        </h2>
+                        <p className="text-slate-400">Configure your simulation environment. Run "Crisis Ops" on live deals or standard training.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">Enablement Context (Optional)</label>
+
+                            {loadingResources ? (
+                                <div className="flex items-center gap-2 text-slate-500 p-4 border border-dashed border-slate-800 rounded-lg">
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Loading resources...
+                                </div>
+                            ) : resources.length === 0 ? (
+                                <div className="p-4 border border-dashed border-slate-800 rounded-lg text-slate-500 text-sm text-center">
+                                    No text-based resources found. Upload documents in the Resources tab to use them here.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                    {resources.map(res => (
+                                        <div
+                                            key={res.id}
+                                            onClick={() => setSelectedResourceId(selectedResourceId === res.id ? null : res.id)}
+                                            className={`
+                                                p-3 rounded-lg border cursor-pointer transition-all flex items-center gap-3
+                                                ${selectedResourceId === res.id
+                                                    ? 'bg-blue-600/20 border-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.2)]'
+                                                    : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800 hover:border-slate-600'}
+                                            `}
+                                        >
+                                            <FileText className={`w-5 h-5 ${selectedResourceId === res.id ? 'text-blue-400' : 'text-slate-500'}`} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium truncate text-sm">{res.title}</div>
+                                                <div className="text-xs opacity-60 truncate">{res.category}</div>
+                                            </div>
+                                            {selectedResourceId === res.id && <CheckCircle className="w-4 h-4 text-blue-400" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Crisis Ops Section */}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">
+                                Crisis Ops (Wargame a Live Deal)
+                            </label>
+
+                            {leads.length === 0 ? (
+                                <div className="p-4 border border-dashed border-slate-800 rounded-lg text-slate-500 text-sm text-center">
+                                    No active leads found in CRM.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                    {leads.map(lead => (
+                                        <div
+                                            key={lead.id}
+                                            onClick={() => setSelectedLeadId(selectedLeadId === lead.id ? null : lead.id)}
+                                            className={`
+                                                p-3 rounded-lg border cursor-pointer transition-all flex items-center gap-3
+                                                ${selectedLeadId === lead.id
+                                                    ? 'bg-red-900/40 border-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                                                    : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800 hover:border-slate-600'}
+                                            `}
+                                        >
+                                            <ShieldAlert className={`w-5 h-5 ${selectedLeadId === lead.id ? 'text-red-500' : 'text-slate-600'}`} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium truncate text-sm">{lead.companyName}</div>
+                                                <div className="text-xs opacity-60 truncate">${lead.value?.toLocaleString()} • {lead.status}</div>
+                                            </div>
+                                            {selectedLeadId === lead.id && <CheckCircle className="w-4 h-4 text-red-500" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="pt-6 border-t border-slate-800 flex justify-end gap-3">
+                            <button
+                                onClick={onClose}
+                                className="px-6 py-3 rounded-lg text-slate-400 font-medium hover:text-white transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={startGame}
+                                className="px-8 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 group transition-all transform hover:scale-[1.02]"
+                            >
+                                <Play className="w-5 h-5 fill-current" />
+                                Start Simulation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (gameState.status === 'initializing') {
         return (

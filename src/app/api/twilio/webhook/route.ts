@@ -37,12 +37,7 @@ export async function POST(request: NextRequest) {
         const userId = request.nextUrl.searchParams.get('userId');
         const leadId = request.nextUrl.searchParams.get('leadId');
 
-        console.log('Twilio webhook received:', {
-            callSid,
-            callStatus,
-            userId,
-            leadId
-        });
+
 
         // Map Twilio status to our status type
         const statusMap: Record<string, string> = {

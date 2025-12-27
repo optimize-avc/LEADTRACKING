@@ -33,6 +33,7 @@ interface DashboardMetrics {
   pipelineStatusCounts: Record<string, number>;
   totalLeads: number;
   emailsSent: number;
+  activityChart: { day: string; dials: number; connects: number }[];
 }
 
 export default function Dashboard() {
@@ -73,7 +74,7 @@ export default function Dashboard() {
   }
 
   // Use real data if available, otherwise use mock data
-  const activityData = MOCK_ACTIVITY_DATA; // TODO: Aggregate real activities by day when available
+  const activityData = metrics?.activityChart || MOCK_ACTIVITY_DATA;
   const pipelineStages = metrics ? [
     { stage: 'New Leads', count: metrics.pipelineStatusCounts['New'] || 0, color: 'bg-blue-500' },
     { stage: 'Contacted', count: metrics.pipelineStatusCounts['Contacted'] || 0, color: 'bg-cyan-500' },

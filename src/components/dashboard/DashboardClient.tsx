@@ -7,6 +7,7 @@ import { useLeads } from '@/lib/api/hooks/useLeads';
 import { useActivities } from '@/lib/api/hooks/useActivities';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Activity, Lead } from '@/types';
 import { ActivityPerformanceChart } from '@/components/dashboard/ActivityPerformanceChart';
 
 export default function DashboardClient() {
@@ -32,22 +33,22 @@ export default function DashboardClient() {
         startOfWeek.setHours(0, 0, 0, 0);
 
         // Daily Activities
-        const todayActivities = activities.filter(a => a.timestamp >= startOfDay);
-        const dials = todayActivities.filter(a => a.type === 'call').length;
-        const meetingsHeld = todayActivities.filter(a => a.type === 'meeting').length;
+        const todayActivities = activities.filter((a: Activity) => a.timestamp >= startOfDay);
+        const dials = todayActivities.filter((a: Activity) => a.type === 'call').length;
+        const meetingsHeld = todayActivities.filter((a: Activity) => a.type === 'meeting').length;
 
         // Connect Rate (Simple version for now)
-        const calls = todayActivities.filter(a => a.type === 'call');
-        const connects = calls.filter(a => ['connected', 'meeting_set', 'qualified'].includes(a.outcome)).length;
+        const calls = todayActivities.filter((a: Activity) => a.type === 'call');
+        const connects = calls.filter((a: Activity) => ['connected', 'meeting_set', 'qualified'].includes(a.outcome)).length;
         const connectRate = calls.length > 0 ? (connects / calls.length) * 100 : 0;
 
         // Pipeline Value
-        const activeLeads = leads.filter(l => !['Lost', 'Closed'].includes(l.status));
-        const pipelineValue = activeLeads.reduce((sum, lead) => sum + (lead.value || 0), 0);
+        const activeLeads = leads.filter((l: Lead) => !['Lost', 'Closed'].includes(l.status));
+        const pipelineValue = activeLeads.reduce((sum: number, lead: Lead) => sum + (lead.value || 0), 0);
 
         // Pipeline Distribution
         const pipelineStatusCounts: Record<string, number> = {};
-        activeLeads.forEach(lead => {
+        activeLeads.forEach((lead: Lead) => {
             pipelineStatusCounts[lead.status] = (pipelineStatusCounts[lead.status] || 0) + 1;
         });
 

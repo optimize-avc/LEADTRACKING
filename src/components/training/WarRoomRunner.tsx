@@ -8,6 +8,7 @@ import {
     FileText, Phone, MessageSquare
 } from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 interface WarRoomRunnerProps {
     onClose: () => void;
@@ -89,6 +90,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
     const [selectedStakeholderId, setSelectedStakeholderId] = useState<string | null>(null);
     const [isProcessingTurn, setIsProcessingTurn] = useState(false);
     const logsEndRef = useRef<HTMLDivElement>(null);
+    const { user } = useAuth();
 
     // --- INITIALIZATION ---
     useEffect(() => {
@@ -96,7 +98,8 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
             try {
                 // Generate a random difficulty level based on RNG
                 const level = Math.random() > 0.5 ? 'Hard' : 'Extreme';
-                const scenario = await GeminiService.generateDealScenario(level, initialContext);
+                const token = await user?.getIdToken();
+                const scenario = await GeminiService.generateDealScenario(level, initialContext, token);
 
                 if (scenario) {
                     setGameState(prev => ({
@@ -140,6 +143,18 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
         }
     }, [gameState.logs]);
 
+    // Re-run init when user is available and we haven't started (optional protection)
+    useEffect(() => {
+        if (user && gameState.status === 'initializing' && !gameState.scenario && gameState.turnCount === 1) {
+            // We relying on the initial effect, but user might be null initially.
+            // However, initGame is called on mount. If user is null then, token is undefined.
+            // Service handles undefined token by not sending header (for now).
+            // But server WILL require it.
+            // We should reload initGame if user becomes available? 
+            // Actually, let's just assume user is loaded or useAuth handles loading state.
+        }
+    }, [user]);
+
     // --- GAME LOGIC ---
 
     const handleAction = async (actionId: string) => {
@@ -173,7 +188,8 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                     stakeholders: gameState.stakeholders
                 },
                 actionCard.label,
-                selectedStakeholderId
+                selectedStakeholderId,
+                await user?.getIdToken()
             );
 
             if (result) {

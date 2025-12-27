@@ -12,11 +12,7 @@ export async function POST(request: NextRequest) {
         const userId = request.nextUrl.searchParams.get('userId');
         const leadId = request.nextUrl.searchParams.get('leadId');
 
-        console.log('Twilio SMS webhook received:', {
-            messageSid,
-            messageStatus,
-            userId
-        });
+
 
         // Map Twilio status
         const validStatuses = ['queued', 'sent', 'delivered', 'failed', 'undelivered'];
@@ -25,7 +21,7 @@ export async function POST(request: NextRequest) {
         if (userId && messageSid) {
             try {
                 await updateSMSStatus(messageSid, userId, status);
-                console.log(`Updated SMS ${messageSid} status to ${status}`);
+                await updateSMSStatus(messageSid, userId, status);
             } catch (error) {
                 console.error(`Failed to update SMS status:`, error);
             }

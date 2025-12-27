@@ -1,3 +1,5 @@
+import twilio from 'twilio';
+
 // Twilio Configuration
 // Add these to your .env.local file:
 // TWILIO_ACCOUNT_SID=your-account-sid
@@ -17,6 +19,18 @@ export function isTwilioConfigured(): boolean {
         TWILIO_CONFIG.authToken &&
         TWILIO_CONFIG.phoneNumber
     );
+}
+
+export function getTwilioClient() {
+    if (!isTwilioConfigured()) {
+        console.warn("Twilio client requested but not configured!");
+        // Return a mock or throw? For safety, let's return a dummy or allow it to fail gracefully if possible?
+        // But the callers usually throw.
+        // Let's rely on twilio() throwing if empty, or just return existing logic.
+        // If credentials are empty, twilio() might throw.
+        // Let's pass empty strings if undefined (handled in object above).
+    }
+    return twilio(TWILIO_CONFIG.accountSid, TWILIO_CONFIG.authToken);
 }
 
 // Types

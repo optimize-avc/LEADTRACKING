@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
         const body = formData.get('Body') as string;
         const messageSid = formData.get('MessageSid') as string;
 
-        console.log('Inbound SMS received:', { fromNumber, toNumber, messageSid });
+
 
         if (!fromNumber || !body) {
             return new NextResponse('<Response></Response>', {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
         const userId = userDocRef.id;
 
-        console.log(`Found lead ${leadId} for user ${userId}, logging message...`);
+
 
         // 2. Log the inbound message to users/{userId}/messages
         await userDocRef.collection('messages').doc(messageSid).set({

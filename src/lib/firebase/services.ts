@@ -251,6 +251,35 @@ export const DashboardService = {
         const weekActivities = activities.filter(a => a.timestamp > weekAgo);
         const todayActivities = activities.filter(a => a.timestamp > todayStart);
 
+        // Aggregate activities by day for the chart
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const activityByDay = weekActivities.reduce((acc, activity) => {
+            const date = new Date(activity.timestamp);
+            const dayName = days[date.getDay()];
+
+            if (!acc[dayName]) {
+                acc[dayName] = { day: dayName, dials: 0, connects: 0 };
+            }
+
+            if (activity.type === 'call') {
+                acc[dayName].dials++;
+                if (activity.outcome === 'connected' || activity.outcome === 'meeting_set') {
+                    acc[dayName].connects++;
+                }
+            }
+            return acc;
+        }, {} as Record<string, { day: string; dials: number; connects: number }>);
+
+        // Ensure we have entries for all days in the last week (or at least today)
+        // For simplicity in this chart, we might just show what we have or fill gaps.
+        // Let's return the last 7 days in order.
+        const chartData = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(now - (i * 24 * 60 * 60 * 1000));
+            const dayName = days[d.getDay()];
+            chartData.push(activityByDay[dayName] || { day: dayName, dials: 0, connects: 0 });
+        }
+
         return {
             // Dials today
             dials: todayActivities.filter(a => a.type === 'call').length,
@@ -271,7 +300,10 @@ export const DashboardService = {
             totalLeads: leads.length,
 
             // Emails sent this week
-            emailsSent: weekActivities.filter(a => a.type === 'email').length
+            emailsSent: weekActivities.filter(a => a.type === 'email').length,
+
+            // Chart data
+            activityChart: chartData
         };
     }
 };

@@ -1,11 +1,16 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const GeminiService = {
-    async generateText(prompt: string): Promise<string> {
+    async generateText(prompt: string, token?: string): Promise<string> {
         try {
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch('/api/ai/generate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({
                     prompt,
                     modelName: "gemini-2.5-flash"
@@ -26,7 +31,7 @@ export const GeminiService = {
         }
     },
 
-    async generatePersona(role: string, industry: string): Promise<any> {
+    async generatePersona(role: string, industry: string, token?: string): Promise<any> {
         const prompt = `
             Generate a detailed sales prospect persona for a ${role} in the ${industry} industry.
             Return ONLY a JSON object with this structure:
@@ -40,7 +45,7 @@ export const GeminiService = {
                  "hiddenAgenda": "A secret motivation they won't say outright"
             }
         `;
-        const text = await this.generateText(prompt);
+        const text = await this.generateText(prompt, token);
         try {
             // Clean up markdown if Gemini wraps in ```json ... ```
             const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -52,7 +57,7 @@ export const GeminiService = {
         }
     },
 
-    async generateReply(persona: any, history: { role: string, content: string }[], userMessage: string): Promise<string> {
+    async generateReply(persona: any, history: { role: string, content: string }[], userMessage: string, token?: string): Promise<string> {
         const systemPrompt = `
             You are acting as ${persona.name}, a ${persona.role} at ${persona.company}.
             Your personality is: ${persona.personality}.
@@ -78,10 +83,10 @@ export const GeminiService = {
             You:
         `;
 
-        return await this.generateText(fullPrompt);
+        return await this.generateText(fullPrompt, token);
     },
 
-    async analyzePitch(transcript: string): Promise<any> {
+    async analyzePitch(transcript: string, token?: string): Promise<any> {
         const prompt = `
             Analyze this sales pitch transcript: "${transcript}"
             
@@ -93,10 +98,10 @@ export const GeminiService = {
                 "confidence": "High", // High, Medium, Low
                 "strengths": ["Strength 1", "Strength 2"], // 3 key strengths
                 "improvements": ["Tip 1", "Tip 2"], // 3 specific improvements
-                "oneLineFeedback": "Excellent delivery but watch the 'ums'."
+                "oneLine feedback": "Excellent delivery but watch the 'ums'."
             }
         `;
-        const text = await this.generateText(prompt);
+        const text = await this.generateText(prompt, token);
         try {
             const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
             return JSON.parse(cleanText);
@@ -106,7 +111,7 @@ export const GeminiService = {
         }
     },
 
-    async generateDealScenario(level: string, context?: { company: string, industry: string, value: string }): Promise<any> {
+    async generateDealScenario(level: string, context?: { company: string, industry: string, value: string }, token?: string): Promise<any> {
         let contextPrompt = "";
         if (context) {
             contextPrompt = `
@@ -145,7 +150,7 @@ export const GeminiService = {
                 ]
             }
         `;
-        const text = await this.generateText(prompt);
+        const text = await this.generateText(prompt, token);
         try {
             const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
             return JSON.parse(cleanText);
@@ -155,7 +160,7 @@ export const GeminiService = {
         }
     },
 
-    async evaluateTurn(gameState: any, action: string, targetId: string): Promise<any> {
+    async evaluateTurn(gameState: any, action: string, targetId: string, token?: string): Promise<any> {
         const prompt = `
             You are the Dungeon Master for a B2B Sales Wargame.
             
@@ -183,7 +188,7 @@ export const GeminiService = {
                 }
             }
         `;
-        const text = await this.generateText(prompt);
+        const text = await this.generateText(prompt, token);
         try {
             const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
             return JSON.parse(cleanText);

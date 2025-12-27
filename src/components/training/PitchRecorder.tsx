@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Mic, Square, Play, BarChart3, TrendingUp, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 interface PitchRecorderProps {
     onClose: () => void;
@@ -15,6 +16,7 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
     const [duration, setDuration] = useState(0);
     const [transcript, setTranscript] = useState('');
     const [analysis, setAnalysis] = useState<any>(null);
+    const { user } = useAuth();
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -123,7 +125,8 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
 
         const textToAnalyze = transcript.trim() || "Hi, I'm calling from OmniStream to see if you have time to discuss your social media automation needs. Our tool is 20 percent cheaper than Hootsuite and has better analytics.";
 
-        const result = await GeminiService.analyzePitch(textToAnalyze);
+        const token = await user?.getIdToken();
+        const result = await GeminiService.analyzePitch(textToAnalyze, token);
         setAnalysis(result);
         setState('complete');
     };

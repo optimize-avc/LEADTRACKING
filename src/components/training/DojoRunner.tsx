@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Mic, Send, User, Bot, AlertCircle, CheckCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 interface DojoRunnerProps {
     onClose: () => void;
@@ -38,6 +39,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
     const [loadingPersona, setLoadingPersona] = useState(true);
     const [persona, setPersona] = useState<any>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const { user } = useAuth();
 
     // Initialize Persona and Greeting
     useEffect(() => {
@@ -45,13 +47,14 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
             setLoadingPersona(true);
             try {
                 // In a future update, we can let the user pick the role/industry
-                const newPersona = await GeminiService.generatePersona("CFO", "SaaS Tech");
+                const token = await user?.getIdToken();
+                const newPersona = await GeminiService.generatePersona("CFO", "SaaS Tech", token);
                 const activePersona = newPersona || DEFAULT_PERSONA;
 
                 setPersona(activePersona);
 
                 // Initial AI Greeting
-                const greeting = await GeminiService.generateReply(activePersona, [], "Start the conversation by stating your main objection immediately.");
+                const greeting = await GeminiService.generateReply(activePersona, [], "Start the conversation by stating your main objection immediately.", token);
 
                 setMessages([{
                     id: 'welcome',
@@ -99,7 +102,8 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
             }));
 
             // Add latest user message to context implicitly or explicitly
-            const aiResponseText = await GeminiService.generateReply(persona, history, newUserMsg.text);
+            const token = await user?.getIdToken();
+            const aiResponseText = await GeminiService.generateReply(persona, history, newUserMsg.text, token);
 
             const newAiMsg: Message = {
                 id: (Date.now() + 1).toString(),

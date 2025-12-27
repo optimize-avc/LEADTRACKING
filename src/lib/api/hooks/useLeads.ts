@@ -17,7 +17,10 @@ export function useLeads() {
     });
 
     const addLeadMutation = useMutation({
-        mutationFn: (newLead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => LeadsService.addLead(newLead),
+        mutationFn: (newLead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>) => {
+            if (!user?.uid) throw new Error("User not authenticated");
+            return LeadsService.createLead(user.uid, newLead);
+        },
         onSuccess: () => {
             // Invalidate to refetch
             queryClient.invalidateQueries({ queryKey: ['leads', user?.uid] });

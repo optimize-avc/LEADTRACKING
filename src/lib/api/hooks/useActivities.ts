@@ -16,7 +16,8 @@ export function useActivities(leadId?: string) {
         queryKey,
         queryFn: () => {
             if (leadId) {
-                return ActivitiesService.getLeadActivities(leadId);
+                if (!user?.uid) return Promise.resolve([]);
+                return ActivitiesService.getLeadActivities(user.uid, leadId);
             }
             if (!user?.uid) return Promise.resolve([]);
             return ActivitiesService.getActivities(user.uid);
@@ -25,7 +26,13 @@ export function useActivities(leadId?: string) {
     });
 
     const logActivityMutation = useMutation({
-        mutationFn: (newActivity: Omit<Activity, 'id' | 'timestamp'>) => ActivitiesService.logActivity(newActivity),
+        mutationFn: (newActivity: Omit<Activity, 'id' | 'timestamp'>) => {
+            if (!user?.uid) throw new Error("User not authenticated");
+            return ActivitiesService.logActivity(user.uid, {
+                ...newActivity,
+                timestamp: Date.now()
+            });
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
             if (leadId) {

@@ -3,7 +3,10 @@
 import React, { useState } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { Play, CheckCircle, Clock, BookOpen, Video, FileText, Award, ChevronRight } from 'lucide-react';
+import { Play, CheckCircle, Clock, BookOpen, Video, FileText, Award, ChevronRight, ShieldAlert, Target, Mic, Zap } from 'lucide-react';
+import { WarRoomRunner } from '@/components/training/WarRoomRunner';
+import { DojoRunner } from '@/components/training/DojoRunner';
+import { PitchRecorder } from '@/components/training/PitchRecorder';
 
 interface TrainingModule {
     id: string;
@@ -64,8 +67,11 @@ const TRAINING_COURSES: TrainingCourse[] = [
     },
 ];
 
+type ActiveTool = 'war-room' | 'dojo' | 'pitch' | null;
+
 export default function TrainingPage() {
     const [selectedCourse, setSelectedCourse] = useState<TrainingCourse | null>(null);
+    const [activeTool, setActiveTool] = useState<ActiveTool>(null);
 
     const getTypeIcon = (type: string) => {
         switch (type) {
@@ -81,16 +87,79 @@ export default function TrainingPage() {
         return Math.round(totalProgress / course.modules.length);
     };
 
+    // Render Active Tool Modal/Overlay
+    if (activeTool === 'war-room') {
+        return <WarRoomRunner onClose={() => setActiveTool(null)} />;
+    }
+    if (activeTool === 'dojo') {
+        return <DojoRunner onClose={() => setActiveTool(null)} />;
+    }
+    if (activeTool === 'pitch') {
+        return <PitchRecorder onClose={() => setActiveTool(null)} />;
+    }
+
     return (
         <div className="p-8 min-h-screen">
             <header className="mb-8">
                 <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">
                     Sales Training Academy
                 </h1>
-                <p className="text-slate-500 text-sm mt-1">Level up your skills with guided learning paths</p>
+                <p className="text-slate-500 text-sm mt-1">Level up your skills with guided learning paths and AI tools</p>
             </header>
 
+            {/* AI Training Tools Section */}
+            <div className="mb-8">
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-amber-400" />
+                    AI Training Tools
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <GlassCard
+                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-red-500"
+                        onClick={() => setActiveTool('war-room')}
+                    >
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-3 bg-red-500/20 rounded-lg group-hover:bg-red-500/30 transition-colors">
+                                <ShieldAlert className="w-6 h-6 text-red-400" />
+                            </div>
+                            <Badge variant="warning">Hard Mode</Badge>
+                        </div>
+                        <h3 className="font-bold text-lg text-white mb-1">The War Room</h3>
+                        <p className="text-sm text-slate-400">Simulate high-stakes deal negotiations with an aggressive AI buyer.</p>
+                    </GlassCard>
+
+                    <GlassCard
+                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-blue-500"
+                        onClick={() => setActiveTool('dojo')}
+                    >
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-3 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
+                                <Target className="w-6 h-6 text-blue-400" />
+                            </div>
+                            <Badge variant="default">Practice</Badge>
+                        </div>
+                        <h3 className="font-bold text-lg text-white mb-1">Objection Dojo</h3>
+                        <p className="text-sm text-slate-400">Master common objections with rapid-fire repetition and feedback.</p>
+                    </GlassCard>
+
+                    <GlassCard
+                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-purple-500"
+                        onClick={() => setActiveTool('pitch')}
+                    >
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="p-3 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition-colors">
+                                <Mic className="w-6 h-6 text-purple-400" />
+                            </div>
+                            <Badge variant="default">Analysis</Badge>
+                        </div>
+                        <h3 className="font-bold text-lg text-white mb-1">Pitch Recorder</h3>
+                        <p className="text-sm text-slate-400">Record your elevator pitch and get instant AI coaching on delivery.</p>
+                    </GlassCard>
+                </div>
+            </div>
+
             {/* Progress Overview */}
+            <h2 className="text-lg font-semibold text-white mb-4">Your Progress</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <GlassCard>
                     <div className="flex items-center gap-4">
@@ -183,8 +252,8 @@ export default function TrainingPage() {
                                             }`}
                                     >
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${module.completed ? 'bg-green-500/20 text-green-400' :
-                                                module.progress > 0 ? 'bg-blue-500/20 text-blue-400' :
-                                                    'bg-slate-700 text-slate-400'
+                                            module.progress > 0 ? 'bg-blue-500/20 text-blue-400' :
+                                                'bg-slate-700 text-slate-400'
                                             }`}>
                                             {module.completed ? <CheckCircle className="w-4 h-4" /> : index + 1}
                                         </div>

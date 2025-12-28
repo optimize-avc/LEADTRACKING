@@ -1,23 +1,48 @@
-import { app } from '@/lib/firebase/config';
 import { getAI, getGenerativeModel, VertexAIBackend, GenerativeModel } from 'firebase/ai';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { EmailRecord, EmailAnalysis } from './gmail-service';
 
 export type { EmailAnalysis };
 
-// Initialize Firebase AI with Vertex AI backend
+// Lazy initialization to avoid build-time errors
 let model: GenerativeModel | null = null;
-try {
-    const ai = getAI(app, { backend: new VertexAIBackend('us-central1') });
-    model = getGenerativeModel(ai, { model: 'gemini-2.0-flash' });
-} catch (e) {
-    console.warn('Firebase AI not initialized for email analysis');
+let initialized = false;
+
+function getModel(): GenerativeModel | null {
+    if (initialized) return model;
+    initialized = true;
+
+    try {
+        // Check if Firebase config is available
+        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+            console.warn('Firebase config not available for email analysis');
+            return null;
+        }
+
+        const firebaseConfig = {
+            apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+            authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+            appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        };
+
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        const ai = getAI(app, { backend: new VertexAIBackend('us-central1') });
+        model = getGenerativeModel(ai, { model: 'gemini-2.0-flash' });
+    } catch (e) {
+        console.warn('Firebase AI not initialized for email analysis:', e);
+    }
+    return model;
 }
 
 /**
  * Analyze an email using AI to extract sentiment, intent, and insights
  */
 export async function analyzeEmail(email: EmailRecord): Promise<EmailAnalysis> {
-    if (!model) {
+    const currentModel = getModel();
+    if (!currentModel) {
         return getDefaultAnalysis();
     }
 
@@ -50,7 +75,7 @@ Rules:
 - dealSignals: Look for phrases like "budget approved", "decision maker", "timeline", "competitor mentioned", etc.`;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await currentModel.generateContent(prompt);
         const text = result.response.text();
         const cleanText = text
             .replace(/```json\n?/g, '')
@@ -73,7 +98,8 @@ export async function analyzeEmailThread(emails: EmailRecord[]): Promise<{
     nextBestAction: string;
     dealHealth: 'healthy' | 'at-risk' | 'stalled';
 }> {
-    if (!model || emails.length === 0) {
+    const currentModel = getModel();
+    if (!currentModel || emails.length === 0) {
         return {
             threadSummary: 'No emails to analyze',
             overallSentiment: 'neutral',
@@ -109,7 +135,7 @@ Consider:
 - Positive vs negative language`;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await currentModel.generateContent(prompt);
         const text = result.response.text();
         const cleanText = text
             .replace(/```json\n?/g, '')
@@ -138,7 +164,8 @@ export async function suggestReply(
     subject: string;
     body: string;
 }> {
-    if (!model) {
+    const currentModel = getModel();
+    if (!currentModel) {
         return {
             subject: 'Re: ' + (emails[0]?.subject || 'Follow up'),
             body: 'Thanks for your email. I wanted to follow up...',
@@ -170,7 +197,7 @@ Keep the reply:
 - Include a clear next step or call to action`;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await currentModel.generateContent(prompt);
         const text = result.response.text();
         const cleanText = text
             .replace(/```json\n?/g, '')

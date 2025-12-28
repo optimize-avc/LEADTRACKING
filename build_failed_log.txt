@@ -1,0 +1,123 @@
+﻿Build	Build Next.js app	∩╗┐2025-12-28T22:24:43.1958749Z ##[debug]Evaluating: secrets.NEXT_PUBLIC_FIREBASE_API_KEY
+Build	Build Next.js app	2025-12-28T22:24:43.1959195Z ##[debug]Evaluating Index:
+Build	Build Next.js app	2025-12-28T22:24:43.1959442Z ##[debug]..Evaluating secrets:
+Build	Build Next.js app	2025-12-28T22:24:43.1959720Z ##[debug]..=> Object
+Build	Build Next.js app	2025-12-28T22:24:43.1959982Z ##[debug]..Evaluating String:
+Build	Build Next.js app	2025-12-28T22:24:43.1960258Z ##[debug]..=> 'NEXT_PUBLIC_FIREBASE_API_KEY'
+Build	Build Next.js app	2025-12-28T22:24:43.1960655Z ##[debug]=> null
+Build	Build Next.js app	2025-12-28T22:24:43.1960888Z ##[debug]Result: null
+Build	Build Next.js app	2025-12-28T22:24:43.1962415Z ##[debug]Evaluating: secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+Build	Build Next.js app	2025-12-28T22:24:43.1962769Z ##[debug]Evaluating Index:
+Build	Build Next.js app	2025-12-28T22:24:43.1962992Z ##[debug]..Evaluating secrets:
+Build	Build Next.js app	2025-12-28T22:24:43.1963227Z ##[debug]..=> Object
+Build	Build Next.js app	2025-12-28T22:24:43.1963436Z ##[debug]..Evaluating String:
+Build	Build Next.js app	2025-12-28T22:24:43.1963690Z ##[debug]..=> 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'
+Build	Build Next.js app	2025-12-28T22:24:43.1963971Z ##[debug]=> null
+Build	Build Next.js app	2025-12-28T22:24:43.1964162Z ##[debug]Result: null
+Build	Build Next.js app	2025-12-28T22:24:43.1965066Z ##[debug]Evaluating: secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+Build	Build Next.js app	2025-12-28T22:24:43.1965437Z ##[debug]Evaluating Index:
+Build	Build Next.js app	2025-12-28T22:24:43.1965660Z ##[debug]..Evaluating secrets:
+Build	Build Next.js app	2025-12-28T22:24:43.1965902Z ##[debug]..=> Object
+Build	Build Next.js app	2025-12-28T22:24:43.1966115Z ##[debug]..Evaluating String:
+Build	Build Next.js app	2025-12-28T22:24:43.1966362Z ##[debug]..=> 'NEXT_PUBLIC_FIREBASE_PROJECT_ID'
+Build	Build Next.js app	2025-12-28T22:24:43.1966658Z ##[debug]=> null
+Build	Build Next.js app	2025-12-28T22:24:43.1966848Z ##[debug]Result: null
+Build	Build Next.js app	2025-12-28T22:24:43.1967552Z ##[debug]Evaluating: secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+Build	Build Next.js app	2025-12-28T22:24:43.1967881Z ##[debug]Evaluating Index:
+Build	Build Next.js app	2025-12-28T22:24:43.1968103Z ##[debug]..Evaluating secrets:
+Build	Build Next.js app	2025-12-28T22:24:43.1968334Z ##[debug]..=> Object
+Build	Build Next.js app	2025-12-28T22:24:43.1968530Z ##[debug]..Evaluating String:
+Build	Build Next.js app	2025-12-28T22:24:43.1968783Z ##[debug]..=> 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'
+Build	Build Next.js app	2025-12-28T22:24:43.1969067Z ##[debug]=> null
+Build	Build Next.js app	2025-12-28T22:24:43.1969253Z ##[debug]Result: null
+Build	Build Next.js app	2025-12-28T22:24:43.1969816Z ##[debug]Evaluating: secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+Build	Build Next.js app	2025-12-28T22:24:43.1970164Z ##[debug]Evaluating Index:
+Build	Build Next.js app	2025-12-28T22:24:43.1970381Z ##[debug]..Evaluating secrets:
+Build	Build Next.js app	2025-12-28T22:24:43.1970597Z ##[debug]..=> Object
+Build	Build Next.js app	2025-12-28T22:24:43.1970804Z ##[debug]..Evaluating String:
+Build	Build Next.js app	2025-12-28T22:24:43.1971074Z ##[debug]..=> 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'
+Build	Build Next.js app	2025-12-28T22:24:43.1971588Z ##[debug]=> null
+Build	Build Next.js app	2025-12-28T22:24:43.1971770Z ##[debug]Result: null
+Build	Build Next.js app	2025-12-28T22:24:43.1972313Z ##[debug]Evaluating: secrets.NEXT_PUBLIC_FIREBASE_APP_ID
+Build	Build Next.js app	2025-12-28T22:24:43.1972653Z ##[debug]Evaluating Index:
+Build	Build Next.js app	2025-12-28T22:24:43.1972865Z ##[debug]..Evaluating secrets:
+Build	Build Next.js app	2025-12-28T22:24:43.1973088Z ##[debug]..=> Object
+Build	Build Next.js app	2025-12-28T22:24:43.1973286Z ##[debug]..Evaluating String:
+Build	Build Next.js app	2025-12-28T22:24:43.1973521Z ##[debug]..=> 'NEXT_PUBLIC_FIREBASE_APP_ID'
+Build	Build Next.js app	2025-12-28T22:24:43.1973774Z ##[debug]=> null
+Build	Build Next.js app	2025-12-28T22:24:43.1973958Z ##[debug]Result: null
+Build	Build Next.js app	2025-12-28T22:24:43.1982124Z ##[debug]Evaluating condition for step: 'Build Next.js app'
+Build	Build Next.js app	2025-12-28T22:24:43.1983706Z ##[debug]Evaluating: success()
+Build	Build Next.js app	2025-12-28T22:24:43.1984060Z ##[debug]Evaluating success:
+Build	Build Next.js app	2025-12-28T22:24:43.1984428Z ##[debug]=> true
+Build	Build Next.js app	2025-12-28T22:24:43.1985137Z ##[debug]Result: true
+Build	Build Next.js app	2025-12-28T22:24:43.1985668Z ##[debug]Starting: Build Next.js app
+Build	Build Next.js app	2025-12-28T22:24:43.1995714Z ##[debug]Loading inputs
+Build	Build Next.js app	2025-12-28T22:24:43.1996749Z ##[debug]Loading env
+Build	Build Next.js app	2025-12-28T22:24:43.2001752Z ##[group]Run npm run build
+Build	Build Next.js app	2025-12-28T22:24:43.2001989Z [36;1mnpm run build[0m
+Build	Build Next.js app	2025-12-28T22:24:43.2045826Z shell: /usr/bin/bash -e {0}
+Build	Build Next.js app	2025-12-28T22:24:43.2046062Z env:
+Build	Build Next.js app	2025-12-28T22:24:43.2046239Z   NEXT_PUBLIC_FIREBASE_API_KEY: 
+Build	Build Next.js app	2025-12-28T22:24:43.2046485Z   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 
+Build	Build Next.js app	2025-12-28T22:24:43.2046734Z   NEXT_PUBLIC_FIREBASE_PROJECT_ID: 
+Build	Build Next.js app	2025-12-28T22:24:43.2046972Z   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 
+Build	Build Next.js app	2025-12-28T22:24:43.2047230Z   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: 
+Build	Build Next.js app	2025-12-28T22:24:43.2047486Z   NEXT_PUBLIC_FIREBASE_APP_ID: 
+Build	Build Next.js app	2025-12-28T22:24:43.2047694Z ##[endgroup]
+Build	Build Next.js app	2025-12-28T22:24:43.2081724Z ##[debug]/usr/bin/bash -e /home/runner/work/_temp/0b687aaf-ba64-4c1a-96a8-8098a850603e.sh
+Build	Build Next.js app	2025-12-28T22:24:43.3185208Z 
+Build	Build Next.js app	2025-12-28T22:24:43.3185627Z > leadtracking@0.1.0 build
+Build	Build Next.js app	2025-12-28T22:24:43.3186080Z > next build
+Build	Build Next.js app	2025-12-28T22:24:43.3186296Z 
+Build	Build Next.js app	2025-12-28T22:24:44.0615956Z ΓÜá No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Build	Build Next.js app	2025-12-28T22:24:44.2855985Z Attention: Next.js now collects completely anonymous telemetry regarding usage.
+Build	Build Next.js app	2025-12-28T22:24:44.2857339Z This information is used to shape Next.js' roadmap and prioritize features.
+Build	Build Next.js app	2025-12-28T22:24:44.2858447Z You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+Build	Build Next.js app	2025-12-28T22:24:44.2859085Z https://nextjs.org/telemetry
+Build	Build Next.js app	2025-12-28T22:24:44.2859267Z 
+Build	Build Next.js app	2025-12-28T22:24:44.2990238Z    Γû▓ Next.js 16.0.10 (Turbopack)
+Build	Build Next.js app	2025-12-28T22:24:44.2990865Z    - Experiments (use with caution):
+Build	Build Next.js app	2025-12-28T22:24:44.2991395Z      ┬╖ optimizePackageImports
+Build	Build Next.js app	2025-12-28T22:24:44.2992599Z 
+Build	Build Next.js app	2025-12-28T22:24:44.3428315Z  ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+Build	Build Next.js app	2025-12-28T22:24:44.3689980Z    Creating an optimized production build ...
+Build	Build Next.js app	2025-12-28T22:24:57.4582978Z  Γ£ô Compiled successfully in 12.6s
+Build	Build Next.js app	2025-12-28T22:24:57.4685352Z    Running TypeScript ...
+Build	Build Next.js app	2025-12-28T22:25:05.8827295Z    Collecting page data using 3 workers ...
+Build	Build Next.js app	2025-12-28T22:25:06.3980498Z Error [FirebaseError]: Firebase: Error (auth/invalid-api-key).
+Build	Build Next.js app	2025-12-28T22:25:06.3981341Z     at tR (.next/server/chunks/_0d5597a7._.js:3:308441)
+Build	Build Next.js app	2025-12-28T22:25:06.3982022Z     at tI (.next/server/chunks/_0d5597a7._.js:3:308490)
+Build	Build Next.js app	2025-12-28T22:25:06.3982818Z     at Y.instanceFactory (.next/server/chunks/_0d5597a7._.js:3:357129)
+Build	Build Next.js app	2025-12-28T22:25:06.3983745Z     at Z.getOrInitializeService (.next/server/chunks/_0d5597a7._.js:3:288669)
+Build	Build Next.js app	2025-12-28T22:25:06.3984802Z     at Z.initialize (.next/server/chunks/_0d5597a7._.js:3:288077)
+Build	Build Next.js app	2025-12-28T22:25:06.3985546Z     at rF (.next/server/chunks/_0d5597a7._.js:3:345996)
+Build	Build Next.js app	2025-12-28T22:25:06.3986142Z     at ng (.next/server/chunks/_0d5597a7._.js:3:357766)
+Build	Build Next.js app	2025-12-28T22:25:06.3986918Z     at module evaluation (.next/server/chunks/_0d5597a7._.js:13:10179)
+Build	Build Next.js app	2025-12-28T22:25:06.3988306Z     at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+Build	Build Next.js app	2025-12-28T22:25:06.3989423Z     at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12) {
+Build	Build Next.js app	2025-12-28T22:25:06.3990317Z   code: 'auth/invalid-api-key',
+Build	Build Next.js app	2025-12-28T22:25:06.3990782Z   customData: [Object]
+Build	Build Next.js app	2025-12-28T22:25:06.3991153Z }
+Build	Build Next.js app	2025-12-28T22:25:06.4391162Z Error [FirebaseError]: Firebase: Error (auth/invalid-api-key).
+Build	Build Next.js app	2025-12-28T22:25:06.4391988Z     at tR (.next/server/chunks/_0d5597a7._.js:3:308441)
+Build	Build Next.js app	2025-12-28T22:25:06.4392593Z     at tI (.next/server/chunks/_0d5597a7._.js:3:308490)
+Build	Build Next.js app	2025-12-28T22:25:06.4393289Z     at Y.instanceFactory (.next/server/chunks/_0d5597a7._.js:3:357129)
+Build	Build Next.js app	2025-12-28T22:25:06.4394182Z     at Z.getOrInitializeService (.next/server/chunks/_0d5597a7._.js:3:288669)
+Build	Build Next.js app	2025-12-28T22:25:06.4395486Z     at Z.initialize (.next/server/chunks/_0d5597a7._.js:3:288077)
+Build	Build Next.js app	2025-12-28T22:25:06.4396169Z     at rF (.next/server/chunks/_0d5597a7._.js:3:345996)
+Build	Build Next.js app	2025-12-28T22:25:06.4396767Z     at ng (.next/server/chunks/_0d5597a7._.js:3:357766)
+Build	Build Next.js app	2025-12-28T22:25:06.4397441Z     at module evaluation (.next/server/chunks/_0d5597a7._.js:13:10179)
+Build	Build Next.js app	2025-12-28T22:25:06.4398331Z     at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+Build	Build Next.js app	2025-12-28T22:25:06.4399404Z     at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12) {
+Build	Build Next.js app	2025-12-28T22:25:06.4400241Z   code: 'auth/invalid-api-key',
+Build	Build Next.js app	2025-12-28T22:25:06.4400643Z   customData: [Object]
+Build	Build Next.js app	2025-12-28T22:25:06.4400969Z }
+Build	Build Next.js app	2025-12-28T22:25:06.5220361Z 
+Build	Build Next.js app	2025-12-28T22:25:06.5220896Z > Build error occurred
+Build	Build Next.js app	2025-12-28T22:25:06.5266834Z Error: Failed to collect page data for /api/auth/gmail/callback
+Build	Build Next.js app	2025-12-28T22:25:06.5268397Z     at ignore-listed frames {
+Build	Build Next.js app	2025-12-28T22:25:06.5277826Z   type: 'Error'
+Build	Build Next.js app	2025-12-28T22:25:06.5279703Z }
+Build	Build Next.js app	2025-12-28T22:25:06.5762977Z ##[error]Process completed with exit code 1.
+Build	Build Next.js app	2025-12-28T22:25:06.5775591Z ##[debug]Finishing: Build Next.js app

@@ -57,13 +57,18 @@ describe('TypeScript Types', () => {
 
         it('supports all activity types', () => {
             const types: Activity['type'][] = ['call', 'email', 'meeting', 'social'];
-            const outcomes: Activity['outcome'][] = ['connected', 'voicemail', 'no_answer', 'wrong_number'];
+            const outcomes: Activity['outcome'][] = [
+                'connected',
+                'voicemail',
+                'no_answer',
+                'wrong_number',
+            ];
 
-            types.forEach(type => {
+            types.forEach((type) => {
                 expect(typeof type).toBe('string');
             });
 
-            outcomes.forEach(outcome => {
+            outcomes.forEach((outcome) => {
                 expect(typeof outcome).toBe('string');
             });
         });

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock Firebase services before importing  
+// Mock Firebase services before importing
 vi.mock('@/lib/firebase/config', () => ({
     app: {},
     auth: {},
@@ -13,13 +13,21 @@ vi.mock('firebase/firestore', () => ({
     doc: vi.fn(),
     addDoc: vi.fn(() => Promise.resolve({ id: 'new-lead-id' })),
     getDoc: vi.fn(() => Promise.resolve({ exists: () => true, data: () => ({ name: 'Test' }) })),
-    getDocs: vi.fn(() => Promise.resolve({
-        docs: [
-            { id: 'lead-1', data: () => ({ companyName: 'Acme', status: 'New', value: 10000 }) },
-            { id: 'lead-2', data: () => ({ companyName: 'Beta', status: 'Contacted', value: 20000 }) },
-        ],
-        forEach: vi.fn(),
-    })),
+    getDocs: vi.fn(() =>
+        Promise.resolve({
+            docs: [
+                {
+                    id: 'lead-1',
+                    data: () => ({ companyName: 'Acme', status: 'New', value: 10000 }),
+                },
+                {
+                    id: 'lead-2',
+                    data: () => ({ companyName: 'Beta', status: 'Contacted', value: 20000 }),
+                },
+            ],
+            forEach: vi.fn(),
+        })
+    ),
     updateDoc: vi.fn(() => Promise.resolve()),
     deleteDoc: vi.fn(() => Promise.resolve()),
     query: vi.fn(),
@@ -39,8 +47,15 @@ describe('Firebase Service Functions', () => {
 
     describe('Lead Status Constants', () => {
         it('should define valid lead statuses', () => {
-            const validStatuses = ['New', 'Contacted', 'Qualified', 'Proposal', 'Closed Won', 'Closed Lost'];
-            validStatuses.forEach(status => {
+            const validStatuses = [
+                'New',
+                'Contacted',
+                'Qualified',
+                'Proposal',
+                'Closed Won',
+                'Closed Lost',
+            ];
+            validStatuses.forEach((status) => {
                 expect(typeof status).toBe('string');
                 expect(status.length).toBeGreaterThan(0);
             });
@@ -50,14 +65,14 @@ describe('Firebase Service Functions', () => {
     describe('Activity Types', () => {
         it('should define valid activity types', () => {
             const validTypes = ['call', 'email', 'meeting', 'social'];
-            validTypes.forEach(type => {
+            validTypes.forEach((type) => {
                 expect(typeof type).toBe('string');
             });
         });
 
         it('should define valid activity outcomes', () => {
             const validOutcomes = ['connected', 'voicemail', 'no_answer', 'wrong_number'];
-            validOutcomes.forEach(outcome => {
+            validOutcomes.forEach((outcome) => {
                 expect(typeof outcome).toBe('string');
             });
         });

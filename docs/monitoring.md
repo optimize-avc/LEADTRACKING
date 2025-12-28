@@ -9,26 +9,27 @@ LEADTRACKING uses Sentry for error tracking and Firebase/Google Cloud for loggin
 ### Setup
 
 1. **Create Sentry Project**
-   - Go to [sentry.io](https://sentry.io)
-   - Create a new Next.js project
-   - Copy the DSN
+    - Go to [sentry.io](https://sentry.io)
+    - Create a new Next.js project
+    - Copy the DSN
 
 2. **Configure Environment**
-   ```bash
-   # .env.local
-   SENTRY_DSN=https://your-dsn@o123.ingest.sentry.io/456
-   NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@o123.ingest.sentry.io/456
-   
-   # For source maps (optional)
-   SENTRY_ORG=your-org
-   SENTRY_PROJECT=leadtracking
-   SENTRY_AUTH_TOKEN=your-auth-token
-   ```
+
+    ```bash
+    # .env.local
+    SENTRY_DSN=https://your-dsn@o123.ingest.sentry.io/456
+    NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@o123.ingest.sentry.io/456
+
+    # For source maps (optional)
+    SENTRY_ORG=your-org
+    SENTRY_PROJECT=leadtracking
+    SENTRY_AUTH_TOKEN=your-auth-token
+    ```
 
 3. **Verify Integration**
-   - Deploy to production
-   - Trigger an error (e.g., `/api/test-error`)
-   - Check Sentry dashboard
+    - Deploy to production
+    - Trigger an error (e.g., `/api/test-error`)
+    - Check Sentry dashboard
 
 ### What's Tracked
 
@@ -39,11 +40,11 @@ LEADTRACKING uses Sentry for error tracking and Firebase/Google Cloud for loggin
 
 ### Configuration Files
 
-| File | Purpose |
-|------|---------|
+| File                      | Purpose                |
+| ------------------------- | ---------------------- |
 | `sentry.client.config.ts` | Browser error tracking |
 | `sentry.server.config.ts` | Node.js error tracking |
-| `sentry.edge.config.ts` | Edge runtime tracking |
+| `sentry.edge.config.ts`   | Edge runtime tracking  |
 
 ### Best Practices
 
@@ -76,22 +77,26 @@ Sentry.addBreadcrumb({
 // lib/logger.ts
 const logger = {
     info: (message: string, meta?: object) => {
-        console.log(JSON.stringify({
-            severity: 'INFO',
-            message,
-            timestamp: new Date().toISOString(),
-            ...meta,
-        }));
+        console.log(
+            JSON.stringify({
+                severity: 'INFO',
+                message,
+                timestamp: new Date().toISOString(),
+                ...meta,
+            })
+        );
     },
     error: (message: string, error: Error, meta?: object) => {
-        console.error(JSON.stringify({
-            severity: 'ERROR',
-            message,
-            error: error.message,
-            stack: error.stack,
-            timestamp: new Date().toISOString(),
-            ...meta,
-        }));
+        console.error(
+            JSON.stringify({
+                severity: 'ERROR',
+                message,
+                error: error.message,
+                stack: error.stack,
+                timestamp: new Date().toISOString(),
+                ...meta,
+            })
+        );
     },
 };
 
@@ -106,7 +111,7 @@ import logger from '@/lib/logger';
 // In API routes
 export async function POST(request: Request) {
     logger.info('Lead creation started', { userId: 'abc' });
-    
+
     try {
         const lead = await createLead(data);
         logger.info('Lead created', { leadId: lead.id });
@@ -121,11 +126,13 @@ export async function POST(request: Request) {
 ### Viewing Logs
 
 **Firebase Console:**
+
 1. Go to Firebase Console
 2. Navigate to App Hosting → Logs
 3. Filter by severity, time range
 
 **Google Cloud Console:**
+
 1. Go to Cloud Logging
 2. Select your Firebase project
 3. Query logs by resource type or custom fields
@@ -148,6 +155,7 @@ jsonPayload.message=~"lead"
 ### Core Web Vitals
 
 Tracked automatically by Next.js and Sentry:
+
 - **LCP** (Largest Contentful Paint)
 - **FID** (First Input Delay)
 - **CLS** (Cumulative Layout Shift)
@@ -170,31 +178,32 @@ export function trackLeadCreated(leadId: string) {
 Configure in Sentry Dashboard → Alerts:
 
 1. **Error Spike Alert**
-   - Trigger: >10 errors in 1 hour
-   - Action: Email + Slack notification
+    - Trigger: >10 errors in 1 hour
+    - Action: Email + Slack notification
 
 2. **New Error Alert**
-   - Trigger: First occurrence of error type
-   - Action: Email notification
+    - Trigger: First occurrence of error type
+    - Action: Email notification
 
 3. **Performance Alert**
-   - Trigger: P95 latency > 3s
-   - Action: Email notification
+    - Trigger: P95 latency > 3s
+    - Action: Email notification
 
 ### Recommended Alert Rules
 
-| Alert | Condition | Action |
-|-------|-----------|--------|
-| Critical Error | Unhandled exception | PagerDuty |
-| High Error Rate | >50 errors/hour | Slack |
-| Slow API | P95 > 2000ms | Email |
-| Auth Failure | >5 failures/minute | Slack |
+| Alert           | Condition           | Action    |
+| --------------- | ------------------- | --------- |
+| Critical Error  | Unhandled exception | PagerDuty |
+| High Error Rate | >50 errors/hour     | Slack     |
+| Slow API        | P95 > 2000ms        | Email     |
+| Auth Failure    | >5 failures/minute  | Slack     |
 
 ## Dashboards
 
 ### Sentry Dashboard
 
 Create custom dashboards for:
+
 - Error trends by feature
 - Performance by route
 - User impact metrics
@@ -204,10 +213,10 @@ Create custom dashboards for:
 1. Go to Cloud Monitoring
 2. Create Dashboard
 3. Add widgets:
-   - Request count
-   - Error rate
-   - Latency percentiles
-   - Active instances
+    - Request count
+    - Error rate
+    - Latency percentiles
+    - Active instances
 
 ## Runbooks
 
@@ -225,9 +234,9 @@ Create custom dashboards for:
 2. Review slow queries in logs
 3. Check for external service issues
 4. Scale up if needed:
-   ```bash
-   firebase hosting:channel:deploy --minInstances=2
-   ```
+    ```bash
+    firebase hosting:channel:deploy --minInstances=2
+    ```
 
 ### Authentication Issues
 
@@ -252,11 +261,11 @@ export async function GET() {
             // Add more checks as needed
         },
     };
-    
-    const allHealthy = Object.values(checks.checks).every(c => c === 'ok');
-    
-    return Response.json(checks, { 
-        status: allHealthy ? 200 : 503 
+
+    const allHealthy = Object.values(checks.checks).every((c) => c === 'ok');
+
+    return Response.json(checks, {
+        status: allHealthy ? 200 : 503,
     });
 }
 
@@ -273,6 +282,7 @@ async function checkFirebase(): Promise<string> {
 ### Uptime Monitoring
 
 Configure external uptime monitoring:
+
 - **UptimeRobot**: Free tier available
 - **BetterUptime**: Good for status pages
 - **Pingdom**: Enterprise option
@@ -281,12 +291,12 @@ Configure external uptime monitoring:
 
 ### Severity Levels
 
-| Level | Description | Response Time |
-|-------|-------------|---------------|
-| P1 | Service down | 15 minutes |
-| P2 | Major feature broken | 1 hour |
-| P3 | Minor issue | 4 hours |
-| P4 | Cosmetic/minor | 1 business day |
+| Level | Description          | Response Time  |
+| ----- | -------------------- | -------------- |
+| P1    | Service down         | 15 minutes     |
+| P2    | Major feature broken | 1 hour         |
+| P3    | Minor issue          | 4 hours        |
+| P4    | Cosmetic/minor       | 1 business day |
 
 ### Response Checklist
 

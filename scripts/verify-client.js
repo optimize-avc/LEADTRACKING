@@ -1,15 +1,24 @@
 const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, addDoc, doc, setDoc, getDocs, query, where } = require('firebase/firestore');
+const {
+    getFirestore,
+    collection,
+    addDoc,
+    doc,
+    setDoc,
+    getDocs,
+    query,
+    where,
+} = require('firebase/firestore');
 const Twilio = require('twilio');
 
 // Config
 const firebaseConfig = {
-    apiKey: "AIzaSyDK6-V94VNzc5pTCgXzKvY9UA00Z0oCSRc",
-    authDomain: "antigrav-tracking-final.firebaseapp.com",
-    projectId: "antigrav-tracking-final",
-    storageBucket: "antigrav-tracking-final.firebasestorage.app",
-    messagingSenderId: "813307578320",
-    appId: "1:813307578320:web:fb167e5ac138fe9ac91bd5"
+    apiKey: 'AIzaSyDK6-V94VNzc5pTCgXzKvY9UA00Z0oCSRc',
+    authDomain: 'antigrav-tracking-final.firebaseapp.com',
+    projectId: 'antigrav-tracking-final',
+    storageBucket: 'antigrav-tracking-final.firebasestorage.app',
+    messagingSenderId: '813307578320',
+    appId: '1:813307578320:web:fb167e5ac138fe9ac91bd5',
 };
 
 // Secrets (User must set these in env or replace manually for testing)
@@ -43,7 +52,7 @@ async function run() {
                 status: 'New',
                 assignedTo: USER_ID,
                 createdAt: Date.now(),
-                updatedAt: Date.now()
+                updatedAt: Date.now(),
             });
             leadId = newLead.id;
             console.log('Created lead:', leadId);
@@ -59,7 +68,7 @@ async function run() {
             from: TWILIO_CONFIG.phoneNumber,
             body: 'Hello! This is a test from the Antigravity system. Please reply to this message.',
             // We use the production webhook URL here so Twilio updates the status there
-            statusCallback: `https://antigrav-tracking-final.web.app/api/twilio/sms-webhook?userId=${USER_ID}&leadId=${leadId}`
+            statusCallback: `https://antigrav-tracking-final.web.app/api/twilio/sms-webhook?userId=${USER_ID}&leadId=${leadId}`,
         });
 
         console.log('SMS Sent! SID:', message.sid);
@@ -77,7 +86,7 @@ async function run() {
             direction: 'outbound',
             sentAt: new Date().toISOString(),
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
         });
 
         console.log('Done! Message logged.');

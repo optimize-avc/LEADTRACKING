@@ -21,19 +21,31 @@ describe('GlassCard Component', () => {
     });
 
     it('applies small padding when specified', () => {
-        render(<GlassCard data-testid="card" padding="sm">Content</GlassCard>);
+        render(
+            <GlassCard data-testid="card" padding="sm">
+                Content
+            </GlassCard>
+        );
         const card = screen.getByTestId('card');
         expect(card).toHaveClass('p-4');
     });
 
     it('applies large padding when specified', () => {
-        render(<GlassCard data-testid="card" padding="lg">Content</GlassCard>);
+        render(
+            <GlassCard data-testid="card" padding="lg">
+                Content
+            </GlassCard>
+        );
         const card = screen.getByTestId('card');
         expect(card).toHaveClass('p-8');
     });
 
     it('applies no padding when specified', () => {
-        render(<GlassCard data-testid="card" padding="none">Content</GlassCard>);
+        render(
+            <GlassCard data-testid="card" padding="none">
+                Content
+            </GlassCard>
+        );
         const card = screen.getByTestId('card');
         expect(card).not.toHaveClass('p-4');
         expect(card).not.toHaveClass('p-6');
@@ -41,14 +53,22 @@ describe('GlassCard Component', () => {
     });
 
     it('merges custom className', () => {
-        render(<GlassCard data-testid="card" className="custom-class">Content</GlassCard>);
+        render(
+            <GlassCard data-testid="card" className="custom-class">
+                Content
+            </GlassCard>
+        );
         const card = screen.getByTestId('card');
         expect(card).toHaveClass('glass-card');
         expect(card).toHaveClass('custom-class');
     });
 
     it('passes additional HTML attributes', () => {
-        render(<GlassCard data-testid="card" id="my-card" role="article">Content</GlassCard>);
+        render(
+            <GlassCard data-testid="card" id="my-card" role="article">
+                Content
+            </GlassCard>
+        );
         const card = screen.getByTestId('card');
         expect(card).toHaveAttribute('id', 'my-card');
         expect(card).toHaveAttribute('role', 'article');

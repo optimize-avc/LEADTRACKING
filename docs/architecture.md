@@ -12,31 +12,31 @@ graph TB
         Services[Firebase Services]
         AI[AI Email Service]
     end
-    
+
     subgraph API ["Next.js API Routes"]
         AuthAPI["/api/auth/*"]
         TwilioAPI["/api/twilio/*"]
         EmailAPI["/api/email/*"]
     end
-    
+
     subgraph Firebase ["Firebase"]
         FAuth[Firebase Auth]
         Firestore[(Firestore DB)]
         FAI[Firebase AI/Vertex AI]
     end
-    
+
     subgraph External ["External Services"]
         Gmail[Gmail API]
         Twilio[Twilio API]
     end
-    
+
     UI --> Auth
     Auth --> FAuth
     UI --> Services
     Services --> Firestore
     UI --> AI
     AI --> FAI
-    
+
     UI --> AuthAPI
     AuthAPI --> Gmail
     UI --> TwilioAPI
@@ -92,55 +92,58 @@ users/{userId}/
 ### Entity Schemas
 
 #### Lead
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Document ID |
-| `companyName` | string | Company name |
-| `contactName` | string | Contact person |
-| `email` | string | Contact email |
-| `phone` | string | Contact phone |
-| `value` | number | Deal value |
-| `status` | LeadStatus | Pipeline stage |
-| `assignedTo` | string | Owner user ID |
-| `industry` | string? | Industry vertical |
-| `source` | string? | Lead source |
-| `notes` | string? | Free-form notes |
-| `tags` | string[]? | Tags for filtering |
-| `lastContact` | number? | Last contact timestamp |
-| `nextStep` | string? | Next action item |
-| `probability` | number? | Win probability % |
-| `createdAt` | number | Creation timestamp |
-| `updatedAt` | number | Last update timestamp |
+
+| Field         | Type       | Description            |
+| ------------- | ---------- | ---------------------- |
+| `id`          | string     | Document ID            |
+| `companyName` | string     | Company name           |
+| `contactName` | string     | Contact person         |
+| `email`       | string     | Contact email          |
+| `phone`       | string     | Contact phone          |
+| `value`       | number     | Deal value             |
+| `status`      | LeadStatus | Pipeline stage         |
+| `assignedTo`  | string     | Owner user ID          |
+| `industry`    | string?    | Industry vertical      |
+| `source`      | string?    | Lead source            |
+| `notes`       | string?    | Free-form notes        |
+| `tags`        | string[]?  | Tags for filtering     |
+| `lastContact` | number?    | Last contact timestamp |
+| `nextStep`    | string?    | Next action item       |
+| `probability` | number?    | Win probability %      |
+| `createdAt`   | number     | Creation timestamp     |
+| `updatedAt`   | number     | Last update timestamp  |
 
 **LeadStatus enum**: `New` | `Contacted` | `Qualified` | `Proposal` | `Negotiation` | `Closed` | `Lost`
 
 #### Activity
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Document ID |
-| `type` | ActivityType | Activity category |
-| `outcome` | ActivityOutcome | Result of activity |
-| `duration` | number? | Duration in seconds (calls) |
-| `timestamp` | number | When it occurred |
-| `repId` | string | User who performed it |
-| `leadId` | string? | Related lead |
-| `notes` | string? | Notes about activity |
+
+| Field       | Type            | Description                 |
+| ----------- | --------------- | --------------------------- |
+| `id`        | string          | Document ID                 |
+| `type`      | ActivityType    | Activity category           |
+| `outcome`   | ActivityOutcome | Result of activity          |
+| `duration`  | number?         | Duration in seconds (calls) |
+| `timestamp` | number          | When it occurred            |
+| `repId`     | string          | User who performed it       |
+| `leadId`    | string?         | Related lead                |
+| `notes`     | string?         | Notes about activity        |
 
 **ActivityType enum**: `call` | `email` | `meeting` | `social` | `demo`
 
 **ActivityOutcome enum**: `connected` | `voicemail` | `no_answer` | `wrong_number` | `meeting_set` | `qualified` | `contract_sent` | `closed_won` | `none`
 
 #### Resource
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Resource ID |
-| `title` | string | Resource title |
-| `description` | string | Description |
-| `category` | ResourceCategory | Category bucket |
-| `type` | ResourceType | Content type |
-| `url` | string | Resource URL |
-| `tags` | string[]? | Search tags |
-| `updatedAt` | number | Last update |
+
+| Field         | Type             | Description     |
+| ------------- | ---------------- | --------------- |
+| `id`          | string           | Resource ID     |
+| `title`       | string           | Resource title  |
+| `description` | string           | Description     |
+| `category`    | ResourceCategory | Category bucket |
+| `type`        | ResourceType     | Content type    |
+| `url`         | string           | Resource URL    |
+| `tags`        | string[]?        | Search tags     |
+| `updatedAt`   | number           | Last update     |
 
 ## Request Flow Examples
 
@@ -152,7 +155,7 @@ sequenceDiagram
     participant C as LeadsPage
     participant S as LeadsService
     participant F as Firestore
-    
+
     U->>C: Click "Add Lead"
     C->>C: Open AddLeadModal
     U->>C: Fill form & submit
@@ -174,7 +177,7 @@ sequenceDiagram
     participant G as Google OAuth
     participant CB as /api/auth/gmail/callback
     participant FS as Firestore
-    
+
     U->>Set: Click "Connect Gmail"
     Set->>API: Redirect with userId
     API->>G: Redirect to Google consent
@@ -194,7 +197,7 @@ sequenceDiagram
     participant E as AIEmailDraft
     participant AI as ai-service.ts
     participant FAI as Firebase AI (Vertex)
-    
+
     U->>E: Request email draft
     E->>AI: AIEmailService.generateEmail(lead, sender)
     AI->>AI: Build context from lead + resources
@@ -206,30 +209,30 @@ sequenceDiagram
 
 ## External Service Dependencies
 
-| Service | Usage | Configuration |
-|---------|-------|---------------|
-| **Firebase Auth** | User authentication (Google OAuth) | Project config in `.env.local` |
-| **Firestore** | Primary database | Same Firebase project |
-| **Firebase AI / Vertex AI** | AI email generation | Enabled in Firebase Console |
-| **Gmail API** | Email sync & sending | OAuth credentials in `.env.local` |
-| **Twilio** | SMS & voice calls | Account SID, Auth Token, Phone Number |
+| Service                     | Usage                              | Configuration                         |
+| --------------------------- | ---------------------------------- | ------------------------------------- |
+| **Firebase Auth**           | User authentication (Google OAuth) | Project config in `.env.local`        |
+| **Firestore**               | Primary database                   | Same Firebase project                 |
+| **Firebase AI / Vertex AI** | AI email generation                | Enabled in Firebase Console           |
+| **Gmail API**               | Email sync & sending               | OAuth credentials in `.env.local`     |
+| **Twilio**                  | SMS & voice calls                  | Account SID, Auth Token, Phone Number |
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API key |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Storage bucket |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Messaging sender ID |
-| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app ID |
-| `GOOGLE_CLIENT_ID` | Gmail OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Gmail OAuth client secret |
-| `NEXT_PUBLIC_APP_URL` | Application URL |
-| `TWILIO_ACCOUNT_SID` | Twilio account SID |
-| `TWILIO_AUTH_TOKEN` | Twilio auth token |
-| `TWILIO_PHONE_NUMBER` | Twilio phone number |
+| Variable                                   | Description               |
+| ------------------------------------------ | ------------------------- |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase API key          |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase auth domain      |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase project ID       |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Storage bucket            |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Messaging sender ID       |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Firebase app ID           |
+| `GOOGLE_CLIENT_ID`                         | Gmail OAuth client ID     |
+| `GOOGLE_CLIENT_SECRET`                     | Gmail OAuth client secret |
+| `NEXT_PUBLIC_APP_URL`                      | Application URL           |
+| `TWILIO_ACCOUNT_SID`                       | Twilio account SID        |
+| `TWILIO_AUTH_TOKEN`                        | Twilio auth token         |
+| `TWILIO_PHONE_NUMBER`                      | Twilio phone number       |
 
 ## Security Model
 
@@ -250,14 +253,14 @@ sequenceDiagram
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Framework** | Next.js 15 (App Router) |
-| **UI** | React 19, TailwindCSS 4 |
-| **Language** | TypeScript (strict mode) |
-| **Auth** | Firebase Auth |
-| **Database** | Firestore |
-| **AI** | Firebase AI / Vertex AI (Gemini) |
-| **Email** | Gmail API |
-| **Telephony** | Twilio |
-| **Hosting** | Firebase App Hosting |
+| Layer         | Technology                       |
+| ------------- | -------------------------------- |
+| **Framework** | Next.js 15 (App Router)          |
+| **UI**        | React 19, TailwindCSS 4          |
+| **Language**  | TypeScript (strict mode)         |
+| **Auth**      | Firebase Auth                    |
+| **Database**  | Firestore                        |
+| **AI**        | Firebase AI / Vertex AI (Gemini) |
+| **Email**     | Gmail API                        |
+| **Telephony** | Twilio                           |
+| **Hosting**   | Firebase App Hosting             |

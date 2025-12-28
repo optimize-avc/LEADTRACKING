@@ -10,17 +10,18 @@ LEADTRACKING is optimized for fast loading, smooth interactions, and excellent C
 
 Every major route has a `loading.tsx` that displays skeleton placeholders instead of spinners:
 
-| Route | Loading File |
-|-------|--------------|
-| `/` (Dashboard) | `src/app/loading.tsx` |
-| `/leads` | `src/app/leads/loading.tsx` |
-| `/activities` | `src/app/activities/loading.tsx` |
-| `/analytics` | `src/app/analytics/loading.tsx` |
-| `/resources` | `src/app/resources/loading.tsx` |
-| `/training` | `src/app/training/loading.tsx` |
-| `/settings` | `src/app/settings/loading.tsx` |
+| Route           | Loading File                     |
+| --------------- | -------------------------------- |
+| `/` (Dashboard) | `src/app/loading.tsx`            |
+| `/leads`        | `src/app/leads/loading.tsx`      |
+| `/activities`   | `src/app/activities/loading.tsx` |
+| `/analytics`    | `src/app/analytics/loading.tsx`  |
+| `/resources`    | `src/app/resources/loading.tsx`  |
+| `/training`     | `src/app/training/loading.tsx`   |
+| `/settings`     | `src/app/settings/loading.tsx`   |
 
 **Benefits:**
+
 - Perceived performance improvement
 - No layout shift when content loads
 - Consistent visual experience
@@ -31,13 +32,14 @@ Fonts are loaded via Google Fonts CDN with `display=swap`:
 
 ```html
 <link
-  rel="stylesheet"
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
 />
 ```
 
 **Recommendation for future:**
 Use `next/font` for automatic font optimization:
+
 ```typescript
 import { Inter, Outfit } from 'next/font/google';
 
@@ -61,6 +63,7 @@ images: {
 ```
 
 **Usage:**
+
 ```typescript
 import Image from 'next/image';
 
@@ -90,6 +93,7 @@ const HeavyChart = dynamic(() => import('@/components/analytics/HeavyChart'), {
 ### 5. CSS Optimization
 
 TailwindCSS 4 with automatic purging:
+
 - Only used classes are included in production
 - Glassmorphism effects use CSS variables for consistency
 - `backdrop-filter` with fallbacks
@@ -104,22 +108,24 @@ TailwindCSS 4 with automatic purging:
 
 ### Target Scores
 
-| Metric | Target | Good | Needs Improvement |
-|--------|--------|------|-------------------|
-| LCP | < 2.5s | ✅ Green | ⚠️ >4s |
-| FID | < 100ms | ✅ Green | ⚠️ >300ms |
-| CLS | < 0.1 | ✅ Green | ⚠️ >0.25 |
-| FCP | < 1.8s | ✅ Green | ⚠️ >3s |
-| TTI | < 3.8s | ✅ Green | ⚠️ >7.3s |
+| Metric | Target  | Good     | Needs Improvement |
+| ------ | ------- | -------- | ----------------- |
+| LCP    | < 2.5s  | ✅ Green | ⚠️ >4s            |
+| FID    | < 100ms | ✅ Green | ⚠️ >300ms         |
+| CLS    | < 0.1   | ✅ Green | ⚠️ >0.25          |
+| FCP    | < 1.8s  | ✅ Green | ⚠️ >3s            |
+| TTI    | < 3.8s  | ✅ Green | ⚠️ >7.3s          |
 
 ### Measuring Performance
 
 **Lighthouse (Chrome DevTools):**
+
 1. Open DevTools → Lighthouse tab
 2. Select "Performance" category
 3. Click "Analyze page load"
 
 **Real User Monitoring:**
+
 - Sentry Performance (configured)
 - Google Search Console (once indexed)
 
@@ -144,40 +150,44 @@ ANALYZE=true npm run build
 
 ### Current Dependencies
 
-| Package | Size (approx) | Purpose |
-|---------|---------------|---------|
-| `react` + `react-dom` | ~130KB | Framework |
-| `firebase` | ~200KB | Backend services |
-| `lucide-react` | Tree-shaken | Icons |
-| `tailwindcss` | ~10KB (purged) | Styling |
-| `sonner` | ~15KB | Toasts |
+| Package               | Size (approx)  | Purpose          |
+| --------------------- | -------------- | ---------------- |
+| `react` + `react-dom` | ~130KB         | Framework        |
+| `firebase`            | ~200KB         | Backend services |
+| `lucide-react`        | Tree-shaken    | Icons            |
+| `tailwindcss`         | ~10KB (purged) | Styling          |
+| `sonner`              | ~15KB          | Toasts           |
 
 ### Optimization Opportunities
 
 1. **Firebase modular imports** (already using)
-   ```typescript
-   // Good: Modular import
-   import { getAuth } from 'firebase/auth';
-   
-   // Bad: Full import
-   import firebase from 'firebase';
-   ```
+
+    ```typescript
+    // Good: Modular import
+    import { getAuth } from 'firebase/auth';
+
+    // Bad: Full import
+    import firebase from 'firebase';
+    ```
 
 2. **Dynamic imports for heavy features**
-   ```typescript
-   const AIEmailDraft = dynamic(() => import('@/components/ai/AIEmailDraft'));
-   ```
+
+    ```typescript
+    const AIEmailDraft = dynamic(() => import('@/components/ai/AIEmailDraft'));
+    ```
 
 3. **Lazy load below-the-fold content**
 
 ## Caching Strategy
 
 ### Static Assets
+
 - Handled by Next.js and Firebase App Hosting
 - Long cache headers for immutable assets
 - Content hash in filenames
 
 ### API Responses
+
 ```typescript
 // Cache for 1 minute, revalidate in background
 export const revalidate = 60;
@@ -193,7 +203,9 @@ export async function GET() {
 ```
 
 ### Client-Side Caching
+
 Consider adding React Query or SWR for:
+
 - Request deduplication
 - Background refresh
 - Optimistic updates
@@ -224,6 +236,7 @@ lhci autorun --collect.url=http://localhost:3000
 ```
 
 **Minimum Acceptable Scores:**
+
 - Performance: ≥ 90
 - Accessibility: ≥ 90
 - Best Practices: ≥ 90
@@ -232,17 +245,20 @@ lhci autorun --collect.url=http://localhost:3000
 ## Troubleshooting Performance Issues
 
 ### Slow Initial Load
+
 1. Check bundle size with analyzer
 2. Identify large dependencies
 3. Add dynamic imports
 4. Verify cache headers
 
 ### Layout Shift
+
 1. Set explicit dimensions on images
 2. Reserve space for dynamic content
 3. Use skeleton placeholders
 
 ### Slow Interactions
+
 1. Profile with React DevTools
 2. Check for unnecessary re-renders
 3. Memoize expensive calculations

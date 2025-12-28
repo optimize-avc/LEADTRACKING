@@ -62,6 +62,7 @@ npm run test -- --updateSnapshot
 ### Writing Tests
 
 #### Component Test Example
+
 ```typescript
 import { render, screen } from '@testing-library/react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -80,6 +81,7 @@ describe('GlassCard', () => {
 ```
 
 #### Testing with Hooks
+
 ```typescript
 import { renderHook, act } from '@testing-library/react';
 import { useAuth } from '@/components/providers/AuthProvider';
@@ -95,18 +97,19 @@ describe('useAuth', () => {
 ### Mocking
 
 #### Firebase Mocks (in jest.setup.ts)
+
 Firebase services are mocked globally:
+
 - `firebase/auth` - Authentication functions
 - `firebase/firestore` - Database operations
 - `@/lib/firebase/config` - App configuration
 
 #### Local Mocks
+
 ```typescript
 jest.mock('@/lib/firebase/services', () => ({
     LeadsService: {
-        getLeads: jest.fn().mockResolvedValue([
-            { id: '1', companyName: 'Test Corp' }
-        ]),
+        getLeads: jest.fn().mockResolvedValue([{ id: '1', companyName: 'Test Corp' }]),
     },
 }));
 ```
@@ -153,6 +156,7 @@ test.describe('Leads Page', () => {
 ### Authentication in E2E
 
 For tests requiring authentication:
+
 ```typescript
 test.describe('Authenticated flows', () => {
     test.beforeEach(async ({ page }) => {
@@ -180,6 +184,7 @@ Coverage report is generated in `coverage/` directory. Open `coverage/lcov-repor
 ### Coverage Thresholds
 
 Configured in `jest.config.ts`:
+
 ```typescript
 coverageThreshold: {
     global: {
@@ -208,6 +213,7 @@ Tests run automatically in CI via GitHub Actions:
 ## Best Practices
 
 ### Do's
+
 - ✅ Test user-visible behavior, not implementation
 - ✅ Use `screen.getByRole()` for accessibility
 - ✅ Mock external services (Firebase, APIs)
@@ -215,6 +221,7 @@ Tests run automatically in CI via GitHub Actions:
 - ✅ Use descriptive test names
 
 ### Don'ts
+
 - ❌ Test implementation details
 - ❌ Rely on CSS selectors
 - ❌ Share state between tests
@@ -224,16 +231,19 @@ Tests run automatically in CI via GitHub Actions:
 ## Troubleshooting
 
 ### Tests Not Finding Elements
+
 - Use `screen.debug()` to see current DOM
 - Check for async rendering (use `findBy*` or `waitFor`)
 - Verify mocks are set up correctly
 
 ### Firebase Mock Issues
+
 - Ensure mocks are defined before imports
 - Check jest.setup.ts loaded correctly
 - Use `jest.clearAllMocks()` in beforeEach
 
 ### Playwright Timeout Issues
+
 - Increase timeout in config
 - Use `{ timeout: 10000 }` in expects
 - Check if dev server is running

@@ -3,12 +3,12 @@ const { getFirestore, collection, getDocs, query, where, orderBy } = require('fi
 
 // Config
 const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIza...",
-    authDomain: "antigrav-tracking-final.firebaseapp.com",
-    projectId: "antigrav-tracking-final",
-    storageBucket: "antigrav-tracking-final.firebasestorage.app",
-    messagingSenderId: "813307578320",
-    appId: "1:813307578320:web:fb167e5ac138fe9ac91bd5"
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIza...',
+    authDomain: 'antigrav-tracking-final.firebaseapp.com',
+    projectId: 'antigrav-tracking-final',
+    storageBucket: 'antigrav-tracking-final.firebasestorage.app',
+    messagingSenderId: '813307578320',
+    appId: '1:813307578320:web:fb167e5ac138fe9ac91bd5',
 };
 
 const USER_ID = '4Q4AmzaE3nMo1iSBCDzBnF0vCE03';
@@ -26,7 +26,8 @@ async function poll() {
     const interval = setInterval(async () => {
         process.stdout.write('.');
         checks++;
-        if (checks > 60) { // 2 minutes
+        if (checks > 60) {
+            // 2 minutes
             console.log('\nTimeout waiting for reply.');
             clearInterval(interval);
             process.exit(1);

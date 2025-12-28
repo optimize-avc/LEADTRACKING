@@ -4,7 +4,16 @@ node_modules
 out
 build
 coverage
+.firebase
 *.min.js
 *.min.css
 package-lock.json
 pnpm-lock.yaml
+
+# Build artifacts and logs
+*.txt
+*.log
+lint_*.json
+
+# Nested project
+antigrav lead&sales Tracking/

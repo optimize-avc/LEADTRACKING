@@ -6,33 +6,34 @@ LEADTRACKING is deployed to **Firebase App Hosting** with automated CI/CD via Gi
 
 ## Environments
 
-| Environment | Branch | Firebase Project | URL |
-|-------------|--------|------------------|-----|
-| Development | `develop` | (local emulator) | `localhost:3000` |
-| Staging | `develop` | staging project | staging URL |
-| Production | `main` | production project | live URL |
+| Environment | Branch    | Firebase Project   | URL              |
+| ----------- | --------- | ------------------ | ---------------- |
+| Development | `develop` | (local emulator)   | `localhost:3000` |
+| Staging     | `develop` | staging project    | staging URL      |
+| Production  | `main`    | production project | live URL         |
 
 ## Prerequisites
 
 1. **Firebase CLI**
-   ```bash
-   npm install -g firebase-tools
-   firebase login
-   ```
+
+    ```bash
+    npm install -g firebase-tools
+    firebase login
+    ```
 
 2. **GitHub Repository Secrets**
    Configure these in GitHub → Settings → Secrets:
-   
-   | Secret | Description |
-   |--------|-------------|
-   | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API key |
-   | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
-   | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
-   | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Storage bucket |
-   | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Messaging sender ID |
-   | `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app ID |
-   | `FIREBASE_SERVICE_ACCOUNT` | Service account JSON |
-   | `SENTRY_DSN` | Sentry DSN (optional) |
+
+    | Secret                                     | Description           |
+    | ------------------------------------------ | --------------------- |
+    | `NEXT_PUBLIC_FIREBASE_API_KEY`             | Firebase API key      |
+    | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Firebase auth domain  |
+    | `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Firebase project ID   |
+    | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Storage bucket        |
+    | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Messaging sender ID   |
+    | `NEXT_PUBLIC_FIREBASE_APP_ID`              | Firebase app ID       |
+    | `FIREBASE_SERVICE_ACCOUNT`                 | Service account JSON  |
+    | `SENTRY_DSN`                               | Sentry DSN (optional) |
 
 ## Local Development
 
@@ -87,24 +88,24 @@ firebase deploy --only storage
 Runs on every push and pull request:
 
 1. **Code Quality**
-   - ESLint check
-   - Prettier format check
-   - TypeScript type check
+    - ESLint check
+    - Prettier format check
+    - TypeScript type check
 
 2. **Unit Tests**
-   - Jest with coverage
-   - Upload to Codecov
+    - Jest with coverage
+    - Upload to Codecov
 
 3. **Build Verification**
-   - Production build
-   - Ensures no build errors
+    - Production build
+    - Ensures no build errors
 
 4. **Security Audit**
-   - `npm audit` for vulnerabilities
+    - `npm audit` for vulnerabilities
 
 5. **E2E Tests** (main branch only)
-   - Playwright tests
-   - Cross-browser testing
+    - Playwright tests
+    - Cross-browser testing
 
 ### CD Pipeline (`.github/workflows/deploy.yml`)
 
@@ -147,11 +148,7 @@ All environment variables are stored as GitHub Secrets and injected during build
     },
     "hosting": {
         "source": ".",
-        "ignore": [
-            "firebase.json",
-            "**/.*",
-            "**/node_modules/**"
-        ],
+        "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
         "frameworksBackend": {
             "region": "us-central1"
         }
@@ -164,13 +161,14 @@ All environment variables are stored as GitHub Secrets and injected during build
 1. **Enable App Hosting** in Firebase Console
 2. **Connect GitHub Repository** for automatic deployments
 3. **Configure Build Settings**:
-   - Root directory: `/`
-   - Build command: `npm run build`
-   - Output directory: `.next`
+    - Root directory: `/`
+    - Build command: `npm run build`
+    - Output directory: `.next`
 
 ## Health Checks
 
 Firebase App Hosting includes automatic health checks:
+
 - Monitors application status
 - Auto-restarts on failure
 - Automatic rollback on failed deployments
@@ -178,6 +176,7 @@ Firebase App Hosting includes automatic health checks:
 ### Custom Health Check
 
 Add a health endpoint:
+
 ```typescript
 // app/api/health/route.ts
 export async function GET() {
@@ -188,7 +187,9 @@ export async function GET() {
 ## Rollback
 
 ### Automatic Rollback
+
 Firebase App Hosting automatically rolls back if:
+
 - Health checks fail
 - Build fails
 
@@ -205,10 +206,12 @@ firebase hosting:channel:deploy live --expires 0
 ## Monitoring
 
 ### Build Logs
+
 - GitHub Actions → Workflow runs
 - Firebase Console → App Hosting → Builds
 
 ### Runtime Logs
+
 - Firebase Console → App Hosting → Logs
 - Sentry Dashboard (if configured)
 
@@ -235,6 +238,7 @@ firebase hosting:channel:deploy live --expires 0
 ## Scaling
 
 Firebase App Hosting automatically scales:
+
 - **Cold starts**: Minimal with warm instances
 - **Concurrency**: Configurable per environment
 - **Regions**: Deploy to multiple regions for latency

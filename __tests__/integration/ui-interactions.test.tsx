@@ -83,7 +83,11 @@ describe('Button States', () => {
 
     it('does not call onClick when disabled', () => {
         const onClick = vi.fn();
-        render(<button onClick={onClick} disabled>Disabled</button>);
+        render(
+            <button onClick={onClick} disabled>
+                Disabled
+            </button>
+        );
 
         fireEvent.click(screen.getByRole('button'));
         expect(onClick).not.toHaveBeenCalled();
@@ -100,7 +104,9 @@ describe('Conditional Rendering', () => {
         }
         return (
             <ul data-testid="list">
-                {data.map((item, i) => <li key={i}>{item}</li>)}
+                {data.map((item, i) => (
+                    <li key={i}>{item}</li>
+                ))}
             </ul>
         );
     }

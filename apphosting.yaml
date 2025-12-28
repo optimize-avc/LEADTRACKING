@@ -80,3 +80,8 @@ env:
     secret: GOOGLE_AI_API_KEY
     availability:
       - RUNTIME
+  # Alias for backward compatibility with code that uses GEMINI_API_KEY
+  - variable: GEMINI_API_KEY
+    secret: GOOGLE_AI_API_KEY
+    availability:
+      - RUNTIME

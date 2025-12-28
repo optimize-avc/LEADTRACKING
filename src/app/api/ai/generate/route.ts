@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { verifyIdToken } from '@/lib/firebase/admin';
 
-// For local development fallback
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+// API key - check multiple possible env var names for flexibility
+const GEMINI_API_KEY = process.env.GOOGLE_AI_API_KEY || 
+                       process.env.GEMINI_API_KEY || 
+                       process.env.NEXT_PUBLIC_GEMINI_API_KEY || 
+                       '';
 
 // Vertex AI client (lazy initialized)
 let vertexAIClient: unknown = null;

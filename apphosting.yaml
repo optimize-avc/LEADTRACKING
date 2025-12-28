@@ -17,7 +17,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    value: AIzaSyDK6-V94VNzc5pTCgXzKvY9UA00Z0oCSRc
     availability:
       - BUILD
       - RUNTIME

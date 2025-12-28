@@ -1,5 +1,5 @@
 import { GmailMessage, GmailThread, GmailTokens, refreshAccessToken } from './gmail-auth';
-import { db } from '@/lib/firebase/config';
+import { getFirebaseDb } from '@/lib/firebase/config';
 import {
     doc,
     getDoc,
@@ -16,7 +16,7 @@ import {
 // ============================================
 
 export async function getValidAccessToken(userId: string): Promise<string | null> {
-    const tokenDoc = await getDoc(doc(db, 'users', userId, 'integrations', 'gmail'));
+    const tokenDoc = await getDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'gmail'));
 
     if (!tokenDoc.exists()) {
         return null;
@@ -28,7 +28,7 @@ export async function getValidAccessToken(userId: string): Promise<string | null
     if (tokens.expiresAt < Date.now() + 300000) {
         try {
             const refreshed = await refreshAccessToken(tokens.refreshToken);
-            await updateDoc(doc(db, 'users', userId, 'integrations', 'gmail'), {
+            await updateDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'gmail'), {
                 accessToken: refreshed.accessToken,
                 expiresAt: refreshed.expiresAt,
             });
@@ -43,11 +43,11 @@ export async function getValidAccessToken(userId: string): Promise<string | null
 }
 
 export async function saveGmailTokens(userId: string, tokens: GmailTokens): Promise<void> {
-    await setDoc(doc(db, 'users', userId, 'integrations', 'gmail'), tokens);
+    await setDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'gmail'), tokens);
 }
 
 export async function isGmailConnected(userId: string): Promise<boolean> {
-    const tokenDoc = await getDoc(doc(db, 'users', userId, 'integrations', 'gmail'));
+    const tokenDoc = await getDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'gmail'));
     return tokenDoc.exists();
 }
 
@@ -214,7 +214,7 @@ export async function syncEmailsForLead(
     const query = `from:${leadEmail} OR to:${leadEmail}`;
     const messages = await fetchEmails(accessToken, query, 30);
 
-    const userDoc = await getDoc(doc(db, 'users', userId, 'integrations', 'gmail'));
+    const userDoc = await getDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'gmail'));
     const userEmail = userDoc.exists() ? userDoc.data().email : '';
 
     const emailRecords: EmailRecord[] = [];
@@ -241,7 +241,7 @@ export async function syncEmailsForLead(
         emailRecords.push(record);
 
         // Save to Firebase
-        await setDoc(doc(db, 'users', userId, 'emailMessages', message.id), record);
+        await setDoc(doc(getFirebaseDb(), 'users', userId, 'emailMessages', message.id), record);
     }
 
     return emailRecords;
@@ -252,7 +252,7 @@ export async function syncEmailsForLead(
 // ============================================
 
 export async function getLeadEmails(userId: string, leadId: string): Promise<EmailRecord[]> {
-    const emailsRef = collection(db, 'users', userId, 'emailMessages');
+    const emailsRef = collection(getFirebaseDb(), 'users', userId, 'emailMessages');
     const q = query(emailsRef, where('leadId', '==', leadId));
     const snapshot = await getDocs(q);
 
@@ -277,7 +277,7 @@ export async function sendEmail(
     }
 
     // Get user's email for From header
-    const userDoc = await getDoc(doc(db, 'users', userId, 'integrations', 'gmail'));
+    const userDoc = await getDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'gmail'));
     const userEmail = userDoc.exists() ? userDoc.data().email : '';
 
     // Create RFC 2822 formatted email with From header
@@ -315,7 +315,7 @@ export async function sendEmail(
 
     // Log the sent email (reuse userEmail from earlier)
 
-    await setDoc(doc(db, 'users', userId, 'emailMessages', result.id), {
+    await setDoc(doc(getFirebaseDb(), 'users', userId, 'emailMessages', result.id), {
         id: result.id,
         threadId: result.threadId,
         leadId,

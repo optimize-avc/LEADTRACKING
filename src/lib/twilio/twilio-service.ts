@@ -7,7 +7,7 @@ import {
     TwilioCredentials,
     getTwilioClient,
 } from './twilio-config';
-import { db } from '@/lib/firebase/config';
+import { getFirebaseDb } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 
 // Twilio Client is now managed via twilio-config.ts helper
@@ -54,7 +54,7 @@ export async function sendSMSWithLogging(
     const result = await sendSMS({ to, body, leadId });
 
     // Log activity regardless of success
-    await addDoc(collection(db, 'users', userId, 'activities'), {
+    await addDoc(collection(getFirebaseDb(), 'users', userId, 'activities'), {
         type: 'social', // Using 'social' as SMS type since it's close
         outcome: result.success ? 'connected' : 'no_answer',
         timestamp: Date.now(),
@@ -114,7 +114,7 @@ export async function initiateCallWithLogging(
     const result = await initiateCall(to);
 
     // Log activity
-    await addDoc(collection(db, 'users', userId, 'activities'), {
+    await addDoc(collection(getFirebaseDb(), 'users', userId, 'activities'), {
         type: 'call',
         outcome: result.success ? 'connected' : 'no_answer',
         timestamp: Date.now(),
@@ -138,7 +138,7 @@ export async function saveTwilioCredentials(
     userId: string,
     credentials: Omit<TwilioCredentials, 'connected' | 'connectedAt'>
 ): Promise<void> {
-    await setDoc(doc(db, 'users', userId, 'integrations', 'twilio'), {
+    await setDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'twilio'), {
         ...credentials,
         connected: true,
         connectedAt: Date.now(),
@@ -150,7 +150,7 @@ export async function saveTwilioCredentials(
  */
 export async function getTwilioStatus(userId: string): Promise<TwilioCredentials | null> {
     // First check if user has their own Twilio credentials
-    const userDoc = await getDoc(doc(db, 'users', userId, 'integrations', 'twilio'));
+    const userDoc = await getDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'twilio'));
 
     if (userDoc.exists()) {
         return userDoc.data() as TwilioCredentials;
@@ -181,7 +181,7 @@ export async function isTwilioConnected(userId: string): Promise<boolean> {
  * Disconnect Twilio for a user
  */
 export async function disconnectTwilio(userId: string): Promise<void> {
-    await setDoc(doc(db, 'users', userId, 'integrations', 'twilio'), {
+    await setDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'twilio'), {
         connected: false,
         disconnectedAt: Date.now(),
     });

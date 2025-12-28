@@ -11,7 +11,7 @@ import {
     addDoc,
     serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { getFirebaseDb } from '@/lib/firebase/config';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { toast } from 'sonner';
 
@@ -54,7 +54,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
         if (!user) return;
 
         const q = query(
-            collection(db, 'users', user.uid, 'messages'),
+            collection(getFirebaseDb(), 'users', user.uid, 'messages'),
             where('leadId', '==', leadId),
             orderBy('createdAt', 'asc')
         );

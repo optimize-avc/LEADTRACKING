@@ -17,77 +17,52 @@ function isFirebaseConfigValid(): boolean {
     return Boolean(firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId);
 }
 
-// Lazy initialization to avoid build-time errors when env vars aren't set
-let _app: FirebaseApp | undefined;
-let _auth: Auth | undefined;
-let _db: Firestore | undefined;
-let _storage: FirebaseStorage | undefined;
+// Cached instances
+let _app: FirebaseApp | null = null;
+let _auth: Auth | null = null;
+let _db: Firestore | null = null;
+let _storage: FirebaseStorage | null = null;
 
-// Initialize Firebase lazily
-function initializeFirebase(): FirebaseApp {
+// Getter functions for lazy initialization - call these at runtime, not module load
+export function getFirebaseApp(): FirebaseApp {
     if (!_app) {
         if (!isFirebaseConfigValid()) {
             throw new Error(
                 'Firebase config is not valid. Ensure NEXT_PUBLIC_FIREBASE_* environment variables are set.'
             );
         }
-        _app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        _app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     }
     return _app;
 }
 
-// Create proxy objects that lazy-initialize on first property access
-// This allows imports to work at build time but defers actual initialization to runtime
-
-function createFirebaseProxy<T extends object>(getter: () => T, name: string): T {
-    // In server environments during build, return a proxy that defers access
-    const handler: ProxyHandler<T> = {
-        get(_target, prop) {
-            const instance = getter();
-            const value = (instance as Record<string | symbol, unknown>)[prop];
-            return typeof value === 'function' ? value.bind(instance) : value;
-        },
-        apply(_target, _thisArg, args) {
-            // For callable proxies (like auth functions)
-            const instance = getter();
-            if (typeof instance === 'function') {
-                return (instance as (...args: unknown[]) => unknown)(...args);
-            }
-            throw new Error(`${name} is not callable`);
-        },
-    };
-    return new Proxy(Object.create(null) as T, handler);
-}
-
-// Getter functions for lazy initialization
-function getFirebaseApp(): FirebaseApp {
-    return initializeFirebase();
-}
-
-function getFirebaseAuth(): Auth {
+export function getFirebaseAuth(): Auth {
     if (!_auth) {
-        _auth = getAuth(initializeFirebase());
+        _auth = getAuth(getFirebaseApp());
     }
     return _auth;
 }
 
-function getFirebaseDb(): Firestore {
+export function getFirebaseDb(): Firestore {
     if (!_db) {
-        _db = getFirestore(initializeFirebase());
+        _db = getFirestore(getFirebaseApp());
     }
     return _db;
 }
 
-function getFirebaseStorage(): FirebaseStorage {
+export function getFirebaseStorage(): FirebaseStorage {
     if (!_storage) {
-        _storage = getStorage(initializeFirebase());
+        _storage = getStorage(getFirebaseApp());
     }
     return _storage;
 }
 
-// Export lazy proxies that look like the actual Firebase instances
-// They only initialize when a property is accessed at runtime
-export const app = createFirebaseProxy(getFirebaseApp, 'app');
-export const auth = createFirebaseProxy(getFirebaseAuth, 'auth');
-export const db = createFirebaseProxy(getFirebaseDb, 'db');
-export const storage = createFirebaseProxy(getFirebaseStorage, 'storage');
+// Legacy exports for backward compatibility - these call the getter functions
+// WARNING: These will throw at build time if accessed during static analysis
+// For new code, prefer using the getter functions directly
+export const app =
+    typeof window !== 'undefined' ? getFirebaseApp() : (null as unknown as FirebaseApp);
+export const auth = typeof window !== 'undefined' ? getFirebaseAuth() : (null as unknown as Auth);
+export const db = typeof window !== 'undefined' ? getFirebaseDb() : (null as unknown as Firestore);
+export const storage =
+    typeof window !== 'undefined' ? getFirebaseStorage() : (null as unknown as FirebaseStorage);

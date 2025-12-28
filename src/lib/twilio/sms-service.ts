@@ -1,5 +1,5 @@
 import { getTwilioClient, TWILIO_CONFIG } from './twilio-config';
-import { db } from '@/lib/firebase/config';
+import { getFirebaseDb } from '@/lib/firebase/config';
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 export interface SMSRecord {
@@ -51,7 +51,7 @@ export async function sendSMS(
             });
 
             // Also log as activity
-            await addDoc(collection(db, 'users', userId, 'activities'), {
+            await addDoc(collection(getFirebaseDb(), 'users', userId, 'activities'), {
                 type: 'sms',
                 leadId,
                 description: `SMS sent: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`,
@@ -78,11 +78,14 @@ export async function sendSMS(
 export async function logSMSToFirestore(smsRecord: SMSRecord): Promise<void> {
     try {
         // Use setDoc with messageSid as ID for easier lookups/updates
-        await setDoc(doc(db, 'users', smsRecord.userId, 'messages', smsRecord.messageSid), {
-            ...smsRecord,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
+        await setDoc(
+            doc(getFirebaseDb(), 'users', smsRecord.userId, 'messages', smsRecord.messageSid),
+            {
+                ...smsRecord,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            }
+        );
     } catch (error) {
         console.error('Error logging SMS to Firestore:', error);
         throw error;
@@ -98,7 +101,7 @@ export async function updateSMSStatus(
     status: SMSRecord['status']
 ): Promise<void> {
     try {
-        const msgRef = doc(db, 'users', userId, 'messages', messageSid);
+        const msgRef = doc(getFirebaseDb(), 'users', userId, 'messages', messageSid);
 
         await setDoc(
             msgRef,

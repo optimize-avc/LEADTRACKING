@@ -1,4 +1,4 @@
-import { db, storage } from '@/lib/firebase/config';
+import { getFirebaseDb, getFirebaseStorage } from '@/lib/firebase/config';
 import {
     collection,
     addDoc,
@@ -26,15 +26,15 @@ export const ResourcesService = {
             visibility === 'company'
                 ? `resources/${Date.now()}_${file.name}`
                 : `users/${userId}/resources/${Date.now()}_${file.name}`;
-        const fileRef = ref(storage, path);
+        const fileRef = ref(getFirebaseStorage(), path);
         const snapshot = await uploadBytes(fileRef, file);
         const downloadUrl = await getDownloadURL(snapshot.ref);
 
         // 2. Save Metadata to Firestore
         const resourcesRef =
             visibility === 'company'
-                ? collection(db, 'resources')
-                : collection(db, 'users', userId, 'resources');
+                ? collection(getFirebaseDb(), 'resources')
+                : collection(getFirebaseDb(), 'users', userId, 'resources');
         const now = new Date().toISOString();
 
         const docRef = await addDoc(resourcesRef, {
@@ -55,7 +55,7 @@ export const ResourcesService = {
 
     // Get company-wide resources
     async getCompanyResources(): Promise<Resource[]> {
-        const resourcesRef = collection(db, 'resources'); // Top-level collection
+        const resourcesRef = collection(getFirebaseDb(), 'resources'); // Top-level collection
         const q = query(resourcesRef, orderBy('createdAt', 'desc'));
 
         const snapshot = await getDocs(q);
@@ -67,7 +67,7 @@ export const ResourcesService = {
 
     // Get all resources for a user
     async getUserResources(userId: string): Promise<Resource[]> {
-        const resourcesRef = collection(db, 'users', userId, 'resources');
+        const resourcesRef = collection(getFirebaseDb(), 'users', userId, 'resources');
         const q = query(resourcesRef, orderBy('createdAt', 'desc'));
 
         const snapshot = await getDocs(q);
@@ -80,11 +80,11 @@ export const ResourcesService = {
     // Delete a resource
     async deleteResource(userId: string, resourceId: string, storagePath: string): Promise<void> {
         // 1. Delete from Firestore
-        await deleteDoc(doc(db, 'users', userId, 'resources', resourceId));
+        await deleteDoc(doc(getFirebaseDb(), 'users', userId, 'resources', resourceId));
 
         // 2. Delete from Storage
         if (storagePath) {
-            const fileRef = ref(storage, storagePath);
+            const fileRef = ref(getFirebaseStorage(), storagePath);
             await deleteObject(fileRef).catch((e) =>
                 console.warn('File already deleted or not found', e)
             );

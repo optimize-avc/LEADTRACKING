@@ -1,5 +1,5 @@
 import { getTwilioClient, TWILIO_CONFIG } from './twilio-config';
-import { db } from '@/lib/firebase/config';
+import { getFirebaseDb } from '@/lib/firebase/config';
 import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export interface CallRecord {
@@ -104,14 +104,17 @@ export async function getCallStatus(callSid: string): Promise<{
 export async function logCallToFirestore(callRecord: CallRecord): Promise<void> {
     try {
         // Save to calls collection
-        await setDoc(doc(db, 'users', callRecord.userId, 'calls', callRecord.callSid), {
-            ...callRecord,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
+        await setDoc(
+            doc(getFirebaseDb(), 'users', callRecord.userId, 'calls', callRecord.callSid),
+            {
+                ...callRecord,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            }
+        );
 
         // Also log as an activity
-        await addDoc(collection(db, 'users', callRecord.userId, 'activities'), {
+        await addDoc(collection(getFirebaseDb(), 'users', callRecord.userId, 'activities'), {
             type: 'call',
             leadId: callRecord.leadId,
             description: `Call ${callRecord.status} - ${callRecord.leadPhone}`,
@@ -137,7 +140,7 @@ export async function updateCallStatus(
     recordingUrl?: string
 ): Promise<void> {
     try {
-        const callRef = doc(db, 'users', userId, 'calls', callSid);
+        const callRef = doc(getFirebaseDb(), 'users', userId, 'calls', callSid);
 
         const updateData: Partial<CallRecord> & { updatedAt: ReturnType<typeof serverTimestamp> } =
             {

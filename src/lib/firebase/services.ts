@@ -1,4 +1,4 @@
-import { db } from './config';
+import { getFirebaseDb } from './config';
 import {
     collection,
     doc,
@@ -32,7 +32,7 @@ function safeLeadValue(value: number | undefined | null): number {
 export const LeadsService = {
     // Get all leads for a user
     async getLeads(userId: string): Promise<Lead[]> {
-        const leadsRef = collection(db, 'users', userId, 'leads');
+        const leadsRef = collection(getFirebaseDb(), 'users', userId, 'leads');
         const q = query(leadsRef, orderBy('updatedAt', 'desc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.map((doc) => {
@@ -48,7 +48,7 @@ export const LeadsService = {
 
     // Get single lead
     async getLead(userId: string, leadId: string): Promise<Lead | null> {
-        const leadRef = doc(db, 'users', userId, 'leads', leadId);
+        const leadRef = doc(getFirebaseDb(), 'users', userId, 'leads', leadId);
         const snapshot = await getDoc(leadRef);
         if (!snapshot.exists()) return null;
         return { id: snapshot.id, ...snapshot.data() } as Lead;
@@ -59,7 +59,7 @@ export const LeadsService = {
         userId: string,
         lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
     ): Promise<string> {
-        const leadsRef = collection(db, 'users', userId, 'leads');
+        const leadsRef = collection(getFirebaseDb(), 'users', userId, 'leads');
         const now = Date.now();
         const docRef = await addDoc(leadsRef, {
             ...lead,
@@ -72,7 +72,7 @@ export const LeadsService = {
 
     // Update lead
     async updateLead(userId: string, leadId: string, updates: Partial<Lead>): Promise<void> {
-        const leadRef = doc(db, 'users', userId, 'leads', leadId);
+        const leadRef = doc(getFirebaseDb(), 'users', userId, 'leads', leadId);
         await updateDoc(leadRef, {
             ...updates,
             updatedAt: Date.now(),
@@ -81,7 +81,7 @@ export const LeadsService = {
 
     // Delete lead
     async deleteLead(userId: string, leadId: string): Promise<void> {
-        const leadRef = doc(db, 'users', userId, 'leads', leadId);
+        const leadRef = doc(getFirebaseDb(), 'users', userId, 'leads', leadId);
         await deleteDoc(leadRef);
     },
 };
@@ -93,7 +93,7 @@ export const LeadsService = {
 export const ActivitiesService = {
     // Get all activities for a user
     async getActivities(userId: string, limit: number = 50): Promise<Activity[]> {
-        const activitiesRef = collection(db, 'users', userId, 'activities');
+        const activitiesRef = collection(getFirebaseDb(), 'users', userId, 'activities');
         const q = query(activitiesRef, orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.slice(0, limit).map((doc) => ({
@@ -104,7 +104,7 @@ export const ActivitiesService = {
 
     // Get activities for a specific lead
     async getLeadActivities(userId: string, leadId: string): Promise<Activity[]> {
-        const activitiesRef = collection(db, 'users', userId, 'activities');
+        const activitiesRef = collection(getFirebaseDb(), 'users', userId, 'activities');
         const q = query(activitiesRef, where('leadId', '==', leadId), orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.map((doc) => ({
@@ -115,7 +115,7 @@ export const ActivitiesService = {
 
     // Log new activity
     async logActivity(userId: string, activity: Omit<Activity, 'id'>): Promise<string> {
-        const activitiesRef = collection(db, 'users', userId, 'activities');
+        const activitiesRef = collection(getFirebaseDb(), 'users', userId, 'activities');
         const docRef = await addDoc(activitiesRef, {
             ...activity,
             repId: userId,
@@ -217,7 +217,7 @@ export interface EmailThread {
 export const EmailThreadsService = {
     // Get email threads for a lead
     async getEmailThreads(userId: string, leadId: string): Promise<EmailThread[]> {
-        const threadsRef = collection(db, 'users', userId, 'emailThreads');
+        const threadsRef = collection(getFirebaseDb(), 'users', userId, 'emailThreads');
         const q = query(threadsRef, where('leadId', '==', leadId), orderBy('sentAt', 'desc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.map((doc) => ({
@@ -228,14 +228,14 @@ export const EmailThreadsService = {
 
     // Create email thread when email is sent
     async createThread(userId: string, thread: Omit<EmailThread, 'id'>): Promise<string> {
-        const threadsRef = collection(db, 'users', userId, 'emailThreads');
+        const threadsRef = collection(getFirebaseDb(), 'users', userId, 'emailThreads');
         const docRef = await addDoc(threadsRef, thread);
         return docRef.id;
     },
 
     // Mark email as replied
     async markAsReplied(userId: string, threadId: string, replyContent: string): Promise<void> {
-        const threadRef = doc(db, 'users', userId, 'emailThreads', threadId);
+        const threadRef = doc(getFirebaseDb(), 'users', userId, 'emailThreads', threadId);
         await updateDoc(threadRef, {
             status: 'replied',
             repliedAt: Date.now(),
@@ -359,14 +359,14 @@ export interface UserProfile {
 
 export const ProfileService = {
     async getProfile(userId: string): Promise<UserProfile | null> {
-        const profileRef = doc(db, 'users', userId);
+        const profileRef = doc(getFirebaseDb(), 'users', userId);
         const snapshot = await getDoc(profileRef);
         if (!snapshot.exists()) return null;
         return { uid: snapshot.id, ...snapshot.data() } as UserProfile;
     },
 
     async updateProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
-        const profileRef = doc(db, 'users', userId);
+        const profileRef = doc(getFirebaseDb(), 'users', userId);
         const now = Date.now();
         await setDoc(
             profileRef,

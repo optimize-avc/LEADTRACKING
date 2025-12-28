@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/config';
+import { getFirebaseDb } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 /**
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         // 1. Find the lead associated with this phone number
         // We search across all users since webhooks are global
         // In production, you'd use a more efficient lookup index
-        const leadsQuery = query(collection(db, 'leads'), where('phone', '==', from));
+        const leadsQuery = query(collection(getFirebaseDb(), 'leads'), where('phone', '==', from));
         const leadsSnapshot = await getDocs(leadsQuery);
 
         if (leadsSnapshot.empty) {
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
             const userId = leadData.ownerId; // Assuming ownerId exists on lead
 
             if (userId) {
-                return addDoc(collection(db, 'users', userId, 'activities'), {
+                return addDoc(collection(getFirebaseDb(), 'users', userId, 'activities'), {
                     type: 'social',
                     outcome: 'connected',
                     timestamp: Date.now(),

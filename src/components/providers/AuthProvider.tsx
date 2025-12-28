@@ -8,7 +8,7 @@ import {
     GoogleAuthProvider,
     signOut,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { getFirebaseAuth } from '@/lib/firebase/config';
 import { ProfileService, UserProfile } from '@/lib/firebase/services';
 
 interface AuthContextType {
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (currentUser) => {
             setUser(currentUser);
             if (currentUser) {
                 // Fetch or initialize profile
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signInWithGoogle = async () => {
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
+            await signInWithPopup(getFirebaseAuth(), provider);
         } catch (error) {
             console.error('Error signing in with Google', error);
             throw error;
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         try {
-            await signOut(auth);
+            await signOut(getFirebaseAuth());
         } catch (error) {
             console.error('Error signing out', error);
             throw error;

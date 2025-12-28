@@ -1,9 +1,11 @@
 name: Deploy to Firebase App Hosting
 
+# Disabled - Firebase App Hosting deploys automatically via Cloud Build on git push
+# This workflow was conflicting with the native Firebase deployment
 on:
-    push:
-        branches: [main]
     workflow_dispatch:
+    # push:
+    #     branches: [main]
 
 concurrency:
     group: deploy-${{ github.ref }}

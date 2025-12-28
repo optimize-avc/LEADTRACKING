@@ -16,6 +16,48 @@ import { GeminiService } from '@/lib/ai/gemini';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { AIPitchAnalysis } from '@/types/ai';
 
+// Web Speech API types (not globally available in all TS configs)
+interface SpeechRecognitionResult {
+    readonly length: number;
+    item(index: number): SpeechRecognitionAlternative;
+    [index: number]: SpeechRecognitionAlternative;
+    readonly isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+    readonly transcript: string;
+    readonly confidence: number;
+}
+
+interface SpeechRecognitionResultList {
+    readonly length: number;
+    item(index: number): SpeechRecognitionResult;
+    [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionEventMap {
+    result: SpeechRecognitionEventType;
+    end: Event;
+    error: Event;
+}
+
+interface SpeechRecognitionEventType extends Event {
+    readonly resultIndex: number;
+    readonly results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionType extends EventTarget {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
+    onresult: ((event: SpeechRecognitionEventType) => void) | null;
+    onerror: ((event: Event) => void) | null;
+    onend: (() => void) | null;
+    start(): void;
+    stop(): void;
+    abort(): void;
+}
+
 interface PitchRecorderProps {
     onClose: () => void;
 }
@@ -31,28 +73,28 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const recognitionRef = useRef<SpeechRecognition | null>(null);
+    const recognitionRef = useRef<SpeechRecognitionType | null>(null);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const SpeechRecognition =
+            const SpeechRecognitionCtor =
                 (
                     window as unknown as {
-                        SpeechRecognition?: new () => SpeechRecognition;
-                        webkitSpeechRecognition?: new () => SpeechRecognition;
+                        SpeechRecognition?: new () => SpeechRecognitionType;
+                        webkitSpeechRecognition?: new () => SpeechRecognitionType;
                     }
                 ).SpeechRecognition ||
                 (
                     window as unknown as {
-                        webkitSpeechRecognition?: new () => SpeechRecognition;
+                        webkitSpeechRecognition?: new () => SpeechRecognitionType;
                     }
                 ).webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                const recognition = new SpeechRecognition();
+            if (SpeechRecognitionCtor) {
+                const recognition = new SpeechRecognitionCtor();
                 recognition.continuous = true;
                 recognition.interimResults = true;
 
-                recognition.onresult = (event: SpeechRecognitionEvent) => {
+                recognition.onresult = (event: SpeechRecognitionEventType) => {
                     let currentTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         currentTranscript += event.results[i][0].transcript;

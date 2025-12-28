@@ -17,6 +17,7 @@ import { motion } from 'framer-motion';
 import { calculateRevenueForecast, ForecastResult } from '@/lib/utils/forecasting';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { LeadsService } from '@/lib/firebase/services';
+import { Lead } from '@/types';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { useState, useEffect } from 'react';
 import {
@@ -51,41 +52,44 @@ export default function AnalyticsClient() {
         const loadForecast = async () => {
             if (!user) {
                 // Mock calculation for demo mode
-                const mockLeads = [
+                const mockLeads: Lead[] = [
                     {
                         value: 50000,
-                        status: 'Negotiation' as const,
+                        status: 'Negotiation',
                         companyName: 'Demo Corp',
                         contactName: 'Alex Demo',
                         email: 'alex@demo.com',
+                        phone: '',
                         id: '1',
-                        ownerId: 'demo',
+                        assignedTo: 'demo',
                         createdAt: Date.now(),
-                        statusUpdatedAt: Date.now(),
+                        updatedAt: Date.now(),
                     },
                     {
                         value: 25000,
-                        status: 'Proposal' as const,
+                        status: 'Proposal',
                         companyName: 'Test Inc',
                         contactName: 'Sarah Test',
                         email: 'sarah@test.com',
+                        phone: '',
                         id: '2',
-                        ownerId: 'demo',
+                        assignedTo: 'demo',
                         createdAt: Date.now(),
-                        statusUpdatedAt: Date.now(),
+                        updatedAt: Date.now(),
                     },
                     {
                         value: 15000,
-                        status: 'Qualified' as const,
+                        status: 'Qualified',
                         companyName: 'Cloud Co',
                         contactName: 'Mike Cloud',
                         email: 'mike@cloud.com',
+                        phone: '',
                         id: '3',
-                        ownerId: 'demo',
+                        assignedTo: 'demo',
                         createdAt: Date.now(),
-                        statusUpdatedAt: Date.now(),
+                        updatedAt: Date.now(),
                     },
-                ] as Parameters<typeof calculateRevenueForecast>[0];
+                ];
                 setForecast(calculateRevenueForecast(mockLeads));
                 setIsLoading(false);
                 return;

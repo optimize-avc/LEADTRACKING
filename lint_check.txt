@@ -1,0 +1,138 @@
+﻿
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\api\twilio\incoming-message\route.ts
+  1:23  warning  'NextResponse' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\api\twilio\lookup\route.ts
+  4:10  warning  'withAuth' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\api\twilio\sms-webhook\route.ts
+  13:15  warning  'leadId' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\api\twilio\webhook\route.ts
+  42:15  warning  'leadId' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\page.tsx
+  53:8  warning  React Hook useEffect has a missing dependency: 'loadMetrics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\reality-link\page.tsx
+   9:5   warning  'Mic' is defined but never used. Allowed unused vars must match /^_/u                     @typescript-eslint/no-unused-vars
+  11:5   warning  'Radio' is defined but never used. Allowed unused vars must match /^_/u                   @typescript-eslint/no-unused-vars
+  12:5   warning  'Zap' is defined but never used. Allowed unused vars must match /^_/u                     @typescript-eslint/no-unused-vars
+  14:5   warning  'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+  15:5   warning  'Shield' is defined but never used. Allowed unused vars must match /^_/u                  @typescript-eslint/no-unused-vars
+  16:5   warning  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  32:24  warning  'setActiveLead' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  38:12  warning  'loading' is assigned a value but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\resources\ResourcesClient.tsx
+  45:12  warning  'loading' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\settings\SettingsClient.tsx
+   7:36  warning  'ShieldCheck' is defined but never used. Allowed unused vars must match /^_/u                                        @typescript-eslint/no-unused-vars
+  40:8   warning  React Hook useEffect has a missing dependency: 'checkConnections'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\app\training\TrainingClient.tsx
+  5:10  warning  'toast' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\ai\AIEmailDraft.tsx
+  42:8   warning  React Hook useEffect has missing dependencies: 'email' and 'handleGenerate'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  51:18  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                   @typescript-eslint/no-unused-vars
+  66:18  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                   @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\dashboard\DashboardClient.tsx
+  8:10  warning  'Skeleton' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\layout\ClientLayout.tsx
+  39:11  warning  'checkUserRole' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  39:34  warning  'userId' is defined but never used. Allowed unused args must match /^_/u                  @typescript-eslint/no-unused-vars
+  46:18  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u          @typescript-eslint/no-unused-vars
+  57:18  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u          @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\leads\CallButton.tsx
+   4:27  warning  'Loader2' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+  30:12  warning  'callSid' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\leads\EmailThreadsPanel.tsx
+  41:8   warning  React Hook useEffect has a missing dependency: 'loadEmails'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  90:18  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                               @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\leads\SMSChatWindow.tsx
+   4:25  warning  'Phone' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   4:35  warning  'MoreVertical' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  11:5   warning  'addDoc' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+  12:5   warning  'serverTimestamp' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\onboarding\WelcomeTour.tsx
+  6:23  warning  'Target' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\BoardroomRunner.tsx
+   8:5  warning  'Mic' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+   9:5  warning  'MicOff' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+  11:5  warning  'AlertCircle' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  12:5  warning  'Play' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\DojoRunner.tsx
+  12:5  warning  'RefreshCw' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  14:5  warning  'Database' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\EndlessQuizRunner.tsx
+  3:27  warning  'useEffect' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\LMSPlayer.tsx
+    4:18  warning  'Module' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+    4:26  warning  'Lesson' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+    5:13  warning  'ChevronLeft' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  215:42  warning  'score' is defined but never used. Allowed unused args must match /^_/u        @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\PitchRecorder.tsx
+   8:5   warning  'Play' is defined but never used. Allowed unused vars must match /^_/u                                 @typescript-eslint/no-unused-vars
+   9:5   warning  'BarChart3' is defined but never used. Allowed unused vars must match /^_/u                            @typescript-eslint/no-unused-vars
+  39:13  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  41:28  error    Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
+  41:65  error    Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\QuizComponent.tsx
+  46:15  warning  'finalScore' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\TimeMachine.tsx
+   9:5  warning  'ExternalLink' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  10:5  warning  'RefreshCw' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  11:5  warning  'Send' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  14:5  warning  'TrendingUp' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  15:5  warning  'Lock' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\components\training\WarRoomRunner.tsx
+    9:5   warning  'Send' is defined but never used. Allowed unused vars must match /^_/u                                                                                                  @typescript-eslint/no-unused-vars
+   14:5   warning  'Unlock' is defined but never used. Allowed unused vars must match /^_/u                                                                                                @typescript-eslint/no-unused-vars
+   16:5   warning  'TrendingUp' is defined but never used. Allowed unused vars must match /^_/u                                                                                            @typescript-eslint/no-unused-vars
+   17:5   warning  'TrendingDown' is defined but never used. Allowed unused vars must match /^_/u                                                                                          @typescript-eslint/no-unused-vars
+   18:5   warning  'Clock' is defined but never used. Allowed unused vars must match /^_/u                                                                                                 @typescript-eslint/no-unused-vars
+   20:5   warning  'RotateCcw' is defined but never used. Allowed unused vars must match /^_/u                                                                                             @typescript-eslint/no-unused-vars
+   22:5   warning  'Phone' is defined but never used. Allowed unused vars must match /^_/u                                                                                                 @typescript-eslint/no-unused-vars
+   26:5   warning  'ChevronRight' is defined but never used. Allowed unused vars must match /^_/u                                                                                          @typescript-eslint/no-unused-vars
+   32:37  warning  'DominanceLevel' is defined but never used. Allowed unused vars must match /^_/u                                                                                        @typescript-eslint/no-unused-vars
+  292:8   warning  React Hook useEffect has missing dependencies: 'gameState.scenario', 'gameState.status', and 'gameState.turnCount'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\lib\ai\courseGenerator.ts
+   1:18  warning  'Module' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+   1:26  warning  'Lesson' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+  18:11  warning  'isPlaybook' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\lib\analytics\index.ts
+  6:6  warning  'AnalyticsEvent' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\lib\firebase\ai-service.ts
+  266:5  warning  'lead' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\lib\firebase\resources.ts
+  6:5  warning  'where' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\lib\gmail\email-analyzer.ts
+  12:10  warning  'e' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\tryst\Downloads\antigrav-tracking\src\middleware.ts
+  4:28  warning  'request' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+Γ£û 74 problems (2 errors, 72 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

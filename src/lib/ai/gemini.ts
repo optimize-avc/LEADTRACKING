@@ -16,7 +16,7 @@ export const GeminiService = {
         try {
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
             if (token) {
-                headers['Authorization'] = `Bearer ${token} `;
+                headers['Authorization'] = `Bearer ${token}`;
             }
 
             const response = await fetch('/api/ai/generate', {

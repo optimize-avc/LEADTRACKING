@@ -53,14 +53,18 @@ export async function POST(req: NextRequest) {
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             // Local dev exception (optional, but better to be strict)
             if (process.env.NODE_ENV !== 'development') {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                console.warn('[AI Route] No auth header provided');
+                return NextResponse.json({ error: 'Unauthorized - No auth header' }, { status: 401 });
             }
         } else {
-            const token = authHeader.split('Bearer ')[1];
+            const token = authHeader.split('Bearer ')[1]?.trim();
+            console.log('[AI Route] Verifying token, length:', token?.length || 0);
             const decodedToken = await verifyIdToken(token);
             if (!decodedToken) {
+                console.warn('[AI Route] Token verification failed');
                 return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
             }
+            console.log('[AI Route] User authenticated:', decodedToken.uid);
             // User is authenticated
         }
 

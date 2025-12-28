@@ -2,13 +2,13 @@
  * Firebase Admin SDK Initialization
  *
  * Singleton pattern for initializing Firebase Admin SDK.
- * Uses environment variables for configuration.
+ * Uses Application Default Credentials (ADC) in Google Cloud environments,
+ * or falls back to service account credentials if provided.
  *
- * For production, you should use a service account JSON file.
  * See: https://firebase.google.com/docs/admin/setup
  */
 
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, applicationDefault, App } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
@@ -24,10 +24,23 @@ function isServer(): boolean {
 }
 
 /**
+ * Check if running in a Google Cloud environment (App Hosting, Cloud Run, etc.)
+ */
+function isGoogleCloudEnvironment(): boolean {
+    // Cloud Run/App Hosting sets these environment variables
+    return !!(
+        process.env.K_SERVICE ||
+        process.env.K_REVISION ||
+        process.env.GOOGLE_CLOUD_PROJECT ||
+        process.env.GCLOUD_PROJECT
+    );
+}
+
+/**
  * Get or initialize Firebase Admin App
  *
- * Uses Application Default Credentials when running in Google Cloud,
- * or falls back to project ID only for development.
+ * Uses Application Default Credentials (ADC) when running in Google Cloud,
+ * or falls back to service account credentials for local development.
  */
 export function getAdminApp(): App {
     if (!isServer()) {
@@ -51,8 +64,24 @@ export function getAdminApp(): App {
         throw new Error('NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set');
     }
 
-    // If service account credentials are available, use them
+    // Priority 1: Use Application Default Credentials in Google Cloud environments
+    // ADC is automatically available in Firebase App Hosting, Cloud Run, etc.
+    if (isGoogleCloudEnvironment()) {
+        console.log('Firebase Admin: Using Application Default Credentials (Google Cloud environment)');
+        try {
+            adminApp = initializeApp({
+                credential: applicationDefault(),
+                projectId,
+            });
+            return adminApp;
+        } catch (e) {
+            console.warn('Firebase Admin: ADC initialization failed, falling back:', e);
+        }
+    }
+
+    // Priority 2: Use service account credentials if provided
     if (clientEmail && privateKey) {
+        console.log('Firebase Admin: Using service account credentials');
         adminApp = initializeApp({
             credential: cert({
                 projectId,
@@ -60,16 +89,18 @@ export function getAdminApp(): App {
                 privateKey,
             }),
         });
-    } else {
-        // Fall back to project ID only (works with Application Default Credentials)
-        // This is suitable for local development and Google Cloud environments
-        console.warn(
-            'Firebase Admin: Using project ID only. For production, set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY.'
-        );
-        adminApp = initializeApp({
-            projectId,
-        });
+        return adminApp;
     }
+
+    // Priority 3: Fall back to project ID only (limited functionality)
+    // Token verification may not work without proper credentials
+    console.warn(
+        'Firebase Admin: Using project ID only. Token verification may not work. ' +
+            'For production, deploy to Google Cloud (for ADC) or set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY.'
+    );
+    adminApp = initializeApp({
+        projectId,
+    });
 
     return adminApp;
 }

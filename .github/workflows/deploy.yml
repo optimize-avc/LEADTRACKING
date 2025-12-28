@@ -1,7 +1,16 @@
 name: Deploy to Firebase App Hosting
 
-# Disabled - Firebase App Hosting deploys automatically via Cloud Build on git push
-# This workflow was conflicting with the native Firebase deployment
+# ============================================================================
+# DISABLED - Firebase App Hosting deploys automatically via Cloud Build
+# ============================================================================
+# Firebase App Hosting watches the main branch and triggers Cloud Build
+# automatically on every push. This workflow is kept for manual deployments
+# only via workflow_dispatch.
+#
+# Note: The FirebaseExtended/action-hosting-deploy action is for Firebase
+# Hosting (static sites), NOT Firebase App Hosting (full-stack Next.js).
+# ============================================================================
+
 on:
     workflow_dispatch:
     # push:
@@ -41,8 +50,6 @@ jobs:
                   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
                   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
                   NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-                  SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-                  NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
 
             - name: Authenticate to Google Cloud
               uses: google-github-actions/auth@v2

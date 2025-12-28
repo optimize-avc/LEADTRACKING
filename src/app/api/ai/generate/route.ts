@@ -54,7 +54,10 @@ export async function POST(req: NextRequest) {
             // Local dev exception (optional, but better to be strict)
             if (process.env.NODE_ENV !== 'development') {
                 console.warn('[AI Route] No auth header provided');
-                return NextResponse.json({ error: 'Unauthorized - No auth header' }, { status: 401 });
+                return NextResponse.json(
+                    { error: 'Unauthorized - No auth header' },
+                    { status: 401 }
+                );
             }
         } else {
             const token = authHeader.split('Bearer ')[1]?.trim();

@@ -67,7 +67,9 @@ export function getAdminApp(): App {
     // Priority 1: Use Application Default Credentials in Google Cloud environments
     // ADC is automatically available in Firebase App Hosting, Cloud Run, etc.
     if (isGoogleCloudEnvironment()) {
-        console.log('Firebase Admin: Using Application Default Credentials (Google Cloud environment)');
+        console.log(
+            'Firebase Admin: Using Application Default Credentials (Google Cloud environment)'
+        );
         try {
             adminApp = initializeApp({
                 credential: applicationDefault(),

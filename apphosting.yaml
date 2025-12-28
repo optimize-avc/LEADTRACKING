@@ -1,34 +1,82 @@
+# Firebase App Hosting Configuration
+# https://firebase.google.com/docs/app-hosting/configure
+
 runConfig:
   cpu: 1
-  memoryMiB: 4096
+  memoryMiB: 1024
   minInstances: 0
   maxInstances: 10
   concurrency: 80
 
-environmentVariables:
+# Environment Variables using the correct 'env' format
+env:
+  # Firebase Public Config
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: antigrav-tracking-final
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "AIza..." # Set this in Firebase Console environment variables
+    value: AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: antigrav-tracking-final.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: antigrav-tracking-final.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: 813307578320
+    value: "813307578320"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: 1:813307578320:web:5932e5a25b74de48c91bd5
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_APP_URL
     value: https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Google OAuth (client ID is public)
   - variable: GOOGLE_CLIENT_ID
     value: 343608443426-qd6f4kkvvkfbeb71ncuug9ldse4ob7cn.apps.googleusercontent.com
+    availability:
+      - RUNTIME
+
+  # Twilio Config (public values)
   - variable: TWILIO_PHONE_NUMBER
     value: "+17086947326"
+    availability:
+      - RUNTIME
   - variable: TWILIO_TWIML_APP_SID
-    value: "" # Set in Firebase Console
+    value: APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    availability:
+      - RUNTIME
+
+  # Secrets (stored in Cloud Secret Manager)
   - variable: TWILIO_ACCOUNT_SID
-    value: "" # Set in Firebase Console
-  - variable: FIREBASE_CLIENT_EMAIL
-    value: "" # Set in Firebase Console secrets
-  - variable: FIREBASE_PRIVATE_KEY
-    value: "" # Set in Firebase Console secrets
+    secret: TWILIO_ACCOUNT_SID
+    availability:
+      - RUNTIME
+  - variable: TWILIO_AUTH_TOKEN
+    secret: TWILIO_AUTH_TOKEN
+    availability:
+      - RUNTIME
+  - variable: GOOGLE_CLIENT_SECRET
+    secret: GOOGLE_CLIENT_SECRET
+    availability:
+      - RUNTIME
+  - variable: GOOGLE_AI_API_KEY
+    secret: GOOGLE_AI_API_KEY
+    availability:
+      - RUNTIME

@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+nul
+
+# Old duplicate project folder
+antigrav lead&sales Tracking/
 
 # debug
 npm-debug.log*

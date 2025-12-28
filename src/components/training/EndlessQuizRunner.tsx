@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Trophy, Target, Award, BrainCircuit, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
+import {
+    X,
+    Trophy,
+    Target,
+    Award,
+    BrainCircuit,
+    ArrowRight,
+    CheckCircle,
+    XCircle,
+} from 'lucide-react';
 import { Question } from '@/types/learning';
 import { generateQuizBatch } from '@/lib/ai/courseGenerator';
 
@@ -51,39 +60,40 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
 
         const isCorrect = optionIndex === questions[currentIndex].correctOptionIndex;
         if (isCorrect) {
-            setBatchCorrect(prev => prev + 1);
-            setTotalCorrect(prev => prev + 1);
+            setBatchCorrect((prev) => prev + 1);
+            setTotalCorrect((prev) => prev + 1);
         }
-        setTotalQuestionsAnswered(prev => prev + 1);
+        setTotalQuestionsAnswered((prev) => prev + 1);
     };
 
     // Next Question or Checkpoint Summary
     const handleNext = () => {
         if (currentIndex < questions.length - 1) {
-            setCurrentIndex(prev => prev + 1);
+            setCurrentIndex((prev) => prev + 1);
             setSelectedOption(null);
             setShowExplanation(false);
         } else {
             // End of Batch
-            setCheckpointsPassed(prev => prev + 1);
+            setCheckpointsPassed((prev) => prev + 1);
             setGameState('checkpoint_summary');
         }
     };
 
-    const overallAccuracy = totalQuestionsAnswered > 0
-        ? Math.round((totalCorrect / totalQuestionsAnswered) * 100)
-        : 0;
+    const overallAccuracy =
+        totalQuestionsAnswered > 0 ? Math.round((totalCorrect / totalQuestionsAnswered) * 100) : 0;
 
-    const batchAccuracy = questions.length > 0
-        ? Math.round((batchCorrect / questions.length) * 100)
-        : 0;
+    const batchAccuracy =
+        questions.length > 0 ? Math.round((batchCorrect / questions.length) * 100) : 0;
 
     // --- SETUP SCREEN ---
     if (gameState === 'setup') {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
                 <div className="glass-card w-full max-w-lg relative overflow-hidden p-8">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-slate-400 hover:text-white"
+                    >
                         <X size={24} />
                     </button>
 
@@ -95,7 +105,8 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                         </div>
                         <h2 className="text-3xl font-bold text-white mb-2">Endless Mastery</h2>
                         <p className="text-slate-400">
-                            Test your sales knowledge against an infinite stream of AI-generated scenarios.
+                            Test your sales knowledge against an infinite stream of AI-generated
+                            scenarios.
                         </p>
                     </div>
 
@@ -129,7 +140,11 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                                 <span className="animate-pulse">Generating...</span>
                             ) : (
                                 <>
-                                    Start Session <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    Start Session{' '}
+                                    <ArrowRight
+                                        size={20}
+                                        className="group-hover:translate-x-1 transition-transform"
+                                    />
                                 </>
                             )}
                         </button>
@@ -150,14 +165,19 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                         <div className="flex items-center gap-4">
                             <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 text-sm font-semibold text-slate-300">
                                 <Target size={16} className="text-fuchsia-400" />
-                                <span>Progress: {currentIndex + 1} / {questions.length}</span>
+                                <span>
+                                    Progress: {currentIndex + 1} / {questions.length}
+                                </span>
                             </div>
                             <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 text-sm font-semibold text-slate-300">
                                 <Trophy size={16} className="text-amber-400" />
                                 <span>Score: {batchCorrect}</span>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                        >
                             <X size={24} />
                         </button>
                     </div>
@@ -165,7 +185,10 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                     {/* Question Card */}
                     <div className="glass-card flex-1 overflow-y-auto custom-scrollbar relative">
                         {/* Progress Bar */}
-                        <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-fuchsia-500 to-indigo-500 transition-all duration-300" style={{ width: `${((currentIndex) / questions.length) * 100}%` }}></div>
+                        <div
+                            className="absolute top-0 left-0 h-1 bg-gradient-to-r from-fuchsia-500 to-indigo-500 transition-all duration-300"
+                            style={{ width: `${(currentIndex / questions.length) * 100}%` }}
+                        ></div>
 
                         <div className="max-w-3xl mx-auto py-8">
                             <h3 className="text-2xl md:text-3xl font-bold text-white mb-8 leading-tight">
@@ -177,13 +200,19 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                                     const isSelected = selectedOption === idx;
                                     const isCorrect = idx === currentQ.correctOptionIndex;
 
-                                    let buttonStyle = "border-slate-700 hover:border-slate-500 hover:bg-slate-800/50";
+                                    let buttonStyle =
+                                        'border-slate-700 hover:border-slate-500 hover:bg-slate-800/50';
                                     if (showExplanation) {
-                                        if (isCorrect) buttonStyle = "border-green-500 bg-green-500/10 text-green-200";
-                                        else if (isSelected) buttonStyle = "border-red-500 bg-red-500/10 text-red-200";
-                                        else buttonStyle = "border-slate-800 opacity-50";
+                                        if (isCorrect)
+                                            buttonStyle =
+                                                'border-green-500 bg-green-500/10 text-green-200';
+                                        else if (isSelected)
+                                            buttonStyle =
+                                                'border-red-500 bg-red-500/10 text-red-200';
+                                        else buttonStyle = 'border-slate-800 opacity-50';
                                     } else if (isSelected) {
-                                        buttonStyle = "border-fuchsia-500 bg-fuchsia-500/10 text-white";
+                                        buttonStyle =
+                                            'border-fuchsia-500 bg-fuchsia-500/10 text-white';
                                     }
 
                                     return (
@@ -194,11 +223,16 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                                             className={`w-full text-left p-6 rounded-xl border-2 transition-all duration-200 text-lg ${buttonStyle}`}
                                         >
                                             <div className="flex items-start gap-4">
-                                                <div className={`mt-1 min-w-[24px] h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${showExplanation && isCorrect ? 'border-green-500 bg-green-500 text-black' :
-                                                    showExplanation && isSelected ? 'border-red-500 bg-red-500 text-white' :
-                                                        'border-slate-600 text-slate-400'
-                                                    }`}>
-                                                    {["A", "B", "C", "D"][idx]}
+                                                <div
+                                                    className={`mt-1 min-w-[24px] h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                                                        showExplanation && isCorrect
+                                                            ? 'border-green-500 bg-green-500 text-black'
+                                                            : showExplanation && isSelected
+                                                              ? 'border-red-500 bg-red-500 text-white'
+                                                              : 'border-slate-600 text-slate-400'
+                                                    }`}
+                                                >
+                                                    {['A', 'B', 'C', 'D'][idx]}
                                                 </div>
                                                 <span>{option}</span>
                                             </div>
@@ -210,15 +244,27 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                             {/* Explanation & Next */}
                             {showExplanation && (
                                 <div className="mt-8 animate-in slide-in-from-bottom-4 fade-in duration-300">
-                                    <div className={`p-6 rounded-xl border mb-6 ${selectedOption === currentQ.correctOptionIndex
-                                        ? 'bg-green-950/30 border-green-500/30'
-                                        : 'bg-red-950/30 border-red-500/30'
-                                        }`}>
+                                    <div
+                                        className={`p-6 rounded-xl border mb-6 ${
+                                            selectedOption === currentQ.correctOptionIndex
+                                                ? 'bg-green-950/30 border-green-500/30'
+                                                : 'bg-red-950/30 border-red-500/30'
+                                        }`}
+                                    >
                                         <div className="flex items-center gap-2 font-bold mb-2">
                                             {selectedOption === currentQ.correctOptionIndex ? (
-                                                <><CheckCircle className="text-green-400" size={20} /> <span className="text-green-400">Correct!</span></>
+                                                <>
+                                                    <CheckCircle
+                                                        className="text-green-400"
+                                                        size={20}
+                                                    />{' '}
+                                                    <span className="text-green-400">Correct!</span>
+                                                </>
                                             ) : (
-                                                <><XCircle className="text-red-400" size={20} /> <span className="text-red-400">Incorrect</span></>
+                                                <>
+                                                    <XCircle className="text-red-400" size={20} />{' '}
+                                                    <span className="text-red-400">Incorrect</span>
+                                                </>
                                             )}
                                         </div>
                                         <p className="text-slate-300 leading-relaxed">
@@ -230,7 +276,10 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                                         onClick={handleNext}
                                         className="glass-button w-full py-4 text-lg font-bold flex items-center justify-center gap-2"
                                     >
-                                        {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Checkpoint'} <ArrowRight size={20} />
+                                        {currentIndex < questions.length - 1
+                                            ? 'Next Question'
+                                            : 'Finish Checkpoint'}{' '}
+                                        <ArrowRight size={20} />
                                     </button>
                                 </div>
                             )}
@@ -251,12 +300,16 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
                     </div>
 
                     <h2 className="text-3xl font-bold text-white mb-2">Checkpoint Cleared!</h2>
-                    <p className="text-slate-400 mb-8">Great work. Here&apos;s how you performed.</p>
+                    <p className="text-slate-400 mb-8">
+                        Great work. Here&apos;s how you performed.
+                    </p>
 
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <div className="glass-panel p-4 rounded-xl">
                             <div className="text-slate-400 text-sm mb-1">Accuracy</div>
-                            <div className={`text-2xl font-bold ${batchAccuracy >= 80 ? 'text-green-400' : 'text-fuchsia-400'}`}>
+                            <div
+                                className={`text-2xl font-bold ${batchAccuracy >= 80 ? 'text-green-400' : 'text-fuchsia-400'}`}
+                            >
                                 {batchAccuracy}%
                             </div>
                         </div>
@@ -270,7 +323,9 @@ export function EndlessQuizRunner({ onClose }: EndlessQuizRunnerProps) {
 
                     {/* Overall Session Stats */}
                     <div className="border-t border-white/10 pt-6 mb-8">
-                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Session Total</div>
+                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                            Session Total
+                        </div>
                         <div className="flex justify-between text-sm">
                             <span className="text-slate-400">Total Questions</span>
                             <span className="text-white font-mono">{totalQuestionsAnswered}</span>

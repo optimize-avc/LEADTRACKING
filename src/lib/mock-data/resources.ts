@@ -1,4 +1,4 @@
-import { Resource } from "@/types";
+import { Resource } from '@/types';
 
 export const MOCK_RESOURCES: Resource[] = [
     // Playbook
@@ -10,7 +10,7 @@ export const MOCK_RESOURCES: Resource[] = [
         url: '#',
         description: 'Call script for first touch with cold leads.',
         tags: ['Script', 'Cold Call'],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     {
         id: '2',
@@ -20,7 +20,7 @@ export const MOCK_RESOURCES: Resource[] = [
         url: '#',
         description: 'Framework for overcoming common objections.',
         tags: ['Objections', 'Negotiation'],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     // Learning
     {
@@ -31,7 +31,7 @@ export const MOCK_RESOURCES: Resource[] = [
         url: '#',
         description: 'Training video on explaining AI to small business owners.',
         tags: ['Training', 'AI'],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     // Prospecting
     {
@@ -42,7 +42,7 @@ export const MOCK_RESOURCES: Resource[] = [
         url: '#',
         description: 'Standard slide deck for introduction meetings.',
         tags: ['Pitch Deck'],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     {
         id: '5',
@@ -52,7 +52,7 @@ export const MOCK_RESOURCES: Resource[] = [
         url: '#',
         description: 'Spreadsheet to calculate potential client ROI.',
         tags: ['Tool', 'ROI'],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     // Competitive
     {
@@ -63,7 +63,7 @@ export const MOCK_RESOURCES: Resource[] = [
         url: '#',
         description: 'Comparison against top 3 competitors.',
         tags: ['Battlecard', 'Strategy'],
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     // Templates
     {
@@ -74,6 +74,6 @@ export const MOCK_RESOURCES: Resource[] = [
         url: '#',
         description: '3-part email sequence for unresponsive leads.',
         tags: ['Email', 'Templates'],
-        updatedAt: Date.now()
-    }
+        updatedAt: Date.now(),
+    },
 ];

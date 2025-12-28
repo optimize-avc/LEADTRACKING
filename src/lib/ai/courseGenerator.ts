@@ -8,12 +8,13 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export async function generateCourseFromResource(resource: Resource): Promise<Course> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const courseId = uuidv4();
 
     // Template logic based on resource category
-    const isScript = resource.category === 'Prospecting' || resource.title.toLowerCase().includes('script');
+    const isScript =
+        resource.category === 'Prospecting' || resource.title.toLowerCase().includes('script');
     const isPlaybook = resource.category === 'Playbook';
 
     return {
@@ -47,8 +48,8 @@ export async function generateCourseFromResource(resource: Resource): Promise<Co
                                     bullets: [
                                         'Understand the "Why" behind the document',
                                         'Learn key terminology',
-                                        'Identify best use-cases'
-                                    ]
+                                        'Identify best use-cases',
+                                    ],
                                 },
                                 {
                                     id: uuidv4(),
@@ -57,13 +58,13 @@ export async function generateCourseFromResource(resource: Resource): Promise<Co
                                     bullets: [
                                         'Consistency is key',
                                         'Always tailor to the prospect',
-                                        'Measure your results'
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                ]
+                                        'Measure your results',
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                ],
             },
             // Module 2: The Deep Dive (Script/Playbook specific)
             {
@@ -80,18 +81,20 @@ export async function generateCourseFromResource(resource: Resource): Promise<Co
                             slides: [
                                 {
                                     id: uuidv4(),
-                                    title: isScript ? 'Perfecting the Delivery' : 'Step-by-Step Execution',
+                                    title: isScript
+                                        ? 'Perfecting the Delivery'
+                                        : 'Step-by-Step Execution',
                                     body: isScript
                                         ? "It's not just what you say, it's how you say it. Focus on:\n\n1. Pace (Not too fast)\n2. Tone (Confident but curious)\n3. Pauses (Let them think)"
                                         : "Follow the playbook exactly to ensure success. Deviation creates variables we can't measure.",
                                     imageUrl: isScript
                                         ? 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800'
-                                        : 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800'
-                                }
-                            ]
-                        }
-                    }
-                ]
+                                        : 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800',
+                                },
+                            ],
+                        },
+                    },
+                ],
             },
             // Module 3: Knowledge Check
             {
@@ -113,10 +116,11 @@ export async function generateCourseFromResource(resource: Resource): Promise<Co
                                     options: [
                                         'To confuse the prospect',
                                         'To drive revenue and efficiency',
-                                        'To fill up time'
+                                        'To fill up time',
                                     ],
                                     correctOptionIndex: 1,
-                                    explanation: 'All our enablement resources are designed to drive core business metrics like revenue and efficiency.'
+                                    explanation:
+                                        'All our enablement resources are designed to drive core business metrics like revenue and efficiency.',
                                 },
                                 {
                                     id: uuidv4(),
@@ -124,17 +128,18 @@ export async function generateCourseFromResource(resource: Resource): Promise<Co
                                     options: [
                                         'Only on Fridays',
                                         'Whenever you feel like it',
-                                        'Consistently across all relevant interactions'
+                                        'Consistently across all relevant interactions',
                                     ],
                                     correctOptionIndex: 2,
-                                    explanation: 'Consistency reduces variables and allows us to optimize performance over time.'
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-        ]
+                                    explanation:
+                                        'Consistency reduces variables and allows us to optimize performance over time.',
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        ],
     };
 }
 
@@ -143,7 +148,7 @@ export async function generateCourseFromResource(resource: Resource): Promise<Co
  */
 export async function generateQuizBatch(count: number): Promise<Question[]> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const questions: Question[] = [];
 
@@ -152,64 +157,99 @@ export async function generateQuizBatch(count: number): Promise<Question[]> {
     const questionTemplates = [
         {
             q: "When a prospect says 'I need to think about it', what is the best immediate response?",
-            o: ["'Okay, call me next week.'", "'What specifically do you need to think about?'", "'I'll send you an email.'", "'Is it the price?'"],
+            o: [
+                "'Okay, call me next week.'",
+                "'What specifically do you need to think about?'",
+                "'I'll send you an email.'",
+                "'Is it the price?'",
+            ],
             c: 1,
-            e: "Isolating the objection is key. Asking 'What specifically...' forces the prospect to reveal the true blocker (Price, Authority, Timing)."
+            e: "Isolating the objection is key. Asking 'What specifically...' forces the prospect to reveal the true blocker (Price, Authority, Timing).",
         },
         {
-            q: "Which metric is the most critical indicator of a healthy sales pipeline?",
-            o: ["Total number of leads", "Deal Velocity", "Number of calls made", "Email open rate"],
+            q: 'Which metric is the most critical indicator of a healthy sales pipeline?',
+            o: [
+                'Total number of leads',
+                'Deal Velocity',
+                'Number of calls made',
+                'Email open rate',
+            ],
             c: 1,
-            e: "Deal Velocity (how fast a deal moves through stages) is the best predictor of revenue. Stagnant deals, even if numerous, do not close."
+            e: 'Deal Velocity (how fast a deal moves through stages) is the best predictor of revenue. Stagnant deals, even if numerous, do not close.',
         },
         {
             q: "In the MEDDIC qualification framework, what does the 'E' stand for?",
-            o: ["Energy", "Engagement", "Economic Buyer", "Enterprise"],
+            o: ['Energy', 'Engagement', 'Economic Buyer', 'Enterprise'],
             c: 2,
-            e: "The Economic Buyer is the person with the ultimate authority to release funds. Identifying them early is crucial."
+            e: 'The Economic Buyer is the person with the ultimate authority to release funds. Identifying them early is crucial.',
         },
         {
             q: "What is the primary purpose of the 'Discovery' phase?",
-            o: ["To pitch your product features", "To qualify the prospect out", "To understand the prospect's pain and goals", "To build rapport only"],
+            o: [
+                'To pitch your product features',
+                'To qualify the prospect out',
+                "To understand the prospect's pain and goals",
+                'To build rapport only',
+            ],
             c: 2,
-            e: "Discovery is about uncovering 'Pain' and 'Goals'. Features should only be discussed as solutions to specific pains found in Discovery."
+            e: "Discovery is about uncovering 'Pain' and 'Goals'. Features should only be discussed as solutions to specific pains found in Discovery.",
         },
         {
-            q: "When conducting a demo, you should...",
-            o: ["Show every single feature", "Focus only on the features that solve the prospect's identified pain", "Let the prospect drive the screen", "Save the pricing for the very end"],
+            q: 'When conducting a demo, you should...',
+            o: [
+                'Show every single feature',
+                "Focus only on the features that solve the prospect's identified pain",
+                'Let the prospect drive the screen',
+                'Save the pricing for the very end',
+            ],
             c: 1,
-            e: "Feature-dumping kills deals. Only show what solves the specific problems you identified during discovery."
+            e: 'Feature-dumping kills deals. Only show what solves the specific problems you identified during discovery.',
         },
         {
-            q: "What is the optimal length for a cold email subject line?",
-            o: ["1-3 words", "10+ words", "Full sentence", "No subject line"],
+            q: 'What is the optimal length for a cold email subject line?',
+            o: ['1-3 words', '10+ words', 'Full sentence', 'No subject line'],
             c: 0,
-            e: "Data shows that short, vague subject lines (e.g., 'Quick question', 'Thoughts?') yield higher open rates than long, descriptive ones."
+            e: "Data shows that short, vague subject lines (e.g., 'Quick question', 'Thoughts?') yield higher open rates than long, descriptive ones.",
         },
         {
             q: "A 'Champion' in a deal is someone who...",
-            o: ["Signs the contract", "Blocks your access", "Sells on your behalf internally", "Ignores your emails"],
+            o: [
+                'Signs the contract',
+                'Blocks your access',
+                'Sells on your behalf internally',
+                'Ignores your emails',
+            ],
             c: 2,
-            e: "A Champion is your internal advocate who sells your solution when you aren't in the room. They have power and influence."
+            e: "A Champion is your internal advocate who sells your solution when you aren't in the room. They have power and influence.",
         },
         {
             q: "If a prospect goes dark after a proposal, effective 'break-up' emails rely on...",
-            o: ["Guilt", "Anger", "Loss Aversion / Negative Reverse Selling", "Desperation"],
+            o: ['Guilt', 'Anger', 'Loss Aversion / Negative Reverse Selling', 'Desperation'],
             c: 2,
-            e: "Negative Reverse Selling (e.g., 'Have you given up on this project?') triggers loss aversion and often gets a response."
+            e: "Negative Reverse Selling (e.g., 'Have you given up on this project?') triggers loss aversion and often gets a response.",
         },
         {
-            q: "What is the difference between specific and implied needs?",
-            o: ["They are the same", "Implied is a statement of dissatisfaction; Specific is a statement of desire for a solution", "Implied is stronger", "Specific needs don't matter"],
+            q: 'What is the difference between specific and implied needs?',
+            o: [
+                'They are the same',
+                'Implied is a statement of dissatisfaction; Specific is a statement of desire for a solution',
+                'Implied is stronger',
+                "Specific needs don't matter",
+            ],
             c: 1,
-            e: "SPIN Selling teaches that 'Implied needs' (I have a headache) must be developed into 'Specific needs' (I need aspirin) before pitching."
+            e: "SPIN Selling teaches that 'Implied needs' (I have a headache) must be developed into 'Specific needs' (I need aspirin) before pitching.",
         },
         {
             q: "The 'Upfront Contract' technique is primarily used to...",
-            o: ["Force a sale", "Set clear expectations for the meeting's agenda and outcome", "Trick the prospect", "Sign a legal document"],
+            o: [
+                'Force a sale',
+                "Set clear expectations for the meeting's agenda and outcome",
+                'Trick the prospect',
+                'Sign a legal document',
+            ],
             c: 1,
-            e: "Sandler's Upfront Contract ensures both parties agree on the purpose, time, and possible outcomes (Yes, No, Next Step) of a meeting."
-        }
+            e: "Sandler's Upfront Contract ensures both parties agree on the purpose, time, and possible outcomes (Yes, No, Next Step) of a meeting.",
+        },
     ];
 
     for (let i = 0; i < count; i++) {
@@ -221,7 +261,7 @@ export async function generateQuizBatch(count: number): Promise<Question[]> {
             question: template.q,
             options: template.o,
             correctOptionIndex: template.c,
-            explanation: template.e
+            explanation: template.e,
         });
     }
 

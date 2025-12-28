@@ -17,10 +17,7 @@ export async function POST(request: NextRequest) {
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(to)) {
-            return NextResponse.json(
-                { error: 'Invalid email address' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
         }
 
         const messageId = await sendEmail(userId, to, subject, emailBody, leadId);

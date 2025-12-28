@@ -1,9 +1,9 @@
 /**
  * Firebase Admin SDK Initialization
- * 
+ *
  * Singleton pattern for initializing Firebase Admin SDK.
  * Uses environment variables for configuration.
- * 
+ *
  * For production, you should use a service account JSON file.
  * See: https://firebase.google.com/docs/admin/setup
  */
@@ -25,7 +25,7 @@ function isServer(): boolean {
 
 /**
  * Get or initialize Firebase Admin App
- * 
+ *
  * Uses Application Default Credentials when running in Google Cloud,
  * or falls back to project ID only for development.
  */
@@ -63,7 +63,9 @@ export function getAdminApp(): App {
     } else {
         // Fall back to project ID only (works with Application Default Credentials)
         // This is suitable for local development and Google Cloud environments
-        console.warn('Firebase Admin: Using project ID only. For production, set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY.');
+        console.warn(
+            'Firebase Admin: Using project ID only. For production, set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY.'
+        );
         adminApp = initializeApp({
             projectId,
         });
@@ -100,7 +102,7 @@ export function getAdminDb(): Firestore {
 
 /**
  * Verify a Firebase ID token
- * 
+ *
  * @param idToken - The Firebase ID token to verify
  * @returns Decoded token with user info, or null if invalid
  */

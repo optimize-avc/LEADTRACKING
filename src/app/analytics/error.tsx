@@ -27,10 +27,7 @@ export default function AnalyticsError({
                 <p className="text-slate-400 mb-6">
                     {error.message || 'Unable to load analytics data. Please try again.'}
                 </p>
-                <button
-                    onClick={reset}
-                    className="glass-button inline-flex items-center gap-2"
-                >
+                <button onClick={reset} className="glass-button inline-flex items-center gap-2">
                     <RefreshCw className="w-4 h-4" />
                     Retry
                 </button>

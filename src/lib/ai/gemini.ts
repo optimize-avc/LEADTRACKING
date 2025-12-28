@@ -8,8 +8,8 @@ import {
     AIFutureArtifact,
     AIStakeholder,
     AIBoardroomAgent,
-    AIBoardroomTranscriptItem
-} from "@/types/ai";
+    AIBoardroomTranscriptItem,
+} from '@/types/ai';
 
 export const GeminiService = {
     async generateText(prompt: string, token?: string): Promise<string> {
@@ -24,26 +24,31 @@ export const GeminiService = {
                 headers,
                 body: JSON.stringify({
                     prompt,
-                    modelName: "gemini-2.5-flash"
-                })
+                    modelName: 'gemini-2.5-flash',
+                }),
             });
 
             if (!response.ok) {
                 const err = await response.json();
-                console.error("AI API Error:", err);
-                return "Error: " + (err.error || "Failed to generate");
+                console.error('AI API Error:', err);
+                return 'Error: ' + (err.error || 'Failed to generate');
             }
 
             const data = await response.json();
             return data.text;
         } catch (error) {
-            console.error("Gemini Service Error:", error);
-            return "Error calling AI service.";
+            console.error('Gemini Service Error:', error);
+            return 'Error calling AI service.';
         }
     },
 
-    async generatePersona(role: string, industry: string, contextMaterials?: string, token?: string): Promise<AIPersona | null> {
-        let contextPrompt = "";
+    async generatePersona(
+        role: string,
+        industry: string,
+        contextMaterials?: string,
+        token?: string
+    ): Promise<AIPersona | null> {
+        let contextPrompt = '';
         if (contextMaterials) {
             contextPrompt = `
                 CONTEXT MATERIALS(PRODUCT / ENABLEMENT):
@@ -72,19 +77,28 @@ INSTRUCTION: The user is selling the product described above.
 }
 `;
         const text = await this.generateText(prompt, token);
-        if (!text || text.startsWith("Error")) return null;
+        if (!text || text.startsWith('Error')) return null;
         try {
             // Clean up markdown if Gemini wraps in \`\`\`json ... \`\`\`
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Gemini Parse Error", e);
+            console.error('Gemini Parse Error', e);
             return null;
         }
     },
 
-    async generateReply(persona: AIPersona, history: { role: string, content: string }[], userMessage: string, contextMaterials?: string, token?: string): Promise<string> {
-        let contextPrompt = "";
+    async generateReply(
+        persona: AIPersona,
+        history: { role: string; content: string }[],
+        userMessage: string,
+        contextMaterials?: string,
+        token?: string
+    ): Promise<string> {
+        let contextPrompt = '';
         if (contextMaterials) {
             contextPrompt = `
                 PRODUCT CONTEXT:
@@ -109,7 +123,9 @@ INSTRUCTION: The user is selling the product described above.
         `;
 
         // simplified history construction
-        const conversation = history.map(h => `${h.role === 'user' ? 'Salesperson' : 'You'}: ${h.content}`).join('\n');
+        const conversation = history
+            .map((h) => `${h.role === 'user' ? 'Salesperson' : 'You'}: ${h.content}`)
+            .join('\n');
 
         const fullPrompt = `
             ${systemPrompt}
@@ -140,9 +156,12 @@ INSTRUCTION: The user is selling the product described above.
             }
         `;
         const text = await this.generateText(prompt, token);
-        if (!text || text.startsWith("Error")) return null;
+        if (!text || text.startsWith('Error')) return null;
         try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
             const data = JSON.parse(cleanText);
             // Fallback for legacy format or AI inconsistencies
             if (data.feedback && !data.oneLineFeedback) {
@@ -150,13 +169,24 @@ INSTRUCTION: The user is selling the product described above.
             }
             return data as AIPitchAnalysis;
         } catch (e) {
-            console.error("Failed to parse pitch analysis", e);
+            console.error('Failed to parse pitch analysis', e);
             return null;
         }
     },
 
-    async generateDealScenario(level: string, context?: { company: string, industry: string, value: string, stage?: string, contact?: string }, contextMaterials?: string, token?: string): Promise<AIScenario | null> {
-        let contextPrompt = "";
+    async generateDealScenario(
+        level: string,
+        context?: {
+            company: string;
+            industry: string;
+            value: string;
+            stage?: string;
+            contact?: string;
+        },
+        contextMaterials?: string,
+        token?: string
+    ): Promise<AIScenario | null> {
+        let contextPrompt = '';
         if (context) {
             contextPrompt = `
                 CONTEXT: The user wants to simulate a deal with a REAL company.
@@ -207,17 +237,25 @@ INSTRUCTION: The user is selling the product described above.
             }
         `;
         const text = await this.generateText(prompt, token);
-        if (!text || text.startsWith("Error")) return null;
+        if (!text || text.startsWith('Error')) return null;
         try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to parse deal scenario", e);
+            console.error('Failed to parse deal scenario', e);
             return null;
         }
     },
 
-    async evaluateTurn(gameState: { company: string; stakeholders: AIStakeholder[] }, action: string, targetId: string, token?: string): Promise<AITurnResult | null> {
+    async evaluateTurn(
+        gameState: { company: string; stakeholders: AIStakeholder[] },
+        action: string,
+        targetId: string,
+        token?: string
+    ): Promise<AITurnResult | null> {
         const prompt = `
             You are the Dungeon Master for a B2B Sales Wargame.
             
@@ -246,19 +284,29 @@ INSTRUCTION: The user is selling the product described above.
             }
         `;
         const text = await this.generateText(prompt, token);
-        if (!text || text.startsWith("Error")) return null;
+        if (!text || text.startsWith('Error')) return null;
         try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to parse turn evaluation", e);
+            console.error('Failed to parse turn evaluation', e);
             return null;
         }
     },
 
-    async evaluateBoardroomTurn(agents: AIBoardroomAgent[], userMessage: string, history: AIBoardroomTranscriptItem[], token?: string): Promise<AIBoardroomTurnResult | null> {
-        const historyText = history.map(h => `${h.speaker}: ${h.message}`).join('\n');
-        const agentProfiles = agents.map(a => `${a.name} (${a.role}, ${a.archetype}): ${a.hiddenAgenda}`).join('\n');
+    async evaluateBoardroomTurn(
+        agents: AIBoardroomAgent[],
+        userMessage: string,
+        history: AIBoardroomTranscriptItem[],
+        token?: string
+    ): Promise<AIBoardroomTurnResult | null> {
+        const historyText = history.map((h) => `${h.speaker}: ${h.message}`).join('\n');
+        const agentProfiles = agents
+            .map((a) => `${a.name} (${a.role}, ${a.archetype}): ${a.hiddenAgenda}`)
+            .join('\n');
 
         const prompt = `
             BOARDROOM SIMULATION
@@ -289,12 +337,15 @@ INSTRUCTION: The user is selling the product described above.
             }
         `;
         const text = await this.generateText(prompt, token);
-        if (!text || text.startsWith("Error")) return null;
+        if (!text || text.startsWith('Error')) return null;
         try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to evaluate boardroom turn", e);
+            console.error('Failed to evaluate boardroom turn', e);
             return null;
         }
     },
@@ -332,18 +383,25 @@ INSTRUCTION: The user is selling the product described above.
             }
         `;
         const text = await this.generateText(prompt, token);
-        if (!text || text.startsWith("Error")) return null;
+        if (!text || text.startsWith('Error')) return null;
         try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to generate boardroom", e);
+            console.error('Failed to generate boardroom', e);
             return null;
         }
     },
 
-    async generateFutureArtifact(transcriptHistory: AIBoardroomTranscriptItem[], outcome: 'win' | 'loss', token?: string): Promise<AIFutureArtifact | null> {
-        const historyText = transcriptHistory.map(t => `${t.speaker}: ${t.message}`).join('\n');
+    async generateFutureArtifact(
+        transcriptHistory: AIBoardroomTranscriptItem[],
+        outcome: 'win' | 'loss',
+        token?: string
+    ): Promise<AIFutureArtifact | null> {
+        const historyText = transcriptHistory.map((t) => `${t.speaker}: ${t.message}`).join('\n');
 
         const prompt = `
             TRANSCRIPT OF SALES CALL:
@@ -406,13 +464,16 @@ INSTRUCTION: The user is selling the product described above.
         `;
 
         const text = await this.generateText(prompt, token);
-        if (!text || text.startsWith("Error")) return null;
+        if (!text || text.startsWith('Error')) return null;
         try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to generate time machine artifact", e);
+            console.error('Failed to generate time machine artifact', e);
             return null;
         }
-    }
+    },
 };

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         // 2. Parse Multipart Data
         const formData = await req.formData();
         const file = formData.get('file') as File;
-        const category = formData.get('category') as string || 'General';
+        const category = (formData.get('category') as string) || 'General';
 
         if (!file) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
@@ -38,18 +38,20 @@ export async function POST(req: NextRequest) {
             fileSize: file.size,
             ownerId: userId,
             uploadedAt: Date.now(),
-            status: 'processing' // Simulate managed RAG indexing status
+            status: 'processing', // Simulate managed RAG indexing status
         });
 
         // 4. Return success to UI
         return NextResponse.json({
             success: true,
             resourceId: resourceRef.id,
-            message: 'Document received and queued for RAG indexing.'
+            message: 'Document received and queued for RAG indexing.',
         });
-
     } catch (error: unknown) {
         console.error('Upload Error:', error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : 'Upload failed' }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'Upload failed' },
+            { status: 500 }
+        );
     }
 }

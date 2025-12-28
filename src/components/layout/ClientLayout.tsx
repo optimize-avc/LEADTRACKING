@@ -5,8 +5,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
-    LayoutDashboard, Target, Activity, Database, BarChart3, GraduationCap,
-    ChevronLeft, ChevronRight, Menu, LogOut, Settings, LogIn
+    LayoutDashboard,
+    Target,
+    Activity,
+    Database,
+    BarChart3,
+    GraduationCap,
+    ChevronLeft,
+    ChevronRight,
+    Menu,
+    LogOut,
+    Settings,
+    LogIn,
 } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
@@ -16,7 +26,13 @@ import { WelcomeTour } from '@/components/onboarding/WelcomeTour';
 import { toast, Toaster } from 'sonner';
 import { AIContextProvider } from '@/components/providers/AIContext';
 
-function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mobileMenuOpen: boolean }) {
+function SidebarContent({
+    collapsed,
+    mobileMenuOpen,
+}: {
+    collapsed: boolean;
+    mobileMenuOpen: boolean;
+}) {
     const { user, loading, logout, signInWithGoogle } = useAuth();
     const router = useRouter();
 
@@ -27,7 +43,8 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
             await logout();
             toast.success('Signed out successfully');
             router.push('/');
-        } catch (error: unknown) { // Changed to unknown
+        } catch (error: unknown) {
+            // Changed to unknown
             toast.error('Failed to sign out');
         }
     };
@@ -37,7 +54,8 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
             await logout();
             toast.success('Signed out successfully');
             router.push('/');
-        } catch (error: unknown) { // Changed to unknown
+        } catch (error: unknown) {
+            // Changed to unknown
             toast.error('Failed to sign out');
         }
     };
@@ -47,7 +65,11 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
             await signInWithGoogle();
             toast.success('Signed in successfully!');
         } catch (error: unknown) {
-            if (error instanceof Error && (error as { code?: string }).code === 'auth/popup-closed-by-user') return;
+            if (
+                error instanceof Error &&
+                (error as { code?: string }).code === 'auth/popup-closed-by-user'
+            )
+                return;
             toast.error('Failed to sign in');
         }
     };
@@ -58,17 +80,65 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
         <>
             {/* Navigation */}
             <nav className="flex-1 px-3 space-y-2 mt-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                <NavLink href="/" icon={<LayoutDashboard size={20} />} label="Dashboard" collapsed={collapsed} mobile={mobileMenuOpen} />
-                <NavLink href="/leads" icon={<Target size={20} />} label="Leads Pipeline" collapsed={collapsed} mobile={mobileMenuOpen} />
-                <NavLink href="/activities" icon={<Activity size={20} />} label="Activities" collapsed={collapsed} mobile={mobileMenuOpen} />
-                <NavLink href="/resources" icon={<Database size={20} />} label="Enablement" collapsed={collapsed} mobile={mobileMenuOpen} />
-                <NavLink href="/analytics" icon={<BarChart3 size={20} />} label="Analytics" collapsed={collapsed} mobile={mobileMenuOpen} />
-                <NavLink href="/training" icon={<GraduationCap size={20} />} label="Training" collapsed={collapsed} mobile={mobileMenuOpen} />
-                <NavLink href="/reality-link" icon={<Activity size={20} />} label="Reality Link HUD" collapsed={collapsed} mobile={mobileMenuOpen} />
+                <NavLink
+                    href="/"
+                    icon={<LayoutDashboard size={20} />}
+                    label="Dashboard"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                />
+                <NavLink
+                    href="/leads"
+                    icon={<Target size={20} />}
+                    label="Leads Pipeline"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                />
+                <NavLink
+                    href="/activities"
+                    icon={<Activity size={20} />}
+                    label="Activities"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                />
+                <NavLink
+                    href="/resources"
+                    icon={<Database size={20} />}
+                    label="Enablement"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                />
+                <NavLink
+                    href="/analytics"
+                    icon={<BarChart3 size={20} />}
+                    label="Analytics"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                />
+                <NavLink
+                    href="/training"
+                    icon={<GraduationCap size={20} />}
+                    label="Training"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                />
+                <NavLink
+                    href="/reality-link"
+                    icon={<Activity size={20} />}
+                    label="Reality Link HUD"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                />
 
                 {/* Settings - show only when logged in */}
                 {user && (
-                    <NavLink href="/settings" icon={<Settings size={20} />} label="Settings" collapsed={collapsed} mobile={mobileMenuOpen} />
+                    <NavLink
+                        href="/settings"
+                        icon={<Settings size={20} />}
+                        label="Settings"
+                        collapsed={collapsed}
+                        mobile={mobileMenuOpen}
+                    />
                 )}
             </nav>
 
@@ -81,7 +151,9 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
                 ) : user ? (
                     <>
                         {/* User Profile */}
-                        <div className={`flex items-center gap-3 mb-3 ${collapsed && !mobileMenuOpen ? 'justify-center' : ''}`}>
+                        <div
+                            className={`flex items-center gap-3 mb-3 ${collapsed && !mobileMenuOpen ? 'justify-center' : ''}`}
+                        >
                             {user.photoURL ? (
                                 <div className="relative w-9 h-9 flex-shrink-0">
                                     <Image
@@ -111,8 +183,9 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
                         {/* Sign Out Button */}
                         <button
                             onClick={handleLogout}
-                            className={`w-full flex items-center gap-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all ${showLabel ? 'px-3 py-2' : 'p-3 justify-center'
-                                }`}
+                            className={`w-full flex items-center gap-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all ${
+                                showLabel ? 'px-3 py-2' : 'p-3 justify-center'
+                            }`}
                             title={!showLabel ? 'Sign Out' : ''}
                         >
                             <LogOut size={18} />
@@ -123,8 +196,9 @@ function SidebarContent({ collapsed, mobileMenuOpen }: { collapsed: boolean; mob
                     /* Sign In Button */
                     <button
                         onClick={handleSignIn}
-                        className={`w-full flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/25 ${showLabel ? 'px-4 py-3' : 'p-3 justify-center'
-                            }`}
+                        className={`w-full flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/25 ${
+                            showLabel ? 'px-4 py-3' : 'p-3 justify-center'
+                        }`}
                         title={!showLabel ? 'Sign In' : ''}
                     >
                         <LogIn size={18} />
@@ -209,14 +283,22 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                     `}
                     >
                         {/* Header / Logo */}
-                        <div className={`p-6 flex items-center ${collapsed ? 'md:justify-center' : 'justify-between'}`}>
+                        <div
+                            className={`p-6 flex items-center ${collapsed ? 'md:justify-center' : 'justify-between'}`}
+                        >
                             {(!collapsed || mobileMenuOpen) && (
-                                <Link href="/" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-violet-400 whitespace-nowrap overflow-hidden animate-fade-in">
+                                <Link
+                                    href="/"
+                                    className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-violet-400 whitespace-nowrap overflow-hidden animate-fade-in"
+                                >
                                     SalesTracker
                                 </Link>
                             )}
                             {collapsed && !mobileMenuOpen && (
-                                <Link href="/" className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center font-bold text-white text-xs">
+                                <Link
+                                    href="/"
+                                    className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center font-bold text-white text-xs"
+                                >
                                     ST
                                 </Link>
                             )}
@@ -228,7 +310,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                         {/* Collapse Toggle (Desktop Only) */}
                         <button
                             onClick={() => setCollapsed(!collapsed)}
-                            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                             className="hidden md:flex absolute -right-3 top-24 w-6 h-6 rounded-full bg-slate-800 border border-slate-600 items-center justify-center text-slate-400 hover:text-white hover:border-white/50 transition-all shadow-lg z-50"
                         >
                             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -258,21 +340,35 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                         </div>
 
                         <div className="flex-1 w-full max-w-full overflow-x-hidden">
-                            <ErrorBoundary>
-                                {children}
-                            </ErrorBoundary>
+                            <ErrorBoundary>{children}</ErrorBoundary>
                         </div>
 
                         {/* Professional Footer */}
                         <footer className="mt-auto border-t border-white/5 p-8 text-center md:text-left">
                             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                                 <div className="text-sm text-slate-500">
-                                    © {new Date().getFullYear()} SalesTracker AI. All rights reserved.
+                                    © {new Date().getFullYear()} SalesTracker AI. All rights
+                                    reserved.
                                 </div>
                                 <div className="flex items-center gap-6 text-sm">
-                                    <Link href="/privacy" className="text-slate-500 hover:text-indigo-400 transition-colors">Privacy Policy</Link>
-                                    <Link href="/terms" className="text-slate-500 hover:text-indigo-400 transition-colors">Terms of Service</Link>
-                                    <a href="mailto:support@salestracker-ai.com" className="text-slate-500 hover:text-indigo-400 transition-colors">Support</a>
+                                    <Link
+                                        href="/privacy"
+                                        className="text-slate-500 hover:text-indigo-400 transition-colors"
+                                    >
+                                        Privacy Policy
+                                    </Link>
+                                    <Link
+                                        href="/terms"
+                                        className="text-slate-500 hover:text-indigo-400 transition-colors"
+                                    >
+                                        Terms of Service
+                                    </Link>
+                                    <a
+                                        href="mailto:support@salestracker-ai.com"
+                                        className="text-slate-500 hover:text-indigo-400 transition-colors"
+                                    >
+                                        Support
+                                    </a>
                                 </div>
                             </div>
                         </footer>
@@ -290,7 +386,19 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     );
 }
 
-function NavLink({ href, icon, label, collapsed, mobile }: { href: string; icon: React.ReactNode; label: string; collapsed: boolean, mobile: boolean }) {
+function NavLink({
+    href,
+    icon,
+    label,
+    collapsed,
+    mobile,
+}: {
+    href: string;
+    icon: React.ReactNode;
+    label: string;
+    collapsed: boolean;
+    mobile: boolean;
+}) {
     const pathname = usePathname();
     const isActive = pathname === href;
 
@@ -304,9 +412,11 @@ function NavLink({ href, icon, label, collapsed, mobile }: { href: string; icon:
             className={`
                 group flex items-center rounded-xl transition-all duration-300 ease-out relative
                 ${!showLabel ? 'justify-center p-3' : 'px-4 py-3'}
-                ${isActive
-                    ? 'bg-gradient-to-r from-indigo-500/20 to-violet-500/5 text-indigo-300 border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'}
+                ${
+                    isActive
+                        ? 'bg-gradient-to-r from-indigo-500/20 to-violet-500/5 text-indigo-300 border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
+                }
             `}
         >
             {/* Active Glow for Icon */}
@@ -314,14 +424,20 @@ function NavLink({ href, icon, label, collapsed, mobile }: { href: string; icon:
                 <div className="absolute inset-0 bg-indigo-500/20 rounded-xl blur-md"></div>
             )}
 
-            <span className={`relative z-10 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
-                {React.cloneElement(icon as React.ReactElement<any>, {
-                    className: isActive ? 'text-indigo-400 drop-shadow-[0_0_5px_rgba(99,102,241,0.5)]' : ''
+            <span
+                className={`relative z-10 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
+            >
+                {React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
+                    className: isActive
+                        ? 'text-indigo-400 drop-shadow-[0_0_5px_rgba(99,102,241,0.5)]'
+                        : '',
                 })}
             </span>
 
             {showLabel && (
-                <span className={`ml-3 text-sm font-medium transition-opacity duration-200 ${isActive ? 'text-white' : ''}`}>
+                <span
+                    className={`ml-3 text-sm font-medium transition-opacity duration-200 ${isActive ? 'text-white' : ''}`}
+                >
                     {label}
                 </span>
             )}

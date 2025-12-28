@@ -24,24 +24,38 @@ export function getAIStatus(): { available: boolean; error?: string } {
     if (model) return { available: true };
     return {
         available: false,
-        error: aiInitError?.message || 'Firebase AI Logic is not enabled. Please enable it in the Firebase Console → AI Logic → Get Started.'
+        error:
+            aiInitError?.message ||
+            'Firebase AI Logic is not enabled. Please enable it in the Firebase Console → AI Logic → Get Started.',
     };
 }
 
 // Email generation types
-export type EmailType = 'introduction' | 'follow-up' | 'discovery' | 'proposal' | 'closing' | 'onboarding' | 're-engagement';
-export type EnhancementAction = 'shorter' | 'professional' | 'friendly' | 'urgency' | 'social-proof';
+export type EmailType =
+    | 'introduction'
+    | 'follow-up'
+    | 'discovery'
+    | 'proposal'
+    | 'closing'
+    | 'onboarding'
+    | 're-engagement';
+export type EnhancementAction =
+    | 'shorter'
+    | 'professional'
+    | 'friendly'
+    | 'urgency'
+    | 'social-proof';
 
 // Map lead status to email type
 function getEmailTypeFromStatus(status: string): EmailType {
     const mapping: Record<string, EmailType> = {
-        'New': 'introduction',
-        'Contacted': 'follow-up',
-        'Qualified': 'discovery',
-        'Proposal': 'proposal',
-        'Negotiation': 'closing',
-        'Closed': 'onboarding',
-        'Lost': 're-engagement'
+        New: 'introduction',
+        Contacted: 'follow-up',
+        Qualified: 'discovery',
+        Proposal: 'proposal',
+        Negotiation: 'closing',
+        Closed: 'onboarding',
+        Lost: 're-engagement',
     };
     return mapping[status] || 'introduction';
 }
@@ -51,36 +65,36 @@ function buildCompanyContext(resources: Resource[]): string {
     const sections: string[] = [];
 
     // Group resources by category
-    const playbooks = resources.filter(r => r.category === 'Playbook');
-    const templates = resources.filter(r => r.category === 'Templates');
-    const competitive = resources.filter(r => r.category === 'Competitive');
-    const prospecting = resources.filter(r => r.category === 'Prospecting');
+    const playbooks = resources.filter((r) => r.category === 'Playbook');
+    const templates = resources.filter((r) => r.category === 'Templates');
+    const competitive = resources.filter((r) => r.category === 'Competitive');
+    const prospecting = resources.filter((r) => r.category === 'Prospecting');
 
     if (playbooks.length > 0) {
         sections.push(`
 SALES PLAYBOOKS & SCRIPTS:
-${playbooks.map(p => `- ${p.title}: ${p.description}`).join('\n')}
+${playbooks.map((p) => `- ${p.title}: ${p.description}`).join('\n')}
 `);
     }
 
     if (templates.length > 0) {
         sections.push(`
 EMAIL TEMPLATES & PATTERNS:
-${templates.map(t => `- ${t.title}: ${t.description}`).join('\n')}
+${templates.map((t) => `- ${t.title}: ${t.description}`).join('\n')}
 `);
     }
 
     if (competitive.length > 0) {
         sections.push(`
 COMPETITIVE POSITIONING:
-${competitive.map(c => `- ${c.title}: ${c.description}`).join('\n')}
+${competitive.map((c) => `- ${c.title}: ${c.description}`).join('\n')}
 `);
     }
 
     if (prospecting.length > 0) {
         sections.push(`
 PROSPECTING & VALUE PROPOSITIONS:
-${prospecting.map(p => `- ${p.title}: ${p.description}`).join('\n')}
+${prospecting.map((p) => `- ${p.title}: ${p.description}`).join('\n')}
 `);
     }
 
@@ -115,19 +129,22 @@ export async function analyzeLeadIntelligence(
     lead: Lead,
     activities: Activity[]
 ): Promise<{ score: number; signal: string; justification: string }> {
-
     if (!model) {
         return {
             score: 50,
             signal: 'Neutral',
-            justification: 'AI intelligence currently offline. Scoring based on activity metadata.'
+            justification: 'AI intelligence currently offline. Scoring based on activity metadata.',
         };
     }
 
     const leadContext = buildLeadContext(lead);
-    const activityContext = activities.length > 0
-        ? `RECENT ACTIVITIES: \n${activities.slice(0, 5).map(a => `- ${a.type} (${a.outcome}): ${a.notes || 'No notes'}`).join('\n')} `
-        : 'No recent activity recorded.';
+    const activityContext =
+        activities.length > 0
+            ? `RECENT ACTIVITIES: \n${activities
+                  .slice(0, 5)
+                  .map((a) => `- ${a.type} (${a.outcome}): ${a.notes || 'No notes'}`)
+                  .join('\n')} `
+            : 'No recent activity recorded.';
 
     const prompt = `You are a high - level Sales Intelligence AI.Analyze this lead and their recent activity to determine their "Closing Signal" strength.
 
@@ -147,17 +164,24 @@ TASK:
     try {
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        const cleanText = text.replace(/```json\n ? /g, '').replace(/```\n?/g, '').trim();
+        const cleanText = text
+            .replace(/```json\n ? /g, '')
+            .replace(/```\n?/g, '')
+            .trim();
         const parsed = JSON.parse(cleanText);
 
         return {
             score: typeof parsed.score === 'number' ? parsed.score : 50,
             signal: parsed.signal || 'Neutral',
-            justification: parsed.justification || 'Analysis complete.'
+            justification: parsed.justification || 'Analysis complete.',
         };
     } catch (error: unknown) {
         console.error('AI Intelligence analysis failed:', error);
-        return { score: 50, signal: 'Neutral', justification: 'Critical analysis failure. Verify lead data.' };
+        return {
+            score: 50,
+            signal: 'Neutral',
+            justification: 'Critical analysis failure. Verify lead data.',
+        };
     }
 }
 
@@ -167,21 +191,23 @@ export async function generateEmail(
     senderName: string,
     customPrompt?: string
 ): Promise<{ subject: string; body: string }> {
-
     if (!model) {
         // Fallback if AI not available
         return {
             subject: `Following up - ${lead.companyName} `,
-            body: getDefaultEmailBody(lead, senderName)
+            body: getDefaultEmailBody(lead, senderName),
         };
     }
 
     const emailType = getEmailTypeFromStatus(lead.status);
 
     // 2025 Best Practice: Augment mock resources with Real RAG context from personal playbooks
-    const ragContext = await RAGService.queryContext(`Sales strategy for ${lead.companyName} in ${lead.industry} at stage ${lead.status} `);
+    const ragContext = await RAGService.queryContext(
+        `Sales strategy for ${lead.companyName} in ${lead.industry} at stage ${lead.status} `
+    );
 
-    const companyContext = buildCompanyContext(MOCK_RESOURCES) + `\n\nPROPRIETARY STRATEGY(RAG): \n${ragContext} `;
+    const companyContext =
+        buildCompanyContext(MOCK_RESOURCES) + `\n\nPROPRIETARY STRATEGY(RAG): \n${ragContext} `;
     const leadContext = buildLeadContext(lead);
 
     const prompt = `You are an expert sales email writer for our company.Use the following context about our company and sales approach to craft highly personalized emails.
@@ -213,39 +239,48 @@ Return ONLY a JSON object with exactly this structure(no markdown, no code block
         const text = result.response.text();
 
         // Parse the JSON response
-        const cleanText = text.replace(/```json\n ? /g, '').replace(/```\n?/g, '').trim();
+        const cleanText = text
+            .replace(/```json\n ? /g, '')
+            .replace(/```\n?/g, '')
+            .trim();
         const parsed = JSON.parse(cleanText);
 
         return {
             subject: parsed.subject || `Following up - ${lead.companyName} `,
-            body: parsed.body || getDefaultEmailBody(lead, senderName)
+            body: parsed.body || getDefaultEmailBody(lead, senderName),
         };
     } catch (error: unknown) {
         console.error('AI email generation failed:', error);
         // Fallback to template
         return {
             subject: `Following up - ${lead.companyName} `,
-            body: getDefaultEmailBody(lead, senderName)
+            body: getDefaultEmailBody(lead, senderName),
         };
     }
 }
 
 // Enhance existing email with AI (with company context)
-export async function enhanceEmail(email: string, action: EnhancementAction, lead?: Lead): Promise<string> {
+export async function enhanceEmail(
+    email: string,
+    action: EnhancementAction,
+    lead?: Lead
+): Promise<string> {
     if (!model) return email;
 
     const companyContext = buildCompanyContext(MOCK_RESOURCES);
 
     const prompts: Record<EnhancementAction, string> = {
-        'shorter': `Make this email more concise while keeping the key message.Reduce to under 100 words: \n\n${email} `,
-        'professional': `Rewrite this email in a more formal, professional business tone.Maintain our company's positioning:\n\n${companyContext}\n\nEmail to rewrite:\n${email}`,
-        'friendly': `Rewrite this email in a warmer, more friendly and conversational tone while staying professional:\n\n${email}`,
-        'urgency': `Add subtle urgency to this email (time-sensitive language, limited availability) without being pushy. Keep it authentic:\n\n${email}`,
-        'social-proof': `Add social proof elements to this email naturally. Reference success with similar companies, results, or credibility signals. Use our competitive positioning:\n\n${companyContext}\n\nEmail to enhance:\n${email}`
+        shorter: `Make this email more concise while keeping the key message.Reduce to under 100 words: \n\n${email} `,
+        professional: `Rewrite this email in a more formal, professional business tone.Maintain our company's positioning:\n\n${companyContext}\n\nEmail to rewrite:\n${email}`,
+        friendly: `Rewrite this email in a warmer, more friendly and conversational tone while staying professional:\n\n${email}`,
+        urgency: `Add subtle urgency to this email (time-sensitive language, limited availability) without being pushy. Keep it authentic:\n\n${email}`,
+        'social-proof': `Add social proof elements to this email naturally. Reference success with similar companies, results, or credibility signals. Use our competitive positioning:\n\n${companyContext}\n\nEmail to enhance:\n${email}`,
     };
 
     try {
-        const result = await model.generateContent(prompts[action] + '\n\nReturn ONLY the rewritten email text, nothing else.');
+        const result = await model.generateContent(
+            prompts[action] + '\n\nReturn ONLY the rewritten email text, nothing else.'
+        );
         return result.response.text().trim();
     } catch (error) {
         console.error('AI enhancement failed:', error);
@@ -266,7 +301,7 @@ export async function generateCustomEmail(
 function getDefaultEmailBody(lead: Lead, senderName: string): string {
     const firstName = lead.contactName.split(' ')[0];
     const templates: Record<string, string> = {
-        'New': `Hi ${firstName},
+        New: `Hi ${firstName},
 
 I hope this email finds you well! I wanted to reach out and introduce myself – I'm excited about the opportunity to connect with ${lead.companyName}.
 
@@ -277,7 +312,7 @@ Would you be open to a brief 15-minute call this week?
 Best regards,
 ${senderName}`,
 
-        'Contacted': `Hi ${firstName},
+        Contacted: `Hi ${firstName},
 
 Great connecting with you! I wanted to follow up on our conversation and share some thoughts on how we can support ${lead.companyName}.
 
@@ -288,7 +323,7 @@ Looking forward to hearing from you!
 Best,
 ${senderName}`,
 
-        'Qualified': `Hi ${firstName},
+        Qualified: `Hi ${firstName},
 
 Thank you for taking the time to discuss your needs. I'm genuinely excited about the potential partnership between our companies.
 
@@ -299,7 +334,7 @@ What does your calendar look like this week?
 Best,
 ${senderName}`,
 
-        'Negotiation': `Hi ${firstName},
+        Negotiation: `Hi ${firstName},
 
 Thank you for your feedback on the proposal. I appreciate your transparency about the considerations.
 
@@ -308,7 +343,7 @@ I've spoken with our team, and we may have some flexibility. Let's find a soluti
 Can we schedule a call to finalize the details?
 
 Best regards,
-${senderName}`
+${senderName}`,
     };
 
     return templates[lead.status] || templates['New'];

@@ -14,7 +14,19 @@ import { LeadsService, ActivitiesService } from '@/lib/firebase/services';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { toast } from 'sonner';
 import { analytics } from '@/lib/analytics';
-import { Gauge, Sparkles, TrendingUp as VelocityUp, Minus, TrendingDown as VelocityDown, Activity as PulseIcon, Download, CheckSquare, Square, Trash2, Mail as MailIcon } from 'lucide-react';
+import {
+    Gauge,
+    Sparkles,
+    TrendingUp as VelocityUp,
+    Minus,
+    TrendingDown as VelocityDown,
+    Activity as PulseIcon,
+    Download,
+    CheckSquare,
+    Square,
+    Trash2,
+    Mail as MailIcon,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateLeadVelocity } from '@/lib/utils/scoring';
 import { analyzeLeadIntelligence } from '@/lib/firebase/ai-service';
@@ -60,7 +72,7 @@ const MOCK_LEADS: Lead[] = [
         industry: 'Logistics',
         createdAt: Date.now() - 172800000,
         updatedAt: Date.now(),
-    }
+    },
 ];
 
 export default function LeadsClient() {
@@ -68,7 +80,9 @@ export default function LeadsClient() {
     const [isLoading, setIsLoading] = useState(true);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [activities, setActivities] = useState<Record<string, Activity[]>>({});
-    const [leadIntel, setLeadIntel] = useState<Record<string, { score: number; signal: string; justification: string }>>({});
+    const [leadIntel, setLeadIntel] = useState<
+        Record<string, { score: number; signal: string; justification: string }>
+    >({});
     const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
     const [gmailHistory, setGmailHistory] = useState<Record<string, EmailRecord[]>>({});
     const [gmailConnected, setGmailConnected] = useState(false);
@@ -104,15 +118,18 @@ export default function LeadsClient() {
         }
     }, [user]);
 
-    const loadLeadActivities = useCallback(async (leadId: string) => {
-        if (!user) return;
-        try {
-            const data = await ActivitiesService.getLeadActivities(user.uid, leadId);
-            setActivities(prev => ({ ...prev, [leadId]: data }));
-        } catch (error) {
-            console.error('Error loading activities:', error);
-        }
-    }, [user]);
+    const loadLeadActivities = useCallback(
+        async (leadId: string) => {
+            if (!user) return;
+            try {
+                const data = await ActivitiesService.getLeadActivities(user.uid, leadId);
+                setActivities((prev) => ({ ...prev, [leadId]: data }));
+            } catch (error) {
+                console.error('Error loading activities:', error);
+            }
+        },
+        [user]
+    );
 
     // Load leads
     useEffect(() => {
@@ -127,7 +144,9 @@ export default function LeadsClient() {
         loadLeads();
     }, [user, authLoading, loadLeads]);
 
-    const handleAddLead = async (leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>) => {
+    const handleAddLead = async (
+        leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
+    ) => {
         if (!user) {
             const newLead: Lead = {
                 ...leadData,
@@ -175,7 +194,7 @@ export default function LeadsClient() {
         if (!user) return;
         try {
             const emails = await getLeadEmails(user.uid, leadId);
-            setGmailHistory(prev => ({ ...prev, [leadId]: emails }));
+            setGmailHistory((prev) => ({ ...prev, [leadId]: emails }));
         } catch (error) {
             console.error('Gmail history load failed', error);
         }
@@ -193,9 +212,11 @@ export default function LeadsClient() {
     const handleIntelRequest = async (lead: Lead) => {
         if (!user) return;
         try {
-            const leadActivities = activities[lead.id] || await ActivitiesService.getLeadActivities(user.uid, lead.id);
+            const leadActivities =
+                activities[lead.id] ||
+                (await ActivitiesService.getLeadActivities(user.uid, lead.id));
             const intel = await analyzeLeadIntelligence(lead, leadActivities);
-            setLeadIntel(prev => ({ ...prev, [lead.id]: intel }));
+            setLeadIntel((prev) => ({ ...prev, [lead.id]: intel }));
         } catch (error) {
             console.error('Intelligence analysis failed', error);
         }
@@ -207,19 +228,30 @@ export default function LeadsClient() {
             return;
         }
 
-        const headers = ['Company', 'Contact', 'Email', 'Phone', 'Value', 'Status', 'Industry', 'Created At'];
+        const headers = [
+            'Company',
+            'Contact',
+            'Email',
+            'Phone',
+            'Value',
+            'Status',
+            'Industry',
+            'Created At',
+        ];
         const csvContent = [
             headers.join(','),
-            ...leads.map(lead => [
-                `"${lead.companyName}"`,
-                `"${lead.contactName}"`,
-                `"${lead.email}"`,
-                `"${lead.phone || ''}"`,
-                lead.value,
-                `"${lead.status}"`,
-                `"${lead.industry || ''}"`,
-                new Date(lead.createdAt).toLocaleDateString()
-            ].join(','))
+            ...leads.map((lead) =>
+                [
+                    `"${lead.companyName}"`,
+                    `"${lead.contactName}"`,
+                    `"${lead.email}"`,
+                    `"${lead.phone || ''}"`,
+                    lead.value,
+                    `"${lead.status}"`,
+                    `"${lead.industry || ''}"`,
+                    new Date(lead.createdAt).toLocaleDateString(),
+                ].join(',')
+            ),
         ].join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -248,18 +280,20 @@ export default function LeadsClient() {
 
     const handleBulkDelete = async () => {
         if (!user) {
-            setLeads(leads.filter(l => !selectedLeadIds.has(l.id)));
+            setLeads(leads.filter((l) => !selectedLeadIds.has(l.id)));
             setSelectedLeadIds(new Set());
             toast.success('Leads removed (demo mode)');
             return;
         }
 
-        const confirm = window.confirm(`Are you sure you want to delete ${selectedLeadIds.size} leads?`);
+        const confirm = window.confirm(
+            `Are you sure you want to delete ${selectedLeadIds.size} leads?`
+        );
         if (!confirm) return;
 
         try {
             await Promise.all(
-                Array.from(selectedLeadIds).map(id => LeadsService.deleteLead(user.uid, id))
+                Array.from(selectedLeadIds).map((id) => LeadsService.deleteLead(user.uid, id))
             );
             toast.success('Leads deleted successfully');
             setSelectedLeadIds(new Set());
@@ -272,7 +306,9 @@ export default function LeadsClient() {
 
     const handleBulkStatusUpdate = async (newStatus: LeadStatus) => {
         if (!user) {
-            setLeads(leads.map(l => selectedLeadIds.has(l.id) ? { ...l, status: newStatus } : l));
+            setLeads(
+                leads.map((l) => (selectedLeadIds.has(l.id) ? { ...l, status: newStatus } : l))
+            );
             setSelectedLeadIds(new Set());
             toast.success('Status updated (demo mode)');
             return;
@@ -280,7 +316,9 @@ export default function LeadsClient() {
 
         try {
             await Promise.all(
-                Array.from(selectedLeadIds).map(id => LeadsService.updateLead(user.uid, id, { status: newStatus }))
+                Array.from(selectedLeadIds).map((id) =>
+                    LeadsService.updateLead(user.uid, id, { status: newStatus })
+                )
             );
             toast.success(`Leads moved to ${newStatus}`);
             setSelectedLeadIds(new Set());
@@ -317,10 +355,7 @@ export default function LeadsClient() {
                     >
                         <Download size={16} /> Export CSV
                     </button>
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="glass-button"
-                    >
+                    <button onClick={() => setIsAddModalOpen(true)} className="glass-button">
                         + Add New Lead
                     </button>
                 </div>
@@ -331,8 +366,11 @@ export default function LeadsClient() {
                     <GlassCard
                         key={lead.id}
                         onClick={() => expandedLeadId !== lead.id && handleExpandLead(lead.id)}
-                        className={`cursor-pointer group relative overflow-hidden transition-all border-l-4 ${selectedLeadIds.has(lead.id) ? 'border-l-blue-500 bg-blue-500/5' : 'border-l-transparent'
-                            } ${expandedLeadId === lead.id ? 'md:col-span-2 lg:col-span-2' : ''}`}
+                        className={`cursor-pointer group relative overflow-hidden transition-all border-l-4 ${
+                            selectedLeadIds.has(lead.id)
+                                ? 'border-l-blue-500 bg-blue-500/5'
+                                : 'border-l-transparent'
+                        } ${expandedLeadId === lead.id ? 'md:col-span-2 lg:col-span-2' : ''}`}
                     >
                         {/* Multi-select checkbox */}
                         <div
@@ -353,13 +391,24 @@ export default function LeadsClient() {
                             const velocity = calculateLeadVelocity(lead, activities[lead.id]);
                             return (
                                 <div className="absolute top-0 right-0 p-2 opacity-30 group-hover:opacity-100 transition-all">
-                                    <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 ${velocity.status === 'hot' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                                        velocity.status === 'warm' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                                            'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                                        }`}>
+                                    <div
+                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 ${
+                                            velocity.status === 'hot'
+                                                ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                                                : velocity.status === 'warm'
+                                                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                                  : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                                        }`}
+                                    >
                                         <Gauge size={10} />
                                         Velocity: {velocity.score}%
-                                        {velocity.momentum === 'rising' ? <VelocityUp size={10} /> : velocity.momentum === 'dropping' ? <VelocityDown size={10} /> : <Minus size={10} />}
+                                        {velocity.momentum === 'rising' ? (
+                                            <VelocityUp size={10} />
+                                        ) : velocity.momentum === 'dropping' ? (
+                                            <VelocityDown size={10} />
+                                        ) : (
+                                            <Minus size={10} />
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -374,14 +423,26 @@ export default function LeadsClient() {
                                 <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
                                     {lead.companyName}
                                 </h3>
-                                <Badge variant={lead.status === 'New' ? 'info' : lead.status === 'Qualified' ? 'success' : lead.status === 'Closed' ? 'success' : 'warning'}>
+                                <Badge
+                                    variant={
+                                        lead.status === 'New'
+                                            ? 'info'
+                                            : lead.status === 'Qualified'
+                                              ? 'success'
+                                              : lead.status === 'Closed'
+                                                ? 'success'
+                                                : 'warning'
+                                    }
+                                >
                                     {lead.status}
                                 </Badge>
                             </div>
 
                             {/* Lead Info */}
                             <div className="mb-4">
-                                <p className="text-slate-300 text-sm font-medium">{lead.contactName}</p>
+                                <p className="text-slate-300 text-sm font-medium">
+                                    {lead.contactName}
+                                </p>
                                 <p className="text-slate-500 text-xs">{lead.email}</p>
                                 {lead.industry && (
                                     <span className="inline-block mt-2 text-[10px] uppercase tracking-wider text-slate-500 border border-slate-700 px-1.5 py-0.5 rounded">
@@ -399,8 +460,15 @@ export default function LeadsClient() {
                                     <div className="mt-3 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 relative group/intel animate-in fade-in zoom-in-95 duration-300">
                                         <div className="flex items-center gap-1.5 mb-1">
                                             <Sparkles size={12} className="text-blue-400" />
-                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">AI Intelligence</span>
-                                            <Badge variant="info" className="ml-auto text-[8px] py-0 px-1 border-blue-500/20">{leadIntel[lead.id].signal}</Badge>
+                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">
+                                                AI Intelligence
+                                            </span>
+                                            <Badge
+                                                variant="info"
+                                                className="ml-auto text-[8px] py-0 px-1 border-blue-500/20"
+                                            >
+                                                {leadIntel[lead.id].signal}
+                                            </Badge>
                                         </div>
                                         <p className="text-[11px] text-slate-400 leading-tight italic line-clamp-2">
                                             &ldquo;{leadIntel[lead.id].justification}&rdquo;
@@ -408,7 +476,10 @@ export default function LeadsClient() {
                                     </div>
                                 ) : (
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); handleIntelRequest(lead); }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleIntelRequest(lead);
+                                        }}
                                         className="mt-3 w-full py-1 text-[10px] text-slate-500 hover:text-blue-400 border border-dashed border-slate-700 hover:border-blue-500/40 rounded transition-all italic flex items-center justify-center gap-1"
                                     >
                                         <Sparkles size={10} /> Analyze Deal Sentiment
@@ -424,8 +495,7 @@ export default function LeadsClient() {
                                 <span className="text-xs text-slate-600">
                                     {lead.lastContact
                                         ? `Last: ${new Date(lead.lastContact).toLocaleDateString()}`
-                                        : new Date(lead.updatedAt).toLocaleDateString()
-                                    }
+                                        : new Date(lead.updatedAt).toLocaleDateString()}
                                 </span>
                             </div>
 
@@ -444,7 +514,10 @@ export default function LeadsClient() {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (!user) { toast.info('Log in to track calls'); return; }
+                                        if (!user) {
+                                            toast.info('Log in to track calls');
+                                            return;
+                                        }
                                         setSelectedLead(lead);
                                         setIsCallModalOpen(true);
                                     }}
@@ -456,7 +529,10 @@ export default function LeadsClient() {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (!user) { toast.info('Log in to track meetings'); return; }
+                                        if (!user) {
+                                            toast.info('Log in to track meetings');
+                                            return;
+                                        }
                                         setSelectedLead(lead);
                                         setIsMeetingModalOpen(true);
                                     }}
@@ -468,7 +544,10 @@ export default function LeadsClient() {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (!user) { toast.info('Log in to track replies'); return; }
+                                        if (!user) {
+                                            toast.info('Log in to track replies');
+                                            return;
+                                        }
                                         setSelectedLead(lead);
                                         setIsReplyModalOpen(true);
                                     }}
@@ -484,7 +563,9 @@ export default function LeadsClient() {
                                 <div className="mt-4 pt-4 border-t border-slate-700/50">
                                     <div className="flex items-center gap-2 mb-4">
                                         <PulseIcon size={14} className="text-blue-400" />
-                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Unified Engagement History</h4>
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                            Unified Engagement History
+                                        </h4>
                                     </div>
 
                                     <div className="space-y-3">
@@ -494,35 +575,65 @@ export default function LeadsClient() {
                                             const leadEmails = gmailHistory[lead.id] || [];
 
                                             const timeline = [
-                                                ...leadActivities.map(a => ({ ...a, sortKey: a.timestamp, timelineType: 'activity' as const })),
-                                                ...leadEmails.map(e => ({ ...e, sortKey: e.timestamp, timelineType: 'email' as const }))
+                                                ...leadActivities.map((a) => ({
+                                                    ...a,
+                                                    sortKey: a.timestamp,
+                                                    timelineType: 'activity' as const,
+                                                })),
+                                                ...leadEmails.map((e) => ({
+                                                    ...e,
+                                                    sortKey: e.timestamp,
+                                                    timelineType: 'email' as const,
+                                                })),
                                             ].sort((a, b) => b.sortKey - a.sortKey);
 
                                             if (timeline.length === 0) {
-                                                return <p className="text-xs text-slate-600 italic py-4">No recent engagement recorded.</p>;
+                                                return (
+                                                    <p className="text-xs text-slate-600 italic py-4">
+                                                        No recent engagement recorded.
+                                                    </p>
+                                                );
                                             }
 
                                             return timeline.map((item, idx) => (
                                                 <div key={idx} className="flex gap-3 group/item">
                                                     <div className="flex flex-col items-center">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${item.timelineType === 'email' ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' :
-                                                            'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                                                            }`}>
-                                                            {item.timelineType === 'email' ? <MailIcon size={12} /> : <PulseIcon size={12} />}
+                                                        <div
+                                                            className={`w-8 h-8 rounded-full flex items-center justify-center border ${
+                                                                item.timelineType === 'email'
+                                                                    ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                                                                    : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                                            }`}
+                                                        >
+                                                            {item.timelineType === 'email' ? (
+                                                                <MailIcon size={12} />
+                                                            ) : (
+                                                                <PulseIcon size={12} />
+                                                            )}
                                                         </div>
-                                                        {idx < timeline.length - 1 && <div className="w-px flex-1 bg-slate-800 my-1" />}
+                                                        {idx < timeline.length - 1 && (
+                                                            <div className="w-px flex-1 bg-slate-800 my-1" />
+                                                        )}
                                                     </div>
                                                     <div className="flex-1 pb-4">
                                                         <div className="flex justify-between items-start mb-1">
                                                             <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">
-                                                                {item.timelineType === 'email' ? (item as EmailRecord).subject : (item as unknown as Activity).type}
+                                                                {item.timelineType === 'email'
+                                                                    ? (item as EmailRecord).subject
+                                                                    : (item as unknown as Activity)
+                                                                          .type}
                                                             </span>
                                                             <span className="text-[9px] text-slate-500">
-                                                                {new Date(item.sortKey).toLocaleDateString()}
+                                                                {new Date(
+                                                                    item.sortKey
+                                                                ).toLocaleDateString()}
                                                             </span>
                                                         </div>
                                                         <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2 italic">
-                                                            {item.timelineType === 'email' ? (item as EmailRecord).snippet : (item as unknown as Activity).notes}
+                                                            {item.timelineType === 'email'
+                                                                ? (item as EmailRecord).snippet
+                                                                : (item as unknown as Activity)
+                                                                      .notes}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -534,10 +645,14 @@ export default function LeadsClient() {
                                         <div className="mt-4 p-3 bg-purple-500/5 border border-purple-500/10 rounded-xl flex items-center justify-between">
                                             <div className="flex items-center gap-2 text-purple-400">
                                                 <MailIcon size={14} />
-                                                <span className="text-[10px] font-medium">Connect Gmail for live thread sync</span>
+                                                <span className="text-[10px] font-medium">
+                                                    Connect Gmail for live thread sync
+                                                </span>
                                             </div>
                                             <button
-                                                onClick={() => window.location.href = `/api/auth/gmail?userId=${user?.uid}`}
+                                                onClick={() =>
+                                                    (window.location.href = `/api/auth/gmail?userId=${user?.uid}`)
+                                                }
                                                 className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] rounded-lg transition-all"
                                             >
                                                 Connect
@@ -551,19 +666,16 @@ export default function LeadsClient() {
                 ))}
             </div>
 
-            {
-                leads.length === 0 && (
-                    <div className="text-center py-20">
-                        <p className="text-slate-500 mb-4">No leads yet. Add your first lead to get started!</p>
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="glass-button"
-                        >
-                            + Add New Lead
-                        </button>
-                    </div>
-                )
-            }
+            {leads.length === 0 && (
+                <div className="text-center py-20">
+                    <p className="text-slate-500 mb-4">
+                        No leads yet. Add your first lead to get started!
+                    </p>
+                    <button onClick={() => setIsAddModalOpen(true)} className="glass-button">
+                        + Add New Lead
+                    </button>
+                </div>
+            )}
 
             {/* Bulk Action Bar */}
             <AnimatePresence>
@@ -576,22 +688,28 @@ export default function LeadsClient() {
                     >
                         <div className="flex items-center gap-2 border-r border-slate-700 pr-6">
                             <span className="text-blue-400 font-bold">{selectedLeadIds.size}</span>
-                            <span className="text-slate-300 text-xs uppercase tracking-widest font-medium">Selected</span>
+                            <span className="text-slate-300 text-xs uppercase tracking-widest font-medium">
+                                Selected
+                            </span>
                         </div>
 
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-slate-500 uppercase font-bold">Move to:</span>
+                                <span className="text-[10px] text-slate-500 uppercase font-bold">
+                                    Move to:
+                                </span>
                                 <div className="flex gap-1">
-                                    {(['Qualified', 'Proposal', 'Negotiation'] as LeadStatus[]).map(status => (
-                                        <button
-                                            key={status}
-                                            onClick={() => handleBulkStatusUpdate(status)}
-                                            className="px-2 py-1 text-[10px] bg-slate-800 hover:bg-blue-600/20 border border-slate-700 hover:border-blue-500/40 rounded-md text-slate-300 hover:text-blue-300 transition-all font-medium"
-                                        >
-                                            {status}
-                                        </button>
-                                    ))}
+                                    {(['Qualified', 'Proposal', 'Negotiation'] as LeadStatus[]).map(
+                                        (status) => (
+                                            <button
+                                                key={status}
+                                                onClick={() => handleBulkStatusUpdate(status)}
+                                                className="px-2 py-1 text-[10px] bg-slate-800 hover:bg-blue-600/20 border border-slate-700 hover:border-blue-500/40 rounded-md text-slate-300 hover:text-blue-300 transition-all font-medium"
+                                            >
+                                                {status}
+                                            </button>
+                                        )
+                                    )}
                                 </div>
                             </div>
 
@@ -621,57 +739,55 @@ export default function LeadsClient() {
                 onSave={handleAddLead}
             />
 
-            {
-                selectedLead && (
-                    <>
-                        <AIEmailDraft
-                            lead={selectedLead}
-                            isOpen={isEmailDraftOpen}
-                            onClose={() => {
-                                setIsEmailDraftOpen(false);
-                                setSelectedLead(null);
-                            }}
-                        />
+            {selectedLead && (
+                <>
+                    <AIEmailDraft
+                        lead={selectedLead}
+                        isOpen={isEmailDraftOpen}
+                        onClose={() => {
+                            setIsEmailDraftOpen(false);
+                            setSelectedLead(null);
+                        }}
+                    />
 
-                        {user && (
-                            <>
-                                <LogCallModal
-                                    lead={selectedLead}
-                                    userId={user.uid}
-                                    isOpen={isCallModalOpen}
-                                    onClose={() => {
-                                        setIsCallModalOpen(false);
-                                        setSelectedLead(null);
-                                    }}
-                                    onSuccess={handleActivitySuccess}
-                                />
+                    {user && (
+                        <>
+                            <LogCallModal
+                                lead={selectedLead}
+                                userId={user.uid}
+                                isOpen={isCallModalOpen}
+                                onClose={() => {
+                                    setIsCallModalOpen(false);
+                                    setSelectedLead(null);
+                                }}
+                                onSuccess={handleActivitySuccess}
+                            />
 
-                                <LogMeetingModal
-                                    lead={selectedLead}
-                                    userId={user.uid}
-                                    isOpen={isMeetingModalOpen}
-                                    onClose={() => {
-                                        setIsMeetingModalOpen(false);
-                                        setSelectedLead(null);
-                                    }}
-                                    onSuccess={handleActivitySuccess}
-                                />
+                            <LogMeetingModal
+                                lead={selectedLead}
+                                userId={user.uid}
+                                isOpen={isMeetingModalOpen}
+                                onClose={() => {
+                                    setIsMeetingModalOpen(false);
+                                    setSelectedLead(null);
+                                }}
+                                onSuccess={handleActivitySuccess}
+                            />
 
-                                <LogReplyModal
-                                    lead={selectedLead}
-                                    userId={user.uid}
-                                    isOpen={isReplyModalOpen}
-                                    onClose={() => {
-                                        setIsReplyModalOpen(false);
-                                        setSelectedLead(null);
-                                    }}
-                                    onSuccess={handleActivitySuccess}
-                                />
-                            </>
-                        )}
-                    </>
-                )
-            }
-        </div >
+                            <LogReplyModal
+                                lead={selectedLead}
+                                userId={user.uid}
+                                isOpen={isReplyModalOpen}
+                                onClose={() => {
+                                    setIsReplyModalOpen(false);
+                                    setSelectedLead(null);
+                                }}
+                                onSuccess={handleActivitySuccess}
+                            />
+                        </>
+                    )}
+                </>
+            )}
+        </div>
     );
 }

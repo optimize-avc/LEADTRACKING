@@ -79,10 +79,7 @@ export function formatCompactNumber(value: number | undefined | null): string {
  * @param decimals - Number of decimal places
  * @returns Formatted percentage string
  */
-export function formatPercentage(
-    value: number | undefined | null,
-    decimals: number = 1
-): string {
+export function formatPercentage(value: number | undefined | null, decimals: number = 1): string {
     if (value === undefined || value === null || !isFinite(value)) {
         return '0%';
     }

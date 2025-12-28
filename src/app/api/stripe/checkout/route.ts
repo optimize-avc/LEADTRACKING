@@ -18,8 +18,8 @@ export async function POST(req: Request) {
 
         // 1. Map tier to Stripe Price ID
         const priceMap: Record<string, string> = {
-            'Pro': process.env.STRIPE_PRICE_ID_PRO || 'price_mock_pro',
-            'Venture': process.env.STRIPE_PRICE_ID_VENTURE || 'price_mock_venture',
+            Pro: process.env.STRIPE_PRICE_ID_PRO || 'price_mock_pro',
+            Venture: process.env.STRIPE_PRICE_ID_VENTURE || 'price_mock_venture',
         };
 
         const priceId = priceMap[tier];

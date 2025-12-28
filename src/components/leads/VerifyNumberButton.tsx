@@ -52,7 +52,6 @@ export function VerifyNumberButton({ phoneNumber, onVerified }: VerifyNumberButt
                 setStatus('invalid');
                 toast.error('Invalid phone number');
             }
-
         } catch (error: unknown) {
             toast.error(error instanceof Error ? error.message : 'Failed to send code');
             setStatus('invalid');
@@ -64,7 +63,10 @@ export function VerifyNumberButton({ phoneNumber, onVerified }: VerifyNumberButt
 
     if (status === 'valid') {
         return (
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20" title={carrierInfo || 'Verified Valid'}>
+            <div
+                className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20"
+                title={carrierInfo || 'Verified Valid'}
+            >
                 <CheckCircle2 size={12} />
                 <span>Valid</span>
             </div>
@@ -73,7 +75,10 @@ export function VerifyNumberButton({ phoneNumber, onVerified }: VerifyNumberButt
 
     if (status === 'invalid') {
         return (
-            <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded-full border border-red-500/20" title="Number appears invalid">
+            <div
+                className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded-full border border-red-500/20"
+                title="Number appears invalid"
+            >
                 <AlertCircle size={12} />
                 <span>Invalid</span>
             </div>
@@ -86,18 +91,15 @@ export function VerifyNumberButton({ phoneNumber, onVerified }: VerifyNumberButt
             disabled={isLoading}
             className={`
                 group flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all
-                ${isLoading
-                    ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
-                    : 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 border border-indigo-500/20 hover:border-indigo-500/40'
+                ${
+                    isLoading
+                        ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
+                        : 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 border border-indigo-500/20 hover:border-indigo-500/40'
                 }
             `}
             title="Verify this number with Twilio Lookup"
         >
-            {isLoading ? (
-                <Loader2 size={12} className="animate-spin" />
-            ) : (
-                <ShieldCheck size={12} />
-            )}
+            {isLoading ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />}
             <span>{isLoading ? 'Verifying...' : 'Verify'}</span>
         </button>
     );

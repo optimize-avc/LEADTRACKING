@@ -28,10 +28,7 @@ export default function Error({
                 <p className="text-slate-400 mb-6">
                     {error.message || 'An unexpected error occurred. Please try again.'}
                 </p>
-                <button
-                    onClick={reset}
-                    className="glass-button inline-flex items-center gap-2"
-                >
+                <button onClick={reset} className="glass-button inline-flex items-center gap-2">
                     <RefreshCw className="w-4 h-4" />
                     Try Again
                 </button>

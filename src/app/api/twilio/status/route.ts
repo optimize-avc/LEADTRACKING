@@ -8,10 +8,7 @@ export async function GET(request: NextRequest) {
         const userId = searchParams.get('userId');
 
         if (!userId) {
-            return NextResponse.json(
-                { error: 'userId required' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'userId required' }, { status: 400 });
         }
 
         const connected = await isTwilioConnected(userId);

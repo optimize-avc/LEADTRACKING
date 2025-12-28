@@ -6,13 +6,13 @@ import { Lead, LeadStatus } from '@/types';
  */
 
 const WIN_PROBABILITIES: Record<LeadStatus, number> = {
-    'New': 0.05,
-    'Contacted': 0.10,
-    'Qualified': 0.25,
-    'Proposal': 0.50,
-    'Negotiation': 0.75,
-    'Closed': 1.00,
-    'Lost': 0.00
+    New: 0.05,
+    Contacted: 0.1,
+    Qualified: 0.25,
+    Proposal: 0.5,
+    Negotiation: 0.75,
+    Closed: 1.0,
+    Lost: 0.0,
 };
 
 export interface ForecastResult {
@@ -26,10 +26,10 @@ export function calculateRevenueForecast(leads: Lead[]): ForecastResult {
     let totalPipeline = 0;
     let weightedForecast = 0;
 
-    leads.forEach(lead => {
+    leads.forEach((lead) => {
         const prob = WIN_PROBABILITIES[lead.status] || 0;
         totalPipeline += lead.value;
-        weightedForecast += (lead.value * prob);
+        weightedForecast += lead.value * prob;
     });
 
     // Determine confidence based on deal volume and data density
@@ -39,6 +39,6 @@ export function calculateRevenueForecast(leads: Lead[]): ForecastResult {
         totalPipeline: Math.round(totalPipeline),
         weightedForecast: Math.round(weightedForecast),
         dealCount: leads.length,
-        confidence
+        confidence,
     };
 }

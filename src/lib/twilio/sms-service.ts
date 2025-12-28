@@ -100,10 +100,14 @@ export async function updateSMSStatus(
     try {
         const msgRef = doc(db, 'users', userId, 'messages', messageSid);
 
-        await setDoc(msgRef, {
-            status,
-            updatedAt: serverTimestamp(),
-        }, { merge: true });
+        await setDoc(
+            msgRef,
+            {
+                status,
+                updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+        );
     } catch (error) {
         console.error('Error updating SMS status:', error);
         throw error;

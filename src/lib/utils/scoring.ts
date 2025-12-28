@@ -6,13 +6,13 @@ import { Lead, Activity, LeadStatus } from '@/types';
  */
 
 const STATUS_WEIGHTS: Record<LeadStatus, number> = {
-    'New': 10,
-    'Contacted': 20,
-    'Qualified': 30,
-    'Proposal': 45,
-    'Negotiation': 60,
-    'Closed': 100,
-    'Lost': 0
+    New: 10,
+    Contacted: 20,
+    Qualified: 30,
+    Proposal: 45,
+    Negotiation: 60,
+    Closed: 100,
+    Lost: 0,
 };
 
 export interface VelocityResult {
@@ -34,8 +34,8 @@ export function calculateLeadVelocity(lead: Lead, activities: Activity[] = []): 
     score -= inactivityPenalty;
 
     // 2. Activity Intensity (Last 7 days)
-    const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
-    const recentActivities = activities.filter(a => a.timestamp > weekAgo);
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    const recentActivities = activities.filter((a) => a.timestamp > weekAgo);
 
     // Reward momentum: +5 points per recent activity (cap at +25)
     const activityBonus = Math.min(recentActivities.length * 5, 25);

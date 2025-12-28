@@ -4,7 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { GeminiService } from '@/lib/ai/gemini';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { AIFutureArtifact, AIBoardroomTranscriptItem } from '@/types/ai';
-import { X, ExternalLink, RefreshCw, Send, AlertTriangle, TrendingDown, TrendingUp, Lock } from 'lucide-react';
+import {
+    X,
+    ExternalLink,
+    RefreshCw,
+    Send,
+    AlertTriangle,
+    TrendingDown,
+    TrendingUp,
+    Lock,
+} from 'lucide-react';
 import Image from 'next/image';
 
 interface TimeMachineProps {
@@ -22,7 +31,7 @@ export function TimeMachine({ transcript, outcome, onClose }: TimeMachineProps) 
     useEffect(() => {
         // Animation to "Travel Forward"
         const interval = setInterval(() => {
-            setYear(prev => {
+            setYear((prev) => {
                 if (prev >= 2026) {
                     clearInterval(interval);
                     return 2026;
@@ -34,10 +43,14 @@ export function TimeMachine({ transcript, outcome, onClose }: TimeMachineProps) 
         async function fetchArtifact() {
             try {
                 const token = await user?.getIdToken();
-                const result = await GeminiService.generateFutureArtifact(transcript, outcome, token);
+                const result = await GeminiService.generateFutureArtifact(
+                    transcript,
+                    outcome,
+                    token
+                );
                 setArtifact(result);
             } catch (e) {
-                console.error("Time Machine Failed", e);
+                console.error('Time Machine Failed', e);
             } finally {
                 setLoading(false);
             }
@@ -64,13 +77,23 @@ export function TimeMachine({ transcript, outcome, onClose }: TimeMachineProps) 
 
     return (
         <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
-            <button onClick={onClose} className="absolute top-8 right-8 text-slate-500 hover:text-white transition-colors">
+            <button
+                onClick={onClose}
+                className="absolute top-8 right-8 text-slate-500 hover:text-white transition-colors"
+            >
                 <X size={32} />
             </button>
             <div className="max-w-4xl w-full animate-in zoom-in-95 duration-700">
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-light text-slate-300 tracking-widest uppercase">
-                        Timeline Status: <span className={outcome === 'win' ? "text-green-400 font-bold" : "text-red-500 font-bold"}>
+                        Timeline Status:{' '}
+                        <span
+                            className={
+                                outcome === 'win'
+                                    ? 'text-green-400 font-bold'
+                                    : 'text-red-500 font-bold'
+                            }
+                        >
                             {outcome === 'win' ? 'OPTIMAL' : 'CRITICAL FAILURE'}
                         </span>
                     </h2>
@@ -82,7 +105,6 @@ export function TimeMachine({ transcript, outcome, onClose }: TimeMachineProps) 
                 {artifact.type === 'email' && <EmailArtifact data={artifact} />}
                 {artifact.type === 'slack' && <SlackArtifact data={artifact} />}
                 {artifact.type === 'stock' && <StockArtifact data={artifact} />}
-
             </div>
         </div>
     );
@@ -94,7 +116,9 @@ function NewsArtifact({ data }: { data: AIFutureArtifact }) {
     return (
         <div className="bg-white text-black p-8 rounded-sm shadow-2xl skew-y-1 transform transition-all hover:skew-y-0">
             <div className="border-b-4 border-black pb-4 mb-6 flex justify-between items-end">
-                <h1 className="text-4xl font-black tracking-tighter italic font-serif">TechCrunch</h1>
+                <h1 className="text-4xl font-black tracking-tighter italic font-serif">
+                    TechCrunch
+                </h1>
                 <span className="font-mono text-sm text-gray-500">{data.date}</span>
             </div>
             <h2 className="text-3xl font-bold leading-tight mb-4">{data.headline}</h2>
@@ -111,9 +135,9 @@ function NewsArtifact({ data }: { data: AIFutureArtifact }) {
                 </div>
                 <div className="w-2/3 font-serif text-lg leading-relaxed text-gray-800">
                     <p className="first-letter:text-5xl first-letter:font-bold first-letter:mr-2 float-left">
-                        {data.body?.charAt(0) || ""}
+                        {data.body?.charAt(0) || ''}
                     </p>
-                    {data.body?.substring(1) || ""}
+                    {data.body?.substring(1) || ''}
                 </div>
             </div>
         </div>
@@ -132,11 +156,11 @@ function EmailArtifact({ data }: { data: AIFutureArtifact }) {
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                            {data.from?.charAt(0) || "U"}
+                            {data.from?.charAt(0) || 'U'}
                         </div>
                         <div>
-                            <div className="font-bold text-lg">{data.from || "Unknown Sender"}</div>
-                            <div className="text-gray-500 text-sm">to {data.to || "User"}</div>
+                            <div className="font-bold text-lg">{data.from || 'Unknown Sender'}</div>
+                            <div className="text-gray-500 text-sm">to {data.to || 'User'}</div>
                         </div>
                     </div>
                     <div className="text-gray-400 text-sm">{data.date}</div>
@@ -193,7 +217,9 @@ function StockArtifact({ data }: { data: AIFutureArtifact }) {
             <div className="flex justify-between items-start mb-12 relative z-10">
                 <div>
                     <h1 className="text-6xl font-black text-white">{data.ticker}</h1>
-                    <p className="text-slate-400 uppercase tracking-widest mt-2">{data.ticker} Corp.</p>
+                    <p className="text-slate-400 uppercase tracking-widest mt-2">
+                        {data.ticker} Corp.
+                    </p>
                 </div>
                 <div className="text-right">
                     <h2 className="text-6xl font-bold text-red-500 flex items-center justify-end gap-2">
@@ -206,14 +232,20 @@ function StockArtifact({ data }: { data: AIFutureArtifact }) {
             {/* Chart Line */}
             <div className="h-32 w-full flex items-end gap-1 mb-8">
                 {[...Array(20)].map((_, i) => (
-                    <div key={i} className="flex-1 bg-red-500/20 hover:bg-red-500/50 transition-colors" style={{ height: `${(i * 13) % 60 + 20}%` }}></div>
+                    <div
+                        key={i}
+                        className="flex-1 bg-red-500/20 hover:bg-red-500/50 transition-colors"
+                        style={{ height: `${((i * 13) % 60) + 20}%` }}
+                    ></div>
                 ))}
             </div>
 
             <div className="bg-red-500/10 border-l-4 border-red-500 p-6 rounded-r-lg relative z-10">
                 <div className="flex items-center gap-3 mb-2">
                     <AlertTriangle className="text-red-500" />
-                    <span className="text-red-500 font-bold uppercase text-sm tracking-widest">Market Alert</span>
+                    <span className="text-red-500 font-bold uppercase text-sm tracking-widest">
+                        Market Alert
+                    </span>
                 </div>
                 <p className="text-white text-xl font-bold leading-relaxed">{data.news}</p>
             </div>

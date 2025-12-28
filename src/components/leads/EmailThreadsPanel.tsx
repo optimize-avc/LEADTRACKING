@@ -14,7 +14,13 @@ interface EmailThreadsPanelProps {
     onDraftReply: (subject: string, body: string) => void;
 }
 
-export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply }: EmailThreadsPanelProps) {
+export function EmailThreadsPanel({
+    lead,
+    userId,
+    isOpen,
+    onClose,
+    onDraftReply,
+}: EmailThreadsPanelProps) {
     const [emails, setEmails] = useState<EmailRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -80,7 +86,7 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
 
         try {
             const analysis = await analyzeEmail(email);
-            setEmailAnalyses(prev => ({ ...prev, [email.id]: analysis }));
+            setEmailAnalyses((prev) => ({ ...prev, [email.id]: analysis }));
         } catch (error) {
             toast.error('Failed to analyze email');
         }
@@ -88,17 +94,23 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
 
     const getSentimentColor = (sentiment: string) => {
         switch (sentiment) {
-            case 'positive': return 'text-green-400 bg-green-500/10 border-green-500/30';
-            case 'negative': return 'text-red-400 bg-red-500/10 border-red-500/30';
-            default: return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
+            case 'positive':
+                return 'text-green-400 bg-green-500/10 border-green-500/30';
+            case 'negative':
+                return 'text-red-400 bg-red-500/10 border-red-500/30';
+            default:
+                return 'text-slate-400 bg-slate-500/10 border-slate-500/30';
         }
     };
 
     const getDealHealthColor = (health: string) => {
         switch (health) {
-            case 'healthy': return 'text-green-400';
-            case 'at-risk': return 'text-amber-400';
-            default: return 'text-red-400';
+            case 'healthy':
+                return 'text-green-400';
+            case 'at-risk':
+                return 'text-amber-400';
+            default:
+                return 'text-red-400';
         }
     };
 
@@ -120,7 +132,9 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">Email History</h2>
-                                <p className="text-sm text-slate-400">{lead.companyName} • {lead.email}</p>
+                                <p className="text-sm text-slate-400">
+                                    {lead.companyName} • {lead.email}
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -150,13 +164,19 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                         <div className="mt-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm text-slate-400">AI Thread Analysis</span>
-                                <span className={`text-xs font-medium ${getDealHealthColor(threadAnalysis.dealHealth)}`}>
+                                <span
+                                    className={`text-xs font-medium ${getDealHealthColor(threadAnalysis.dealHealth)}`}
+                                >
                                     {threadAnalysis.dealHealth.toUpperCase()}
                                 </span>
                             </div>
-                            <p className="text-sm text-slate-300 mb-2">{threadAnalysis.threadSummary}</p>
+                            <p className="text-sm text-slate-300 mb-2">
+                                {threadAnalysis.threadSummary}
+                            </p>
                             <div className="flex items-center gap-4 text-xs">
-                                <span className={`px-2 py-1 rounded border ${getSentimentColor(threadAnalysis.overallSentiment)}`}>
+                                <span
+                                    className={`px-2 py-1 rounded border ${getSentimentColor(threadAnalysis.overallSentiment)}`}
+                                >
                                     {threadAnalysis.overallSentiment}
                                 </span>
                                 <span className="text-slate-500">
@@ -165,7 +185,9 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                             </div>
                             <div className="mt-2 flex items-center gap-2">
                                 <span className="text-amber-400">💡</span>
-                                <span className="text-sm text-amber-300">{threadAnalysis.nextBestAction}</span>
+                                <span className="text-sm text-amber-300">
+                                    {threadAnalysis.nextBestAction}
+                                </span>
                             </div>
                         </div>
                     )}
@@ -180,10 +202,7 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                     ) : emails.length === 0 ? (
                         <div className="text-center py-12">
                             <p className="text-slate-500 mb-4">No emails found for this lead</p>
-                            <button
-                                onClick={handleSync}
-                                className="glass-button px-4 py-2"
-                            >
+                            <button onClick={handleSync} className="glass-button px-4 py-2">
                                 🔄 Sync from Gmail
                             </button>
                         </div>
@@ -192,12 +211,15 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                             {emails.map((email) => (
                                 <div
                                     key={email.id}
-                                    className={`p-4 rounded-lg border transition-all cursor-pointer ${email.direction === 'sent'
-                                        ? 'bg-blue-500/5 border-blue-500/20 ml-8'
-                                        : 'bg-slate-800/50 border-slate-700 mr-8'
-                                        }`}
+                                    className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                                        email.direction === 'sent'
+                                            ? 'bg-blue-500/5 border-blue-500/20 ml-8'
+                                            : 'bg-slate-800/50 border-slate-700 mr-8'
+                                    }`}
                                     onClick={() => {
-                                        setExpandedEmailId(expandedEmailId === email.id ? null : email.id);
+                                        setExpandedEmailId(
+                                            expandedEmailId === email.id ? null : email.id
+                                        );
                                         if (!emailAnalyses[email.id]) {
                                             handleAnalyzeEmail(email);
                                         }
@@ -209,7 +231,9 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                                                 {email.direction === 'sent' ? '📤' : '📥'}
                                             </span>
                                             <span className="text-sm font-medium text-slate-300">
-                                                {email.direction === 'sent' ? 'You' : lead.contactName}
+                                                {email.direction === 'sent'
+                                                    ? 'You'
+                                                    : lead.contactName}
                                             </span>
                                         </div>
                                         <span className="text-xs text-slate-500">
@@ -217,7 +241,9 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                                         </span>
                                     </div>
 
-                                    <p className="text-sm font-medium text-white mb-1">{email.subject}</p>
+                                    <p className="text-sm font-medium text-white mb-1">
+                                        {email.subject}
+                                    </p>
                                     <p className="text-sm text-slate-400">
                                         {expandedEmailId === email.id ? email.body : email.snippet}
                                     </p>
@@ -226,21 +252,30 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                                     {expandedEmailId === email.id && emailAnalyses[email.id] && (
                                         <div className="mt-3 pt-3 border-t border-slate-700">
                                             <div className="flex flex-wrap gap-2 mb-2">
-                                                <span className={`text-xs px-2 py-1 rounded border ${getSentimentColor(emailAnalyses[email.id].sentiment)}`}>
+                                                <span
+                                                    className={`text-xs px-2 py-1 rounded border ${getSentimentColor(emailAnalyses[email.id].sentiment)}`}
+                                                >
                                                     {emailAnalyses[email.id].sentiment}
                                                 </span>
                                                 <span className="text-xs px-2 py-1 rounded border border-slate-600 text-slate-400">
                                                     {emailAnalyses[email.id].intent}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-slate-500 mb-2">{emailAnalyses[email.id].summary}</p>
+                                            <p className="text-xs text-slate-500 mb-2">
+                                                {emailAnalyses[email.id].summary}
+                                            </p>
                                             {emailAnalyses[email.id].dealSignals.length > 0 && (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {emailAnalyses[email.id].dealSignals.map((signal, i) => (
-                                                        <span key={i} className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded">
-                                                            🎯 {signal}
-                                                        </span>
-                                                    ))}
+                                                    {emailAnalyses[email.id].dealSignals.map(
+                                                        (signal, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded"
+                                                            >
+                                                                🎯 {signal}
+                                                            </span>
+                                                        )
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -256,10 +291,7 @@ export function EmailThreadsPanel({ lead, userId, isOpen, onClose, onDraftReply 
                     <button
                         onClick={() => {
                             const lastEmail = emails[0];
-                            onDraftReply(
-                                'Re: ' + (lastEmail?.subject || ''),
-                                ''
-                            );
+                            onDraftReply('Re: ' + (lastEmail?.subject || ''), '');
                             onClose();
                         }}
                         className="glass-button w-full py-2"

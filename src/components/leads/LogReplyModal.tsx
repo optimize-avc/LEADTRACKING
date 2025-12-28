@@ -30,16 +30,21 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
             // Log the reply as an email activity
             await ActivitiesService.logActivity(userId, {
                 type: 'email',
-                outcome: sentiment === 'positive' ? 'connected' : sentiment === 'negative' ? 'none' : 'connected',
+                outcome:
+                    sentiment === 'positive'
+                        ? 'connected'
+                        : sentiment === 'negative'
+                          ? 'none'
+                          : 'connected',
                 leadId: lead.id,
                 notes: `📩 REPLY RECEIVED (${sentiment}): ${replyContent}`,
                 timestamp: Date.now(),
-                repId: userId
+                repId: userId,
             });
 
             // Update lead
             const updates: Partial<Lead> = {
-                lastContact: Date.now()
+                lastContact: Date.now(),
             };
 
             if (nextStep) {
@@ -90,7 +95,9 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white">Log Email Reply</h2>
-                            <p className="text-sm text-slate-400">{lead.companyName} • {lead.contactName}</p>
+                            <p className="text-sm text-slate-400">
+                                {lead.companyName} • {lead.contactName}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -102,28 +109,42 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
                         <label className="block text-sm text-slate-400 mb-2">Reply Sentiment</label>
                         <div className="flex gap-2">
                             {[
-                                { value: 'positive', label: 'Positive', icon: '😊', color: 'green' },
+                                {
+                                    value: 'positive',
+                                    label: 'Positive',
+                                    icon: '😊',
+                                    color: 'green',
+                                },
                                 { value: 'neutral', label: 'Neutral', icon: '😐', color: 'slate' },
                                 { value: 'negative', label: 'Negative', icon: '😞', color: 'red' },
                             ].map((s) => (
                                 <button
                                     key={s.value}
-                                    onClick={() => setSentiment(s.value as 'positive' | 'neutral' | 'negative')}
-                                    className={`flex-1 p-3 rounded-lg border text-center transition-all ${sentiment === s.value
-                                        ? `bg-${s.color}-500/20 border-${s.color}-500/50 text-${s.color}-300`
-                                        : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
-                                        }`}
+                                    onClick={() =>
+                                        setSentiment(s.value as 'positive' | 'neutral' | 'negative')
+                                    }
+                                    className={`flex-1 p-3 rounded-lg border text-center transition-all ${
+                                        sentiment === s.value
+                                            ? `bg-${s.color}-500/20 border-${s.color}-500/50 text-${s.color}-300`
+                                            : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
+                                    }`}
                                     style={{
-                                        backgroundColor: sentiment === s.value
-                                            ? s.color === 'green' ? 'rgba(34, 197, 94, 0.2)'
-                                                : s.color === 'red' ? 'rgba(239, 68, 68, 0.2)'
-                                                    : 'rgba(100, 116, 139, 0.2)'
-                                            : undefined,
-                                        borderColor: sentiment === s.value
-                                            ? s.color === 'green' ? 'rgba(34, 197, 94, 0.5)'
-                                                : s.color === 'red' ? 'rgba(239, 68, 68, 0.5)'
-                                                    : 'rgba(100, 116, 139, 0.5)'
-                                            : undefined
+                                        backgroundColor:
+                                            sentiment === s.value
+                                                ? s.color === 'green'
+                                                    ? 'rgba(34, 197, 94, 0.2)'
+                                                    : s.color === 'red'
+                                                      ? 'rgba(239, 68, 68, 0.2)'
+                                                      : 'rgba(100, 116, 139, 0.2)'
+                                                : undefined,
+                                        borderColor:
+                                            sentiment === s.value
+                                                ? s.color === 'green'
+                                                    ? 'rgba(34, 197, 94, 0.5)'
+                                                    : s.color === 'red'
+                                                      ? 'rgba(239, 68, 68, 0.5)'
+                                                      : 'rgba(100, 116, 139, 0.5)'
+                                                : undefined,
                                     }}
                                 >
                                     <div className="text-xl mb-1">{s.icon}</div>
@@ -135,14 +156,18 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
 
                     {/* Reply Content */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Reply Content or Summary</label>
+                        <label className="block text-sm text-slate-400 mb-2">
+                            Reply Content or Summary
+                        </label>
                         <textarea
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
                             className="glass-input w-full h-32 resize-none"
                             placeholder="Paste the reply or write a summary of what they said..."
                         />
-                        <p className="text-xs text-slate-500 mt-1">Tip: Paste the email reply directly for full context</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                            Tip: Paste the email reply directly for full context
+                        </p>
                     </div>
 
                     {/* Next Step */}

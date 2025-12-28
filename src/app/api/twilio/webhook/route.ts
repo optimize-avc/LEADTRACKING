@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
         });
 
         if (process.env.NODE_ENV === 'production') {
-            if (!twilioSignature || !authToken || !validateRequest(authToken, twilioSignature, url, params)) {
+            if (
+                !twilioSignature ||
+                !authToken ||
+                !validateRequest(authToken, twilioSignature, url, params)
+            ) {
                 console.error('Security Alert: Invalid Twilio Signature');
                 return new NextResponse('Unauthorized', { status: 403 });
             }
@@ -37,21 +41,24 @@ export async function POST(request: NextRequest) {
         const userId = request.nextUrl.searchParams.get('userId');
         const leadId = request.nextUrl.searchParams.get('leadId');
 
-
-
         // Map Twilio status to our status type
         const statusMap: Record<string, string> = {
-            'queued': 'queued',
-            'ringing': 'ringing',
+            queued: 'queued',
+            ringing: 'ringing',
             'in-progress': 'in-progress',
-            'completed': 'completed',
-            'busy': 'busy',
-            'failed': 'failed',
+            completed: 'completed',
+            busy: 'busy',
+            failed: 'failed',
             'no-answer': 'no-answer',
-            'canceled': 'canceled',
+            canceled: 'canceled',
         };
 
-        const status = (statusMap[callStatus] || 'failed') as any;
+        const status = (statusMap[callStatus] || 'failed') as
+            | 'completed'
+            | 'busy'
+            | 'failed'
+            | 'no-answer'
+            | 'canceled';
         const duration = callDuration ? parseInt(callDuration) : undefined;
 
         if (userId) {
@@ -67,25 +74,19 @@ export async function POST(request: NextRequest) {
         }
 
         // Return TwiML response (required by Twilio)
-        return new NextResponse(
-            '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
-            {
-                status: 200,
-                headers: {
-                    'Content-Type': 'text/xml',
-                },
-            }
-        );
+        return new NextResponse('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/xml',
+            },
+        });
     } catch (error: unknown) {
         console.error('Twilio Voice Webhook Error:', error);
-        return new NextResponse(
-            '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
-            {
-                status: 200,
-                headers: {
-                    'Content-Type': 'text/xml',
-                },
-            }
-        );
+        return new NextResponse('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/xml',
+            },
+        });
     }
 }

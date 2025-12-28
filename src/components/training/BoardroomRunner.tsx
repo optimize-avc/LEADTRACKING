@@ -2,8 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    X, Users, MessageSquare, Mic, MicOff,
-    BrainCircuit, AlertCircle, Play, Send
+    X,
+    Users,
+    MessageSquare,
+    Mic,
+    MicOff,
+    BrainCircuit,
+    AlertCircle,
+    Play,
+    Send,
 } from 'lucide-react';
 import Image from 'next/image';
 import { GeminiService } from '@/lib/ai/gemini';
@@ -21,10 +28,12 @@ type TranscriptItem = AIBoardroomTranscriptItem;
 
 export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
     const { user } = useAuth();
-    const [status, setStatus] = useState<'init' | 'playing' | 'loading_turn' | 'time_machine'>('init');
+    const [status, setStatus] = useState<'init' | 'playing' | 'loading_turn' | 'time_machine'>(
+        'init'
+    );
     const [agents, setAgents] = useState<Agent[]>([]);
     const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
-    const [inputValue, setInputValue] = useState("");
+    const [inputValue, setInputValue] = useState('');
     const [outcome, setOutcome] = useState<'win' | 'loss'>('loss'); // Default to loss for drama
     const transcriptEndRef = useRef<HTMLDivElement>(null);
 
@@ -38,17 +47,23 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
                     setAgents(scenario.stakeholders);
                     setStatus('playing');
                     // Initial welcome message from the Champion
-                    const champion = scenario.stakeholders.find((s: AIBoardroomAgent) => s.archetype === 'Champion') || scenario.stakeholders[0];
-                    setTranscript([{
-                        id: 'init',
-                        speaker: champion.name,
-                        speakerId: champion.id,
-                        message: "Thanks for coming in. We&apos;re all here. Why don&apos;t you kick us off?",
-                        type: 'speech'
-                    }]);
+                    const champion =
+                        scenario.stakeholders.find(
+                            (s: AIBoardroomAgent) => s.archetype === 'Champion'
+                        ) || scenario.stakeholders[0];
+                    setTranscript([
+                        {
+                            id: 'init',
+                            speaker: champion.name,
+                            speakerId: champion.id,
+                            message:
+                                'Thanks for coming in. We&apos;re all here. Why don&apos;t you kick us off?',
+                            type: 'speech',
+                        },
+                    ]);
                 }
             } catch (e) {
-                console.error("Failed to init boardroom", e);
+                console.error('Failed to init boardroom', e);
             }
         }
         init();
@@ -64,22 +79,30 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
         if (!inputValue.trim() || status === 'loading_turn') return;
 
         const userMsg = inputValue;
-        setInputValue("");
+        setInputValue('');
         setStatus('loading_turn');
 
         // 1. Add User Message
-        const newTranscript = [...transcript, {
-            id: Date.now().toString(),
-            speaker: 'You',
-            speakerId: 'user',
-            message: userMsg,
-            type: 'speech' as const
-        }];
+        const newTranscript = [
+            ...transcript,
+            {
+                id: Date.now().toString(),
+                speaker: 'You',
+                speakerId: 'user',
+                message: userMsg,
+                type: 'speech' as const,
+            },
+        ];
         setTranscript(newTranscript);
 
         try {
             const token = await user?.getIdToken();
-            const result = await GeminiService.evaluateBoardroomTurn(agents, userMsg, newTranscript, token);
+            const result = await GeminiService.evaluateBoardroomTurn(
+                agents,
+                userMsg,
+                newTranscript,
+                token
+            );
 
             if (result) {
                 const turnId = Date.now().toString();
@@ -89,48 +112,50 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
 
                 // 2. Main Response
                 if (result.response) {
-                    const speaker = agents.find(a => a.id === result.mainSpeakerId);
+                    const speaker = agents.find((a) => a.id === result.mainSpeakerId);
                     updates.push({
                         id: `resp-${turnId}`,
                         speaker: speaker?.name || 'Unknown',
                         speakerId: result.mainSpeakerId,
                         message: result.response,
-                        type: 'speech'
+                        type: 'speech',
                     });
                 }
 
                 // 3. Whispers (Thoughts)
                 if (result.whispers) {
-                    result.whispers.forEach((w: { agentId: string; thought: string }, idx: number) => {
-                        const agent = agents.find(a => a.id === w.agentId);
-                        updates.push({
-                            id: `whisp-${turnId}-${idx}`,
-                            speaker: agent?.name || 'Unknown',
-                            speakerId: w.agentId,
-                            message: w.thought,
-                            type: 'whisper'
-                        });
-                    });
+                    result.whispers.forEach(
+                        (w: { agentId: string; thought: string }, idx: number) => {
+                            const agent = agents.find((a) => a.id === w.agentId);
+                            updates.push({
+                                id: `whisp-${turnId}-${idx}`,
+                                speaker: agent?.name || 'Unknown',
+                                speakerId: w.agentId,
+                                message: w.thought,
+                                type: 'whisper',
+                            });
+                        }
+                    );
                 }
 
                 // 4. Sidebar
                 if (result.sidebar) {
-                    const from = agents.find(a => a.id === result.sidebar!.fromId);
-                    const to = agents.find(a => a.id === result.sidebar!.toId);
+                    const from = agents.find((a) => a.id === result.sidebar!.fromId);
+                    const to = agents.find((a) => a.id === result.sidebar!.toId);
                     updates.push({
                         id: `side-${turnId}`,
                         speaker: from?.name || 'Unknown',
                         speakerId: result.sidebar.fromId,
                         targetId: result.sidebar.toId,
                         message: `(to ${to?.name?.split(' ')[0]}): ${result.sidebar.message}`,
-                        type: 'sidebar'
+                        type: 'sidebar',
                     });
                 }
 
-                setTranscript(prev => [...prev, ...updates]);
+                setTranscript((prev) => [...prev, ...updates]);
             }
         } catch (e) {
-            console.error("Turn failed", e);
+            console.error('Turn failed', e);
         } finally {
             setStatus('playing');
         }
@@ -152,14 +177,15 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
         return (
             <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
                 <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                <h2 className="text-xl font-bold text-white tracking-widest uppercase">Assembling The Board...</h2>
+                <h2 className="text-xl font-bold text-white tracking-widest uppercase">
+                    Assembling The Board...
+                </h2>
             </div>
         );
     }
 
     return (
         <div className="fixed inset-0 z-50 bg-slate-950 text-slate-200 font-sans flex flex-col">
-
             {/* HEADER */}
             <div className="h-16 border-b border-white/10 bg-slate-900 flex items-center justify-between px-6 shrink-0 relative z-20">
                 <h1 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -172,7 +198,10 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
                     >
                         End Meeting
                     </button>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>
@@ -180,7 +209,6 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
 
             {/* MAIN STAGE (Isometric View Simulation) */}
             <div className="flex-1 overflow-hidden relative bg-[#0f172a] perspective-1000">
-
                 {/* Table Surface */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-indigo-950/20 rounded-[100px] border border-indigo-500/20 shadow-[0_0_100px_rgba(79,70,229,0.1)] transform rotate-x-60"></div>
 
@@ -205,20 +233,20 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
                 {/* Transcript Overlay (Floating HUD) */}
                 <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[300px] pointer-events-auto">
                     <div className="h-full overflow-y-auto px-4 space-y-4 custom-scrollbar mask-image-linear-to-t">
-                        {transcript.map(item => (
+                        {transcript.map((item) => (
                             <ChatBubble key={item.id} item={item} />
                         ))}
                         {status === 'loading_turn' && (
                             <div className="flex justify-start">
                                 <div className="bg-slate-800/50 rounded-lg px-4 py-2 text-xs text-slate-400 italic flex items-center gap-2">
-                                    <BrainCircuit size={12} className="animate-pulse" /> The Board is deliberating...
+                                    <BrainCircuit size={12} className="animate-pulse" /> The Board
+                                    is deliberating...
                                 </div>
                             </div>
                         )}
                         <div ref={transcriptEndRef} />
                     </div>
                 </div>
-
             </div>
 
             {/* INPUT AREA */}
@@ -242,36 +270,38 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
                     </button>
                 </div>
             </div>
-
         </div>
     );
 }
 
 // --- SUBCOMPONENTS ---
 
-function AgentAvatar({ agent, isSpeaking }: { agent: Agent, isSpeaking: boolean }) {
+function AgentAvatar({ agent, isSpeaking }: { agent: Agent; isSpeaking: boolean }) {
     if (!agent) return null;
     return (
         <div className="flex flex-col items-center group">
-            <div className={`
+            <div
+                className={`
                 w-24 h-24 rounded-full border-4 overflow-hidden bg-slate-800 shadow-2xl relative transition-all duration-300
-                ${agent.archetype === 'Blocker' ? 'border-red-500/30 group-hover:border-red-500' :
-                    agent.archetype === 'Champion' ? 'border-green-500/30 group-hover:border-green-500' :
-                        'border-blue-500/30 group-hover:border-blue-500'}
+                ${
+                    agent.archetype === 'Blocker'
+                        ? 'border-red-500/30 group-hover:border-red-500'
+                        : agent.archetype === 'Champion'
+                          ? 'border-green-500/30 group-hover:border-green-500'
+                          : 'border-blue-500/30 group-hover:border-blue-500'
+                }
                 ${isSpeaking ? 'scale-110 shadow-[0_0_30px_rgba(255,255,255,0.2)]' : ''}
-            `}>
-                <Image
-                    src={agent.avatar}
-                    alt={agent.name}
-                    fill
-                    className="object-cover"
-                />
+            `}
+            >
+                <Image src={agent.avatar} alt={agent.name} fill className="object-cover" />
             </div>
 
             {/* Nameplate */}
             <div className="mt-4 bg-slate-900/80 backdrop-blur border border-white/10 px-4 py-2 rounded-lg text-center transform transition-transform group-hover:-translate-y-1">
                 <div className="font-bold text-white text-sm">{agent.name}</div>
-                <div className="text-[10px] uppercase tracking-wider font-mono text-slate-400">{agent.role}</div>
+                <div className="text-[10px] uppercase tracking-wider font-mono text-slate-400">
+                    {agent.role}
+                </div>
             </div>
 
             {/* Hover Info */}
@@ -288,8 +318,12 @@ function ChatBubble({ item }: { item: TranscriptItem }) {
             <div className="flex justify-center my-2">
                 <div className="bg-slate-900/40 border border-slate-700/50 rounded-full px-4 py-1.5 flex items-center gap-2 max-w-lg backdrop-blur-sm animate-in fade-in zoom-in-95">
                     <BrainCircuit size={12} className="text-purple-400" />
-                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">{item.speaker}&apos;s Thought:</span>
-                    <span className="text-xs text-slate-300 italic">&ldquo;{item.message}&rdquo;</span>
+                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                        {item.speaker}&apos;s Thought:
+                    </span>
+                    <span className="text-xs text-slate-300 italic">
+                        &ldquo;{item.message}&rdquo;
+                    </span>
                 </div>
             </div>
         );
@@ -300,8 +334,12 @@ function ChatBubble({ item }: { item: TranscriptItem }) {
             <div className="flex justify-center my-2">
                 <div className="bg-amber-900/20 border border-amber-500/30 rounded-full px-4 py-1.5 flex items-center gap-2 max-w-lg backdrop-blur-sm animate-in fade-in zoom-in-95">
                     <MessageSquare size={12} className="text-amber-500" />
-                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Sidebar ({item.speaker}):</span>
-                    <span className="text-xs text-amber-200/80 italic">&ldquo;{item.message}&rdquo;</span>
+                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">
+                        Sidebar ({item.speaker}):
+                    </span>
+                    <span className="text-xs text-amber-200/80 italic">
+                        &ldquo;{item.message}&rdquo;
+                    </span>
                 </div>
             </div>
         );
@@ -310,12 +348,19 @@ function ChatBubble({ item }: { item: TranscriptItem }) {
     // Standard Speech
     const isUser = item.speakerId === 'user';
     return (
-        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-md p-4 rounded-2xl shadow-lg border ${isUser
-                ? 'bg-blue-600 text-white rounded-br-none border-blue-500'
-                : 'bg-slate-800 text-slate-200 rounded-bl-none border-slate-700'
-                }`}>
-                {!isUser && <div className="text-xs font-bold text-slate-400 mb-1">{item.speaker}</div>}
+        <div
+            className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}
+        >
+            <div
+                className={`max-w-md p-4 rounded-2xl shadow-lg border ${
+                    isUser
+                        ? 'bg-blue-600 text-white rounded-br-none border-blue-500'
+                        : 'bg-slate-800 text-slate-200 rounded-bl-none border-slate-700'
+                }`}
+            >
+                {!isUser && (
+                    <div className="text-xs font-bold text-slate-400 mb-1">{item.speaker}</div>
+                )}
                 <div className="text-sm leading-relaxed">{item.message}</div>
             </div>
         </div>

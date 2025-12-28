@@ -33,18 +33,18 @@ export function SlideDeck({ slides, onComplete }: SlideDeckProps) {
     const variants = {
         enter: (direction: number) => ({
             x: direction > 0 ? 1000 : -1000,
-            opacity: 0
+            opacity: 0,
         }),
         center: {
             zIndex: 1,
             x: 0,
-            opacity: 1
+            opacity: 1,
         },
         exit: (direction: number) => ({
             zIndex: 0,
             x: direction < 0 ? 1000 : -1000,
-            opacity: 0
-        })
+            opacity: 0,
+        }),
     };
 
     return (
@@ -68,8 +68,8 @@ export function SlideDeck({ slides, onComplete }: SlideDeckProps) {
                         animate="center"
                         exit="exit"
                         transition={{
-                            x: { type: "spring", stiffness: 300, damping: 30 },
-                            opacity: { duration: 0.2 }
+                            x: { type: 'spring', stiffness: 300, damping: 30 },
+                            opacity: { duration: 0.2 },
                         }}
                         className="w-full max-w-3xl glass-card border-none bg-slate-800/30 p-8 md:p-12 min-h-[400px] flex flex-col"
                     >
@@ -79,12 +79,15 @@ export function SlideDeck({ slides, onComplete }: SlideDeckProps) {
                         </h2>
 
                         {/* Layout: Image + Text or Text Only */}
-                        <div className={`flex flex-col md:flex-row gap-8 items-center ${currentSlide.imageUrl ? 'justify-between' : 'justify-center'}`}>
-
+                        <div
+                            className={`flex flex-col md:flex-row gap-8 items-center ${currentSlide.imageUrl ? 'justify-between' : 'justify-center'}`}
+                        >
                             {/* Text Content */}
                             <div className="flex-1 space-y-6">
                                 <div className="prose prose-invert prose-lg text-slate-300">
-                                    <p className="whitespace-pre-line leading-relaxed">{currentSlide.body}</p>
+                                    <p className="whitespace-pre-line leading-relaxed">
+                                        {currentSlide.body}
+                                    </p>
                                 </div>
 
                                 {currentSlide.bullets && (
@@ -94,7 +97,7 @@ export function SlideDeck({ slides, onComplete }: SlideDeckProps) {
                                                 key={idx}
                                                 initial={{ opacity: 0, x: -20 }}
                                                 animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: 0.3 + (idx * 0.1) }}
+                                                transition={{ delay: 0.3 + idx * 0.1 }}
                                                 className="flex items-start gap-3 text-slate-300"
                                             >
                                                 <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
@@ -119,7 +122,6 @@ export function SlideDeck({ slides, onComplete }: SlideDeckProps) {
                                 </div>
                             )}
                         </div>
-
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -143,7 +145,8 @@ export function SlideDeck({ slides, onComplete }: SlideDeckProps) {
                     onClick={() => paginate(1)}
                     className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95"
                 >
-                    {isLastSlide ? 'Complete Lesson' : 'Next'} {isLastSlide ? <CheckCircle size={20} /> : <ChevronRight size={20} />}
+                    {isLastSlide ? 'Complete Lesson' : 'Next'}{' '}
+                    {isLastSlide ? <CheckCircle size={20} /> : <ChevronRight size={20} />}
                 </button>
             </div>
         </div>

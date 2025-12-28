@@ -8,7 +8,15 @@ export interface CallRecord {
     leadId: string;
     leadPhone: string;
     fromNumber: string;
-    status: 'queued' | 'ringing' | 'in-progress' | 'completed' | 'busy' | 'failed' | 'no-answer' | 'canceled';
+    status:
+        | 'queued'
+        | 'ringing'
+        | 'in-progress'
+        | 'completed'
+        | 'busy'
+        | 'failed'
+        | 'no-answer'
+        | 'canceled';
     direction: 'outbound' | 'inbound';
     duration?: number;
     startTime: string;
@@ -131,10 +139,11 @@ export async function updateCallStatus(
     try {
         const callRef = doc(db, 'users', userId, 'calls', callSid);
 
-        const updateData: Partial<CallRecord> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
-            status,
-            updatedAt: serverTimestamp(),
-        };
+        const updateData: Partial<CallRecord> & { updatedAt: ReturnType<typeof serverTimestamp> } =
+            {
+                status,
+                updatedAt: serverTimestamp(),
+            };
 
         if (duration !== undefined) {
             updateData.duration = duration;

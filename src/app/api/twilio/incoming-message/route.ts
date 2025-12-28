@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
                     leadId: leadDoc.id,
                     notes: `Inbound Message: ${body}`,
                     channel: 'sms',
-                    messageSid
+                    messageSid,
                 });
             }
         });
@@ -51,9 +51,8 @@ export async function POST(req: NextRequest) {
 
         // 3. Respond with empty TwiML to acknowledge receipt
         return new Response('<Response></Response>', {
-            headers: { 'Content-Type': 'text/xml' }
+            headers: { 'Content-Type': 'text/xml' },
         });
-
     } catch (error) {
         console.error('Webhook Error:', error);
         return new Response('Internal error', { status: 500 });

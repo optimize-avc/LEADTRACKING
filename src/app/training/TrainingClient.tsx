@@ -5,7 +5,21 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { toast } from 'sonner';
 import { analytics } from '@/lib/analytics';
 import { Badge } from '@/components/ui/Badge';
-import { Play, CheckCircle, Clock, BookOpen, Video, FileText, Award, ChevronRight, ShieldAlert, Target, Mic, Zap, Users } from 'lucide-react';
+import {
+    Play,
+    CheckCircle,
+    Clock,
+    BookOpen,
+    Video,
+    FileText,
+    Award,
+    ChevronRight,
+    ShieldAlert,
+    Target,
+    Mic,
+    Zap,
+    Users,
+} from 'lucide-react';
 import { WarRoomRunner } from '@/components/training/WarRoomRunner';
 import { DojoRunner } from '@/components/training/DojoRunner';
 import { PitchRecorder } from '@/components/training/PitchRecorder';
@@ -36,11 +50,51 @@ const TRAINING_COURSES: TrainingCourse[] = [
         category: 'Prospecting',
         totalDuration: '2h 15m',
         modules: [
-            { id: '1-1', title: 'The Psychology of Cold Calls', description: 'Understand buyer mindset', duration: '15m', type: 'video', completed: true, progress: 100 },
-            { id: '1-2', title: 'Opening Lines That Work', description: 'First 10-second strategies', duration: '20m', type: 'video', completed: true, progress: 100 },
-            { id: '1-3', title: 'Handling Gatekeepers', description: 'Navigate to decision makers', duration: '25m', type: 'video', completed: false, progress: 60 },
-            { id: '1-4', title: 'Objection Handling', description: 'Turn no into next step', duration: '30m', type: 'video', completed: false, progress: 0 },
-            { id: '1-5', title: 'Cold Calling Quiz', description: 'Test your knowledge', duration: '10m', type: 'quiz', completed: false, progress: 0 },
+            {
+                id: '1-1',
+                title: 'The Psychology of Cold Calls',
+                description: 'Understand buyer mindset',
+                duration: '15m',
+                type: 'video',
+                completed: true,
+                progress: 100,
+            },
+            {
+                id: '1-2',
+                title: 'Opening Lines That Work',
+                description: 'First 10-second strategies',
+                duration: '20m',
+                type: 'video',
+                completed: true,
+                progress: 100,
+            },
+            {
+                id: '1-3',
+                title: 'Handling Gatekeepers',
+                description: 'Navigate to decision makers',
+                duration: '25m',
+                type: 'video',
+                completed: false,
+                progress: 60,
+            },
+            {
+                id: '1-4',
+                title: 'Objection Handling',
+                description: 'Turn no into next step',
+                duration: '30m',
+                type: 'video',
+                completed: false,
+                progress: 0,
+            },
+            {
+                id: '1-5',
+                title: 'Cold Calling Quiz',
+                description: 'Test your knowledge',
+                duration: '10m',
+                type: 'quiz',
+                completed: false,
+                progress: 0,
+            },
         ],
     },
     {
@@ -49,10 +103,42 @@ const TRAINING_COURSES: TrainingCourse[] = [
         category: 'Sales Process',
         totalDuration: '1h 45m',
         modules: [
-            { id: '2-1', title: 'Setting the Agenda', description: 'Control the conversation', duration: '15m', type: 'video', completed: true, progress: 100 },
-            { id: '2-2', title: 'SPIN Questioning', description: 'Advanced questioning techniques', duration: '25m', type: 'video', completed: false, progress: 30 },
-            { id: '2-3', title: 'Pain Point Discovery', description: 'Uncover true needs', duration: '20m', type: 'reading', completed: false, progress: 0 },
-            { id: '2-4', title: 'Next Steps & Close', description: 'Always advance', duration: '20m', type: 'video', completed: false, progress: 0 },
+            {
+                id: '2-1',
+                title: 'Setting the Agenda',
+                description: 'Control the conversation',
+                duration: '15m',
+                type: 'video',
+                completed: true,
+                progress: 100,
+            },
+            {
+                id: '2-2',
+                title: 'SPIN Questioning',
+                description: 'Advanced questioning techniques',
+                duration: '25m',
+                type: 'video',
+                completed: false,
+                progress: 30,
+            },
+            {
+                id: '2-3',
+                title: 'Pain Point Discovery',
+                description: 'Uncover true needs',
+                duration: '20m',
+                type: 'reading',
+                completed: false,
+                progress: 0,
+            },
+            {
+                id: '2-4',
+                title: 'Next Steps & Close',
+                description: 'Always advance',
+                duration: '20m',
+                type: 'video',
+                completed: false,
+                progress: 0,
+            },
         ],
     },
     {
@@ -61,11 +147,51 @@ const TRAINING_COURSES: TrainingCourse[] = [
         category: 'Product',
         totalDuration: '3h 00m',
         modules: [
-            { id: '3-1', title: 'Platform Overview', description: 'Core features and benefits', duration: '30m', type: 'video', completed: true, progress: 100 },
-            { id: '3-2', title: 'Use Cases by Industry', description: 'Tailored value propositions', duration: '45m', type: 'reading', completed: true, progress: 100 },
-            { id: '3-3', title: 'Competitive Positioning', description: 'Win against competitors', duration: '30m', type: 'video', completed: false, progress: 0 },
-            { id: '3-4', title: 'Pricing & Packaging', description: 'Navigate deal structures', duration: '20m', type: 'video', completed: false, progress: 0 },
-            { id: '3-5', title: 'Product Certification', description: 'Earn your badge', duration: '30m', type: 'quiz', completed: false, progress: 0 },
+            {
+                id: '3-1',
+                title: 'Platform Overview',
+                description: 'Core features and benefits',
+                duration: '30m',
+                type: 'video',
+                completed: true,
+                progress: 100,
+            },
+            {
+                id: '3-2',
+                title: 'Use Cases by Industry',
+                description: 'Tailored value propositions',
+                duration: '45m',
+                type: 'reading',
+                completed: true,
+                progress: 100,
+            },
+            {
+                id: '3-3',
+                title: 'Competitive Positioning',
+                description: 'Win against competitors',
+                duration: '30m',
+                type: 'video',
+                completed: false,
+                progress: 0,
+            },
+            {
+                id: '3-4',
+                title: 'Pricing & Packaging',
+                description: 'Navigate deal structures',
+                duration: '20m',
+                type: 'video',
+                completed: false,
+                progress: 0,
+            },
+            {
+                id: '3-5',
+                title: 'Product Certification',
+                description: 'Earn your badge',
+                duration: '30m',
+                type: 'quiz',
+                completed: false,
+                progress: 0,
+            },
         ],
     },
 ];
@@ -85,10 +211,14 @@ export default function TrainingClient() {
 
     const getTypeIcon = (type: string) => {
         switch (type) {
-            case 'video': return <Video className="w-4 h-4" />;
-            case 'quiz': return <Award className="w-4 h-4" />;
-            case 'reading': return <FileText className="w-4 h-4" />;
-            default: return <BookOpen className="w-4 h-4" />;
+            case 'video':
+                return <Video className="w-4 h-4" />;
+            case 'quiz':
+                return <Award className="w-4 h-4" />;
+            case 'reading':
+                return <FileText className="w-4 h-4" />;
+            default:
+                return <BookOpen className="w-4 h-4" />;
         }
     };
 
@@ -117,7 +247,9 @@ export default function TrainingClient() {
                 <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">
                     Sales Training Academy
                 </h1>
-                <p className="text-slate-500 text-sm mt-1">Level up your skills with guided learning paths and AI tools</p>
+                <p className="text-slate-500 text-sm mt-1">
+                    Level up your skills with guided learning paths and AI tools
+                </p>
             </header>
 
             {/* AI Training Tools Section */}
@@ -138,7 +270,9 @@ export default function TrainingClient() {
                             <Badge variant="warning">Hard Mode</Badge>
                         </div>
                         <h3 className="font-bold text-lg text-white mb-1">The War Room</h3>
-                        <p className="text-sm text-slate-400">Simulate high-stakes deal negotiations with an aggressive AI buyer.</p>
+                        <p className="text-sm text-slate-400">
+                            Simulate high-stakes deal negotiations with an aggressive AI buyer.
+                        </p>
                     </GlassCard>
 
                     <GlassCard
@@ -152,7 +286,9 @@ export default function TrainingClient() {
                             <Badge variant="default">Practice</Badge>
                         </div>
                         <h3 className="font-bold text-lg text-white mb-1">Objection Dojo</h3>
-                        <p className="text-sm text-slate-400">Master common objections with rapid-fire repetition and feedback.</p>
+                        <p className="text-sm text-slate-400">
+                            Master common objections with rapid-fire repetition and feedback.
+                        </p>
                     </GlassCard>
 
                     <GlassCard
@@ -166,7 +302,9 @@ export default function TrainingClient() {
                             <Badge variant="default">Analysis</Badge>
                         </div>
                         <h3 className="font-bold text-lg text-white mb-1">Pitch Recorder</h3>
-                        <p className="text-sm text-slate-400">Record your elevator pitch and get instant AI coaching on delivery.</p>
+                        <p className="text-sm text-slate-400">
+                            Record your elevator pitch and get instant AI coaching on delivery.
+                        </p>
                     </GlassCard>
 
                     <GlassCard
@@ -180,7 +318,10 @@ export default function TrainingClient() {
                             <Badge variant="warning">Venture Scale</Badge>
                         </div>
                         <h3 className="font-bold text-lg text-white mb-1">The Boardroom</h3>
-                        <p className="text-sm text-slate-400">Multi-agent simulation. Win over the CFO, CTO, and Champion simultaneously.</p>
+                        <p className="text-sm text-slate-400">
+                            Multi-agent simulation. Win over the CFO, CTO, and Champion
+                            simultaneously.
+                        </p>
                     </GlassCard>
                 </div>
             </div>
@@ -240,9 +381,19 @@ export default function TrainingClient() {
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
                                         <h3 className="font-medium text-white">{course.title}</h3>
-                                        <p className="text-xs text-slate-500">{course.category} • {course.totalDuration}</p>
+                                        <p className="text-xs text-slate-500">
+                                            {course.category} • {course.totalDuration}
+                                        </p>
                                     </div>
-                                    <Badge variant={progress === 100 ? 'success' : progress > 0 ? 'warning' : 'default'}>
+                                    <Badge
+                                        variant={
+                                            progress === 100
+                                                ? 'success'
+                                                : progress > 0
+                                                  ? 'warning'
+                                                  : 'default'
+                                        }
+                                    >
                                         {progress}%
                                     </Badge>
                                 </div>
@@ -263,8 +414,13 @@ export default function TrainingClient() {
                         <GlassCard>
                             <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">{selectedCourse.title}</h2>
-                                    <p className="text-sm text-slate-400">{selectedCourse.modules.length} modules • {selectedCourse.totalDuration}</p>
+                                    <h2 className="text-xl font-bold text-white">
+                                        {selectedCourse.title}
+                                    </h2>
+                                    <p className="text-sm text-slate-400">
+                                        {selectedCourse.modules.length} modules •{' '}
+                                        {selectedCourse.totalDuration}
+                                    </p>
                                 </div>
                                 <button className="glass-button flex items-center gap-2">
                                     <Play className="w-4 h-4" /> Continue
@@ -275,25 +431,46 @@ export default function TrainingClient() {
                                 {selectedCourse.modules.map((module, index) => (
                                     <div
                                         key={module.id}
-                                        className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${module.completed ? 'bg-green-500/10' : 'bg-slate-800/50 hover:bg-slate-800'
-                                            }`}
+                                        className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${
+                                            module.completed
+                                                ? 'bg-green-500/10'
+                                                : 'bg-slate-800/50 hover:bg-slate-800'
+                                        }`}
                                     >
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${module.completed ? 'bg-green-500/20 text-green-400' :
-                                            module.progress > 0 ? 'bg-blue-500/20 text-blue-400' :
-                                                'bg-slate-700 text-slate-400'
-                                            }`}>
-                                            {module.completed ? <CheckCircle className="w-4 h-4" /> : index + 1}
+                                        <div
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                module.completed
+                                                    ? 'bg-green-500/20 text-green-400'
+                                                    : module.progress > 0
+                                                      ? 'bg-blue-500/20 text-blue-400'
+                                                      : 'bg-slate-700 text-slate-400'
+                                            }`}
+                                        >
+                                            {module.completed ? (
+                                                <CheckCircle className="w-4 h-4" />
+                                            ) : (
+                                                index + 1
+                                            )}
                                         </div>
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="font-medium text-white truncate">{module.title}</h4>
-                                                <span className="text-slate-500">{getTypeIcon(module.type)}</span>
+                                                <h4 className="font-medium text-white truncate">
+                                                    {module.title}
+                                                </h4>
+                                                <span className="text-slate-500">
+                                                    {getTypeIcon(module.type)}
+                                                </span>
                                             </div>
-                                            <p className="text-xs text-slate-500">{module.description} • {module.duration}</p>
+                                            <p className="text-xs text-slate-500">
+                                                {module.description} • {module.duration}
+                                            </p>
                                             {module.progress > 0 && module.progress < 100 && (
                                                 <div className="h-1 bg-slate-700 rounded-full mt-2 overflow-hidden w-32">
-                                                    <div className="h-full bg-blue-500" style={{ width: `${module.progress}%` }} />
+                                                    <div
+                                                        className="h-full bg-blue-500"
+                                                        style={{ width: `${module.progress}%` }}
+                                                    />
                                                 </div>
                                             )}
                                         </div>

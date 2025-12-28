@@ -17,29 +17,33 @@ interface TourStep {
 
 const TOUR_STEPS: TourStep[] = [
     {
-        title: "Welcome to SalesTracker AI",
-        description: "Your new command center for high-stakes sales. We've built this to help you master every interaction using advanced enterprise telemetry.",
+        title: 'Welcome to SalesTracker AI',
+        description:
+            "Your new command center for high-stakes sales. We've built this to help you master every interaction using advanced enterprise telemetry.",
         icon: <Rocket className="w-8 h-8 text-blue-400" />,
-        color: "blue"
+        color: 'blue',
     },
     {
-        title: "The Intelligence Pipeline",
-        description: "Track your leads with sub-millisecond precision. Use the new Export feature to keep your data portable and secure.",
+        title: 'The Intelligence Pipeline',
+        description:
+            'Track your leads with sub-millisecond precision. Use the new Export feature to keep your data portable and secure.',
         icon: <Zap className="w-8 h-8 text-amber-400" />,
-        color: "amber"
+        color: 'amber',
     },
     {
-        title: "The Simulation Lab",
-        description: "Go beyond tracking. Enter the War Room or the Objection Dojo to wargame deals with aggressive AI buying committees.",
-        icon: < ShieldAlert className="w-8 h-8 text-red-400" />,
-        color: "red"
+        title: 'The Simulation Lab',
+        description:
+            'Go beyond tracking. Enter the War Room or the Objection Dojo to wargame deals with aggressive AI buying committees.',
+        icon: <ShieldAlert className="w-8 h-8 text-red-400" />,
+        color: 'red',
     },
     {
         title: "You're Ready to Scale",
-        description: "All enterprise guardrails are active. Your journey to venture-scale performance starts now.",
+        description:
+            'All enterprise guardrails are active. Your journey to venture-scale performance starts now.',
         icon: <Check className="w-8 h-8 text-green-400" />,
-        color: "green"
-    }
+        color: 'green',
+    },
 ];
 
 export function WelcomeTour() {
@@ -58,7 +62,7 @@ export function WelcomeTour() {
                 particleCount: 150,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#6366f1', '#a855f7', '#ec4899']
+                colors: ['#6366f1', '#a855f7', '#ec4899'],
             });
 
             if (user) {
@@ -88,7 +92,9 @@ export function WelcomeTour() {
             >
                 <GlassCard className="relative overflow-hidden border border-white/10 shadow-2xl">
                     {/* Background Glow */}
-                    <div className={`absolute -top-24 -right-24 w-48 h-48 bg-${step.color}-500/10 blur-[80px] rounded-full`} />
+                    <div
+                        className={`absolute -top-24 -right-24 w-48 h-48 bg-${step.color}-500/10 blur-[80px] rounded-full`}
+                    />
 
                     <button
                         onClick={handleSkip}
@@ -107,13 +113,13 @@ export function WelcomeTour() {
                                 transition={{ duration: 0.3 }}
                                 className="text-center"
                             >
-                                <div className={`w-16 h-16 bg-${step.color}-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl`}>
+                                <div
+                                    className={`w-16 h-16 bg-${step.color}-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl`}
+                                >
                                     {step.icon}
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-white mb-4">
-                                    {step.title}
-                                </h2>
+                                <h2 className="text-2xl font-bold text-white mb-4">{step.title}</h2>
 
                                 <p className="text-slate-400 leading-relaxed mb-8 min-h-[80px]">
                                     {step.description}
@@ -127,8 +133,11 @@ export function WelcomeTour() {
                                 {TOUR_STEPS.map((_, i) => (
                                     <div
                                         key={i}
-                                        className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep ? 'w-8 bg-indigo-500' : 'w-2 bg-slate-700'
-                                            }`}
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                                            i === currentStep
+                                                ? 'w-8 bg-indigo-500'
+                                                : 'w-2 bg-slate-700'
+                                        }`}
                                     />
                                 ))}
                             </div>
@@ -137,7 +146,7 @@ export function WelcomeTour() {
                                 onClick={handleNext}
                                 className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-semibold transition-all shadow-lg active:scale-95"
                             >
-                                {currentStep === TOUR_STEPS.length - 1 ? "Get Started" : "Continue"}
+                                {currentStep === TOUR_STEPS.length - 1 ? 'Get Started' : 'Continue'}
                                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>

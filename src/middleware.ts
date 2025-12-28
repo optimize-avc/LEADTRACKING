@@ -15,12 +15,17 @@ export function middleware(request: NextRequest) {
     connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.sentry.io wss://*.firebaseio.com;
     frame-src 'self' https://*.firebaseapp.com;
     upgrade-insecure-requests;
-  `.replace(/\s{2,}/g, ' ').trim();
+  `
+        .replace(/\s{2,}/g, ' ')
+        .trim();
 
     response.headers.set('Content-Security-Policy', cspHeader);
 
     // 2. Strict Transport Security (HSTS)
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    response.headers.set(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains; preload'
+    );
 
     // 3. X-Content-Type-Options
     response.headers.set('X-Content-Type-Options', 'nosniff');

@@ -20,7 +20,7 @@ export function CallButton({
     leadName,
     leadPhone,
     size = 'md',
-    variant = 'primary'
+    variant = 'primary',
 }: CallButtonProps) {
     const { user: authUser } = useAuth();
     // Fake user for testing if not logged in
@@ -61,7 +61,6 @@ export function CallButton({
 
             // Simulate call progress (in production, use webhooks)
             setTimeout(() => setCallStatus('in-progress'), 3000);
-
         } catch (error) {
             console.error('Call error:', error);
             setCallStatus('failed');
@@ -117,9 +116,10 @@ export function CallButton({
     }
 
     // Idle/Failed state
-    const baseClasses = variant === 'primary'
-        ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20'
-        : 'text-slate-400 hover:text-green-400 hover:bg-white/5';
+    const baseClasses =
+        variant === 'primary'
+            ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20'
+            : 'text-slate-400 hover:text-green-400 hover:bg-white/5';
 
     return (
         <button

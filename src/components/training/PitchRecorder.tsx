@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Mic, Square, Play, BarChart3, TrendingUp, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import {
+    X,
+    Mic,
+    Square,
+    Play,
+    BarChart3,
+    TrendingUp,
+    AlertTriangle,
+    CheckCircle2,
+    Clock,
+} from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { AIPitchAnalysis } from '@/types/ai';
@@ -21,25 +31,33 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recognitionRef = useRef<any>(null); // SpeechRecognition type is erratic in standard TS configs
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            const SpeechRecognition =
+                (
+                    window as unknown as {
+                        SpeechRecognition?: new () => SpeechRecognition;
+                        webkitSpeechRecognition?: new () => SpeechRecognition;
+                    }
+                ).SpeechRecognition ||
+                (
+                    window as unknown as {
+                        webkitSpeechRecognition?: new () => SpeechRecognition;
+                    }
+                ).webkitSpeechRecognition;
             if (SpeechRecognition) {
                 const recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                recognition.onresult = (event: any) => { // SpeechRecognitionEvent is not always available in global types
+                recognition.onresult = (event: SpeechRecognitionEvent) => {
                     let currentTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         currentTranscript += event.results[i][0].transcript;
                     }
-                    setTranscript(prev => prev + ' ' + currentTranscript);
+                    setTranscript((prev) => prev + ' ' + currentTranscript);
                 };
 
                 recognitionRef.current = recognition;
@@ -65,7 +83,7 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
 
             for (let i = 0; i < bars; i++) {
                 // Generate random bar height
-                const height = Math.random() * (canvas.height * 0.8) + (canvas.height * 0.1);
+                const height = Math.random() * (canvas.height * 0.8) + canvas.height * 0.1;
                 const x = i * barWidth;
                 const y = (canvas.height - height) / 2;
 
@@ -85,7 +103,7 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
     useEffect(() => {
         if (state === 'recording') {
             timerRef.current = setInterval(() => {
-                setDuration(prev => prev + 1);
+                setDuration((prev) => prev + 1);
             }, 1000);
         } else if (state === 'idle') {
             const timeout = setTimeout(() => {
@@ -98,7 +116,7 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
         }
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
-        }
+        };
     }, [state]);
 
     const startRecording = () => {
@@ -108,10 +126,10 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
             try {
                 recognitionRef.current.start();
             } catch (e) {
-                console.error("Speech start error", e);
+                console.error('Speech start error', e);
             }
         } else {
-            alert("Speech Recognition not supported in this browser. Please use Chrome/Edge.");
+            alert('Speech Recognition not supported in this browser. Please use Chrome/Edge.');
         }
     };
 
@@ -124,13 +142,15 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
         // Send to AI
         if (!transcript.trim()) {
             // Fallback for demo if mic failed or silence
-            console.warn("No transcript captured. Using fallback.");
+            console.warn('No transcript captured. Using fallback.');
         }
 
         // Wait a tiny bit for final transcript
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 500));
 
-        const textToAnalyze = transcript.trim() || "Hi, I'm calling from OmniStream to see if you have time to discuss your social media automation needs. Our tool is 20 percent cheaper than Hootsuite and has better analytics.";
+        const textToAnalyze =
+            transcript.trim() ||
+            "Hi, I'm calling from OmniStream to see if you have time to discuss your social media automation needs. Our tool is 20 percent cheaper than Hootsuite and has better analytics.";
 
         const token = await user?.getIdToken();
         const result = await GeminiService.analyzePitch(textToAnalyze, token);
@@ -150,7 +170,10 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
             <div className="fixed inset-0 z-50 z-[100] overflow-y-auto bg-slate-900/90 backdrop-blur-md">
                 <div className="flex min-h-full items-center justify-center p-4">
                     <div className="glass-card w-full max-w-lg text-center p-12 relative overflow-hidden my-auto">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-white"
+                        >
                             <X size={24} />
                         </button>
 
@@ -161,7 +184,8 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
 
                         <h2 className="text-3xl font-bold text-white mb-4">Pitch Perfect</h2>
                         <p className="text-slate-400 mb-10 leading-relaxed">
-                            Record your 30-second elevator pitch. Starts <b>listening</b> immediately.
+                            Record your 30-second elevator pitch. Starts <b>listening</b>{' '}
+                            immediately.
                         </p>
 
                         <button
@@ -190,7 +214,12 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                         </div>
 
                         <div className="h-32 w-full bg-slate-900/50 rounded-xl mb-10 overflow-hidden relative border border-white/5">
-                            <canvas ref={canvasRef} width={400} height={128} className="w-full h-full" />
+                            <canvas
+                                ref={canvasRef}
+                                width={400}
+                                height={128}
+                                className="w-full h-full"
+                            />
                         </div>
 
                         <div className="text-white text-lg font-medium mb-8 animate-pulse">
@@ -207,7 +236,9 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                         >
                             <Square size={32} className="text-white fill-white" />
                         </button>
-                        <div className="mt-4 text-xs text-slate-500 uppercase tracking-wider font-bold">Stop Recording</div>
+                        <div className="mt-4 text-xs text-slate-500 uppercase tracking-wider font-bold">
+                            Stop Recording
+                        </div>
                     </div>
                 </div>
             </div>
@@ -222,7 +253,9 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                     <div className="glass-card w-full max-w-md text-center p-12 my-auto">
                         <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
                         <h3 className="text-xl font-bold text-white mb-2">Analyzing Pitch...</h3>
-                        <p className="text-slate-400 text-sm">Gemini 2.5 is reviewing your tone, pace, and content.</p>
+                        <p className="text-slate-400 text-sm">
+                            Gemini 2.5 is reviewing your tone, pace, and content.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -235,14 +268,21 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
             <div className="fixed inset-0 z-50 z-[100] overflow-y-auto bg-slate-900/90 backdrop-blur-md">
                 <div className="flex min-h-full items-center justify-center p-4">
                     <div className="glass-card w-full max-w-2xl relative p-0 overflow-hidden animate-in zoom-in-95 duration-300 my-auto">
-                        <button onClick={onClose} className="absolute top-4 right-4 z-10 text-slate-400 hover:text-white">
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 z-10 text-slate-400 hover:text-white"
+                        >
                             <X size={24} />
                         </button>
 
                         <div className="bg-gradient-to-r from-cyan-900 to-blue-900 p-8 text-center relative overflow-hidden">
                             <div className="relative z-10">
-                                <div className="text-cyan-300 text-sm font-bold uppercase tracking-widest mb-2">Analysis Complete</div>
-                                <h2 className="text-4xl font-bold text-white mb-2">{analysis.score}/100</h2>
+                                <div className="text-cyan-300 text-sm font-bold uppercase tracking-widest mb-2">
+                                    Analysis Complete
+                                </div>
+                                <h2 className="text-4xl font-bold text-white mb-2">
+                                    {analysis.score}/100
+                                </h2>
                                 <p className="text-cyan-200">{analysis.oneLineFeedback}</p>
                             </div>
                             {/* Background Decor */}
@@ -255,7 +295,9 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                                 <div className="mb-3 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto text-blue-400">
                                     <Clock size={20} />
                                 </div>
-                                <div className="text-2xl font-bold text-white mb-1">{analysis.pace || '~'}</div>
+                                <div className="text-2xl font-bold text-white mb-1">
+                                    {analysis.pace || '~'}
+                                </div>
                                 <div className="text-xs text-slate-400 uppercase">Words / Min</div>
                                 <div className="mt-2 text-xs text-green-400">Estimated</div>
                             </div>
@@ -265,9 +307,13 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                                 <div className="mb-3 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
                                     <AlertTriangle size={20} />
                                 </div>
-                                <div className="text-2xl font-bold text-white mb-1">{analysis.fillerWords?.length || 0}</div>
+                                <div className="text-2xl font-bold text-white mb-1">
+                                    {analysis.fillerWords?.length || 0}
+                                </div>
                                 <div className="text-xs text-slate-400 uppercase">Filler Words</div>
-                                <div className="mt-2 text-xs text-amber-400">{analysis.fillerWords?.join(', ') || 'None'}</div>
+                                <div className="mt-2 text-xs text-amber-400">
+                                    {analysis.fillerWords?.join(', ') || 'None'}
+                                </div>
                             </div>
 
                             {/* Confidence */}
@@ -275,7 +321,9 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                                 <div className="mb-3 w-10 h-10 rounded-full bg-fuchsia-500/20 flex items-center justify-center mx-auto text-fuchsia-400">
                                     <TrendingUp size={20} />
                                 </div>
-                                <div className="text-2xl font-bold text-white mb-1">{analysis.confidence}</div>
+                                <div className="text-2xl font-bold text-white mb-1">
+                                    {analysis.confidence}
+                                </div>
                                 <div className="text-xs text-slate-400 uppercase">Confidence</div>
                                 <div className="mt-2 text-xs text-green-400">AI Analysis</div>
                             </div>
@@ -284,7 +332,8 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                         <div className="p-8 pt-0">
                             <div className="p-4 rounded-xl bg-slate-900/50 border border-white/5 mb-6">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <CheckCircle2 size={16} className="text-green-500" /> Key Strengths
+                                    <CheckCircle2 size={16} className="text-green-500" /> Key
+                                    Strengths
                                 </h4>
                                 <ul className="text-sm text-slate-300 space-y-2 list-disc pl-5">
                                     {analysis.strengths?.map((s: string, i: number) => (
@@ -296,7 +345,8 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                             {analysis.improvements && (
                                 <div className="p-4 rounded-xl bg-slate-900/50 border border-white/5 mb-6">
                                     <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                        <AlertTriangle size={16} className="text-amber-500" /> Improvements
+                                        <AlertTriangle size={16} className="text-amber-500" />{' '}
+                                        Improvements
                                     </h4>
                                     <ul className="text-sm text-slate-300 space-y-2 list-disc pl-5">
                                         {analysis.improvements.map((s: string, i: number) => (
@@ -307,15 +357,24 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
                             )}
 
                             <div className="flex gap-4">
-                                <button onClick={() => setState('idle')} className="flex-1 glass-button py-3 text-sm font-bold">Try Again</button>
-                                <button onClick={onClose} className="flex-1 py-3 border border-slate-700 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-bold">Close</button>
+                                <button
+                                    onClick={() => setState('idle')}
+                                    className="flex-1 glass-button py-3 text-sm font-bold"
+                                >
+                                    Try Again
+                                </button>
+                                <button
+                                    onClick={onClose}
+                                    className="flex-1 py-3 border border-slate-700 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-bold"
+                                >
+                                    Close
+                                </button>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
-        )
+        );
     }
 
     return null;

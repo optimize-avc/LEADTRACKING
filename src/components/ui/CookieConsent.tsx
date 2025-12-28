@@ -34,10 +34,16 @@ export function CookieConsent() {
                     <div className="flex-1">
                         <h3 className="text-white font-semibold mb-1">Privacy & Cookies</h3>
                         <p className="text-sm text-slate-400 leading-relaxed mb-4">
-                            We use cookies to improve your AI training experience and analyze site traffic. By continuing to use our platform, you agree to our
-                            <Link href="/privacy" className="text-indigo-400 hover:underline mx-1">Privacy Policy</Link>
+                            We use cookies to improve your AI training experience and analyze site
+                            traffic. By continuing to use our platform, you agree to our
+                            <Link href="/privacy" className="text-indigo-400 hover:underline mx-1">
+                                Privacy Policy
+                            </Link>
                             and
-                            <Link href="/terms" className="text-indigo-400 hover:underline mx-1">Terms</Link>.
+                            <Link href="/terms" className="text-indigo-400 hover:underline mx-1">
+                                Terms
+                            </Link>
+                            .
                         </p>
                         <div className="flex items-center gap-3">
                             <button

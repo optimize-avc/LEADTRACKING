@@ -14,7 +14,7 @@ export function parseEmailHeaders(headers: { name: string; value: string }[]): {
     date: string;
 } {
     const getHeader = (name: string) =>
-        headers.find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+        headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value || '';
 
     return {
         from: getHeader('From'),
@@ -47,11 +47,11 @@ export function getEmailBody(message: GmailMessage): string {
 
     // Try to get from parts (multipart email)
     if (message.payload.parts) {
-        const textPart = message.payload.parts.find(p => p.mimeType === 'text/plain');
+        const textPart = message.payload.parts.find((p) => p.mimeType === 'text/plain');
         if (textPart?.body?.data) {
             return decodeBase64(textPart.body.data);
         }
-        const htmlPart = message.payload.parts.find(p => p.mimeType === 'text/html');
+        const htmlPart = message.payload.parts.find((p) => p.mimeType === 'text/html');
         if (htmlPart?.body?.data) {
             // Strip HTML tags for plain text
             return decodeBase64(htmlPart.body.data).replace(/<[^>]*>/g, '');
@@ -76,9 +76,9 @@ export interface EmailRecord {
 }
 
 // Helper: Get Valid Token (Server-Side Only)
-// We rely on 'firebase-admin' or 'firebase/firestore' depending on environment. 
-// Since this is a Server Action, we can use the Admin SDK for better permission handling if setup, 
-// but existing code used client SDK with strict rules. We'll stick to client SDK with server env vars for consistency, 
+// We rely on 'firebase-admin' or 'firebase/firestore' depending on environment.
+// Since this is a Server Action, we can use the Admin SDK for better permission handling if setup,
+// but existing code used client SDK with strict rules. We'll stick to client SDK with server env vars for consistency,
 // OR switch to Admin SDK if client SDK auth state is tricky in Server Actions.
 // Given strict "commercial grade" request: We should use Admin SDK for data access if possible to bypass RLS issues on server,
 // BUT preserving the existing 'firebase/config' usage is safer for now unless we do a full rewrite.
@@ -87,12 +87,17 @@ export interface EmailRecord {
 // Let's stick to the logic from gmail-service.ts but ensure it runs on server.
 
 async function getValidAccessToken(userId: string): Promise<string | null> {
-    // Note: In a real Server Action, we might not have a signed-in firebase user in the global scope 
+    // Note: In a real Server Action, we might not have a signed-in firebase user in the global scope
     // unless we pass the token. However, for getting the GMAIL token stored in DB, we can just query DB.
 
     // Using Admin DB to ensure we can read the user's secrets securely without worrying about Client Auth state
     const adminDb = getAdminDb();
-    const tokenDoc = await adminDb.collection('users').doc(userId).collection('integrations').doc('gmail').get();
+    const tokenDoc = await adminDb
+        .collection('users')
+        .doc(userId)
+        .collection('integrations')
+        .doc('gmail')
+        .get();
 
     if (!tokenDoc.exists) {
         return null;
@@ -106,10 +111,15 @@ async function getValidAccessToken(userId: string): Promise<string | null> {
             console.log('Refreshing Gmail access token...');
             const refreshed = await refreshAccessToken(tokens.refreshToken);
 
-            await adminDb.collection('users').doc(userId).collection('integrations').doc('gmail').update({
-                accessToken: refreshed.accessToken,
-                expiresAt: refreshed.expiresAt,
-            });
+            await adminDb
+                .collection('users')
+                .doc(userId)
+                .collection('integrations')
+                .doc('gmail')
+                .update({
+                    accessToken: refreshed.accessToken,
+                    expiresAt: refreshed.expiresAt,
+                });
             return refreshed.accessToken;
         } catch (error) {
             console.error('Failed to refresh token:', error);
@@ -120,7 +130,11 @@ async function getValidAccessToken(userId: string): Promise<string | null> {
     return tokens.accessToken;
 }
 
-async function fetchEmails(accessToken: string, queryStr: string, maxResults: number = 50): Promise<GmailMessage[]> {
+async function fetchEmails(
+    accessToken: string,
+    queryStr: string,
+    maxResults: number = 50
+): Promise<GmailMessage[]> {
     const params = new URLSearchParams({
         q: queryStr,
         maxResults: maxResults.toString(),
@@ -152,7 +166,11 @@ async function fetchEmails(accessToken: string, queryStr: string, maxResults: nu
     return messages;
 }
 
-export async function syncEmailsForLeadAction(userId: string, leadEmail: string, leadId: string): Promise<EmailRecord[]> {
+export async function syncEmailsForLeadAction(
+    userId: string,
+    leadEmail: string,
+    leadId: string
+): Promise<EmailRecord[]> {
     try {
         const accessToken = await getValidAccessToken(userId);
         if (!accessToken) {
@@ -163,7 +181,12 @@ export async function syncEmailsForLeadAction(userId: string, leadEmail: string,
         const messages = await fetchEmails(accessToken, queryStr, 30);
 
         const adminDb = getAdminDb();
-        const userDoc = await adminDb.collection('users').doc(userId).collection('integrations').doc('gmail').get();
+        const userDoc = await adminDb
+            .collection('users')
+            .doc(userId)
+            .collection('integrations')
+            .doc('gmail')
+            .get();
         const userEmail = userDoc.exists ? userDoc.data()?.email : '';
 
         const emailRecords: EmailRecord[] = [];
@@ -172,7 +195,8 @@ export async function syncEmailsForLeadAction(userId: string, leadEmail: string,
         for (const message of messages) {
             const headers = parseEmailHeaders(message.payload.headers);
             const fromEmail = extractEmailAddress(headers.from);
-            const direction = fromEmail.toLowerCase() === userEmail.toLowerCase() ? 'sent' : 'received';
+            const direction =
+                fromEmail.toLowerCase() === userEmail.toLowerCase() ? 'sent' : 'received';
 
             const record: EmailRecord = {
                 id: message.id,
@@ -189,7 +213,11 @@ export async function syncEmailsForLeadAction(userId: string, leadEmail: string,
 
             emailRecords.push(record);
 
-            const docRef = adminDb.collection('users').doc(userId).collection('emailMessages').doc(message.id);
+            const docRef = adminDb
+                .collection('users')
+                .doc(userId)
+                .collection('emailMessages')
+                .doc(message.id);
             batch.set(docRef, record, { merge: true });
         }
 
@@ -203,7 +231,13 @@ export async function syncEmailsForLeadAction(userId: string, leadEmail: string,
     }
 }
 
-export async function sendEmailAction(userId: string, to: string, subject: string, body: string, leadId: string): Promise<{ success: boolean; id?: string; error?: string }> {
+export async function sendEmailAction(
+    userId: string,
+    to: string,
+    subject: string,
+    body: string,
+    leadId: string
+): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
         const accessToken = await getValidAccessToken(userId);
         if (!accessToken) {
@@ -216,7 +250,7 @@ export async function sendEmailAction(userId: string, to: string, subject: strin
             `Subject: ${subject}`,
             'Content-Type: text/plain; charset=utf-8',
             '',
-            body
+            body,
         ].join('\r\n');
 
         const encodedEmail = Buffer.from(email)
@@ -246,7 +280,12 @@ export async function sendEmailAction(userId: string, to: string, subject: strin
 
         // Log to Firestore using Admin SDK
         const adminDb = getAdminDb();
-        const userDoc = await adminDb.collection('users').doc(userId).collection('integrations').doc('gmail').get();
+        const userDoc = await adminDb
+            .collection('users')
+            .doc(userId)
+            .collection('integrations')
+            .doc('gmail')
+            .get();
         const userEmail = userDoc.exists ? userDoc.data()?.email : '';
 
         const record = {
@@ -262,11 +301,19 @@ export async function sendEmailAction(userId: string, to: string, subject: strin
             timestamp: Date.now(),
         };
 
-        await adminDb.collection('users').doc(userId).collection('emailMessages').doc(result.id).set(record);
+        await adminDb
+            .collection('users')
+            .doc(userId)
+            .collection('emailMessages')
+            .doc(result.id)
+            .set(record);
 
         return { success: true, id: result.id };
     } catch (error: unknown) {
         console.error('Send Email Error:', error);
-        return { success: false, error: error instanceof Error ? error.message : 'Failed to send email' };
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to send email',
+        };
     }
 }

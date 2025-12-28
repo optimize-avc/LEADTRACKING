@@ -53,13 +53,15 @@ export async function exchangeCodeForTokens(code: string): Promise<GmailTokens> 
     return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
-        expiresAt: Date.now() + (data.expires_in * 1000),
+        expiresAt: Date.now() + data.expires_in * 1000,
         email: '', // Will be populated after fetching user info
     };
 }
 
 // Refresh access token
-export async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; expiresAt: number }> {
+export async function refreshAccessToken(
+    refreshToken: string
+): Promise<{ accessToken: string; expiresAt: number }> {
     const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -78,7 +80,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<{ access
     const data = await response.json();
     return {
         accessToken: data.access_token,
-        expiresAt: Date.now() + (data.expires_in * 1000),
+        expiresAt: Date.now() + data.expires_in * 1000,
     };
 }
 

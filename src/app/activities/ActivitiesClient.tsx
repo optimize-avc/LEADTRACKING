@@ -13,7 +13,9 @@ export default function ActivitiesClient() {
     const [activeTab, setActiveTab] = useState<'call' | 'email' | 'meeting'>('call');
     const [activities, setActivities] = useState<Activity[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(
+        null
+    );
 
     // Form state
     const [formData, setFormData] = useState({
@@ -82,20 +84,29 @@ export default function ActivitiesClient() {
 
     const getActivityIcon = (type: string) => {
         switch (type) {
-            case 'call': return <Phone className="w-4 h-4" />;
-            case 'email': return <Mail className="w-4 h-4" />;
-            case 'meeting': return <Calendar className="w-4 h-4" />;
-            default: return <Phone className="w-4 h-4" />;
+            case 'call':
+                return <Phone className="w-4 h-4" />;
+            case 'email':
+                return <Mail className="w-4 h-4" />;
+            case 'meeting':
+                return <Calendar className="w-4 h-4" />;
+            default:
+                return <Phone className="w-4 h-4" />;
         }
     };
 
     const getOutcomeBadge = (outcome: string) => {
         switch (outcome) {
-            case 'connected': return <Badge variant="success">Connected</Badge>;
-            case 'voicemail': return <Badge variant="warning">Voicemail</Badge>;
-            case 'no_answer': return <Badge variant="default">No Answer</Badge>;
-            case 'meeting_set': return <Badge variant="success">Meeting Set</Badge>;
-            default: return <Badge variant="default">{outcome}</Badge>;
+            case 'connected':
+                return <Badge variant="success">Connected</Badge>;
+            case 'voicemail':
+                return <Badge variant="warning">Voicemail</Badge>;
+            case 'no_answer':
+                return <Badge variant="default">No Answer</Badge>;
+            case 'meeting_set':
+                return <Badge variant="success">Meeting Set</Badge>;
+            default:
+                return <Badge variant="default">{outcome}</Badge>;
         }
     };
 
@@ -126,9 +137,18 @@ export default function ActivitiesClient() {
 
                         {/* Message Display */}
                         {message && (
-                            <div className={`flex items-center gap-2 p-3 rounded-lg mb-4 ${message.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                                }`}>
-                                {message.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                            <div
+                                className={`flex items-center gap-2 p-3 rounded-lg mb-4 ${
+                                    message.type === 'success'
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : 'bg-red-500/20 text-red-400'
+                                }`}
+                            >
+                                {message.type === 'success' ? (
+                                    <CheckCircle className="w-4 h-4" />
+                                ) : (
+                                    <AlertCircle className="w-4 h-4" />
+                                )}
                                 <span className="text-sm">{message.text}</span>
                             </div>
                         )}
@@ -156,24 +176,32 @@ export default function ActivitiesClient() {
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Lead / Contact *</label>
+                                <label className="block text-xs text-slate-400 mb-1">
+                                    Lead / Contact *
+                                </label>
                                 <input
                                     type="text"
                                     placeholder="Enter lead name..."
                                     className="glass-input"
                                     value={formData.leadName}
-                                    onChange={(e) => setFormData({ ...formData, leadName: e.target.value })}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, leadName: e.target.value })
+                                    }
                                     required
                                 />
                             </div>
 
                             {activeTab === 'call' && (
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Outcome</label>
+                                    <label className="block text-xs text-slate-400 mb-1">
+                                        Outcome
+                                    </label>
                                     <select
                                         className="glass-input bg-slate-800"
                                         value={formData.outcome}
-                                        onChange={(e) => setFormData({ ...formData, outcome: e.target.value })}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, outcome: e.target.value })
+                                        }
                                     >
                                         <option value="connected">Connected</option>
                                         <option value="voicemail">Voicemail</option>
@@ -185,11 +213,15 @@ export default function ActivitiesClient() {
 
                             {activeTab === 'meeting' && (
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Outcome</label>
+                                    <label className="block text-xs text-slate-400 mb-1">
+                                        Outcome
+                                    </label>
                                     <select
                                         className="glass-input bg-slate-800"
                                         value={formData.outcome}
-                                        onChange={(e) => setFormData({ ...formData, outcome: e.target.value })}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, outcome: e.target.value })
+                                        }
                                     >
                                         <option value="meeting_set">Meeting Scheduled</option>
                                         <option value="qualified">Qualified</option>
@@ -206,7 +238,9 @@ export default function ActivitiesClient() {
                                     className="glass-input"
                                     placeholder="Enter notes..."
                                     value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, notes: e.target.value })
+                                    }
                                 />
                             </div>
 
@@ -253,23 +287,39 @@ export default function ActivitiesClient() {
                             {activities.length === 0 ? (
                                 <div className="text-center py-10 text-slate-500">
                                     <p>No activities logged yet.</p>
-                                    <p className="text-xs mt-1">Log your first activity using the form.</p>
+                                    <p className="text-xs mt-1">
+                                        Log your first activity using the form.
+                                    </p>
                                 </div>
                             ) : (
                                 activities.map((activity) => (
-                                    <div key={activity.id} className="flex gap-4 p-4 border-b border-slate-800 hover:bg-white/5 transition-colors last:border-0">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${activity.type === 'call' ? 'bg-blue-400/20 text-blue-400' :
-                                            activity.type === 'email' ? 'bg-purple-400/20 text-purple-400' :
-                                                'bg-amber-400/20 text-amber-400'
-                                            }`}>
+                                    <div
+                                        key={activity.id}
+                                        className="flex gap-4 p-4 border-b border-slate-800 hover:bg-white/5 transition-colors last:border-0"
+                                    >
+                                        <div
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                activity.type === 'call'
+                                                    ? 'bg-blue-400/20 text-blue-400'
+                                                    : activity.type === 'email'
+                                                      ? 'bg-purple-400/20 text-purple-400'
+                                                      : 'bg-amber-400/20 text-amber-400'
+                                            }`}
+                                        >
                                             {getActivityIcon(activity.type)}
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex justify-between">
-                                                <span className="font-medium text-white capitalize">{activity.type}</span>
-                                                <span className="text-slate-500 text-xs">{formatTimeAgo(activity.timestamp)}</span>
+                                                <span className="font-medium text-white capitalize">
+                                                    {activity.type}
+                                                </span>
+                                                <span className="text-slate-500 text-xs">
+                                                    {formatTimeAgo(activity.timestamp)}
+                                                </span>
                                             </div>
-                                            <p className="text-slate-400 mt-1">{activity.notes || 'No notes'}</p>
+                                            <p className="text-slate-400 mt-1">
+                                                {activity.notes || 'No notes'}
+                                            </p>
                                             <div className="mt-2">
                                                 {getOutcomeBadge(activity.outcome)}
                                             </div>
@@ -284,4 +334,3 @@ export default function ActivitiesClient() {
         </div>
     );
 }
-

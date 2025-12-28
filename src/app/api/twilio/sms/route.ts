@@ -37,13 +37,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             messageSid: result.messageSid,
-            note: 'Message queued for delivery'
+            note: 'Message queued for delivery',
         });
-
     } catch (error: unknown) {
         console.error('API SMS Error:', error);
-        return NextResponse.json({
-            error: error instanceof Error ? error.message : 'Internal server error'
-        }, { status: 500 });
+        return NextResponse.json(
+            {
+                error: error instanceof Error ? error.message : 'Internal server error',
+            },
+            { status: 500 }
+        );
     }
 }

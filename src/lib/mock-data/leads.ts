@@ -1,4 +1,4 @@
-import { Lead } from "@/types";
+import { Lead } from '@/types';
 
 export const MOCK_LEADS: Lead[] = [
     {
@@ -15,7 +15,7 @@ export const MOCK_LEADS: Lead[] = [
         assignedTo: 'user1',
         industry: 'SaaS',
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     {
         id: '2',
@@ -31,7 +31,7 @@ export const MOCK_LEADS: Lead[] = [
         assignedTo: 'user1',
         industry: 'Manufacturing',
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     {
         id: '3',
@@ -47,7 +47,7 @@ export const MOCK_LEADS: Lead[] = [
         assignedTo: 'user1',
         industry: 'Healthcare',
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     {
         id: '4',
@@ -63,7 +63,7 @@ export const MOCK_LEADS: Lead[] = [
         assignedTo: 'user1',
         industry: 'Logistics',
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     {
         id: '5',
@@ -79,7 +79,7 @@ export const MOCK_LEADS: Lead[] = [
         assignedTo: 'user1',
         industry: 'Finance',
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     },
     {
         id: '6',
@@ -95,6 +95,6 @@ export const MOCK_LEADS: Lead[] = [
         assignedTo: 'user1',
         industry: 'Cybersecurity',
         createdAt: Date.now(),
-        updatedAt: Date.now()
-    }
+        updatedAt: Date.now(),
+    },
 ];

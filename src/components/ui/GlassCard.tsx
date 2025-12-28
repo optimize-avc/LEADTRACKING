@@ -22,7 +22,11 @@ export function GlassCard({
 
     return (
         <Component
-            role={Component === 'section' || Component === 'article' || Component === 'aside' ? Component : undefined}
+            role={
+                Component === 'section' || Component === 'article' || Component === 'aside'
+                    ? Component
+                    : undefined
+            }
             className={`glass-card ${paddingClass} ${className}`}
             {...props}
         >

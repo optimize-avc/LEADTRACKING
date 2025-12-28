@@ -86,9 +86,7 @@ export function Sidebar() {
                                 <div className="text-white font-medium truncate">
                                     {user.displayName || 'User'}
                                 </div>
-                                <div className="text-slate-500 text-xs truncate">
-                                    {user.email}
-                                </div>
+                                <div className="text-slate-500 text-xs truncate">{user.email}</div>
                             </div>
                         </div>
                         <button

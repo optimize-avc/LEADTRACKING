@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,12 +7,31 @@ import { Resource, ResourceCategory } from '@/types';
 import { MOCK_RESOURCES } from '@/lib/mock-data/resources'; // Keep for defaults
 import { ResourcesService } from '@/lib/firebase/resources';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { Search, FileText, Video, Link as LinkIcon, Download, FileSpreadsheet, Presentation, Plus, X, UploadCloud, Loader2 } from 'lucide-react';
+import {
+    Search,
+    FileText,
+    Video,
+    Link as LinkIcon,
+    Download,
+    FileSpreadsheet,
+    Presentation,
+    Plus,
+    X,
+    UploadCloud,
+    Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 const CATEGORIES: ResourceCategory[] = [
-    'Playbook', 'Learning', 'Prospecting', 'Templates',
-    'Competitive', 'Operational', 'Scheduling', 'Brand', 'Insights'
+    'Playbook',
+    'Learning',
+    'Prospecting',
+    'Templates',
+    'Competitive',
+    'Operational',
+    'Scheduling',
+    'Brand',
+    'Insights',
 ];
 
 export default function ResourcesClient() {
@@ -49,8 +67,8 @@ export default function ResourcesClient() {
                     setUserResources(userData);
                 }
             } catch (error) {
-                console.error("Failed to fetch resources:", error);
-                toast.error("Failed to load resources.");
+                console.error('Failed to fetch resources:', error);
+                toast.error('Failed to load resources.');
             } finally {
                 setLoading(false);
             }
@@ -65,8 +83,14 @@ export default function ResourcesClient() {
 
         setIsUploading(true);
         try {
-            await ResourcesService.uploadResource(user.uid, uploadFile, uploadCategory, uploadDesc, uploadVisibility);
-            toast.success("Resource uploaded successfully!");
+            await ResourcesService.uploadResource(
+                user.uid,
+                uploadFile,
+                uploadCategory,
+                uploadDesc,
+                uploadVisibility
+            );
+            toast.success('Resource uploaded successfully!');
 
             // Refresh list
             if (user?.uid) {
@@ -82,8 +106,8 @@ export default function ResourcesClient() {
             setUploadVisibility('private');
             setIsUploadOpen(false);
         } catch (error) {
-            console.error("Upload failed:", error);
-            toast.error("Failed to upload resource.");
+            console.error('Upload failed:', error);
+            toast.error('Failed to upload resource.');
         } finally {
             setIsUploading(false);
         }
@@ -91,24 +115,31 @@ export default function ResourcesClient() {
 
     const displayResources = activeTab === 'mine' ? userResources : companyResources;
 
-    // Merge Mock data (System Resources) with User Resources ONLY if in Company View? 
+    // Merge Mock data (System Resources) with User Resources ONLY if in Company View?
     // Actually, MOCK_RESOURCES are usually global, so let's put them in Company view.
-    const allResources = activeTab === 'company' ? [...displayResources, ...MOCK_RESOURCES] : displayResources;
+    const allResources =
+        activeTab === 'company' ? [...displayResources, ...MOCK_RESOURCES] : displayResources;
 
-    const filteredResources = allResources.filter(resource => {
+    const filteredResources = allResources.filter((resource) => {
         const matchesCategory = activeCategory === 'All' || resource.category === activeCategory;
-        const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        const matchesSearch =
+            resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             resource.description.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'video': return <Video className="w-5 h-5 text-red-400" />;
-            case 'deck': return <Presentation className="w-5 h-5 text-orange-400" />;
-            case 'sheet': return <FileSpreadsheet className="w-5 h-5 text-green-400" />;
-            case 'link': return <LinkIcon className="w-5 h-5 text-blue-400" />;
-            default: return <FileText className="w-5 h-5 text-slate-300" />;
+            case 'video':
+                return <Video className="w-5 h-5 text-red-400" />;
+            case 'deck':
+                return <Presentation className="w-5 h-5 text-orange-400" />;
+            case 'sheet':
+                return <FileSpreadsheet className="w-5 h-5 text-green-400" />;
+            case 'link':
+                return <LinkIcon className="w-5 h-5 text-blue-400" />;
+            default:
+                return <FileText className="w-5 h-5 text-slate-300" />;
         }
     };
 
@@ -120,20 +151,26 @@ export default function ResourcesClient() {
                 <div className="space-y-1">
                     <button
                         onClick={() => setActiveCategory('All')}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCategory === 'All' ? 'bg-blue-600/20 text-blue-300' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                            activeCategory === 'All'
+                                ? 'bg-blue-600/20 text-blue-300'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
                     >
                         All Resources
                     </button>
 
                     <div className="my-4 border-t border-slate-800" />
 
-                    {CATEGORIES.map(category => (
+                    {CATEGORIES.map((category) => (
                         <button
                             key={category}
                             onClick={() => setActiveCategory(category)}
-                            className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeCategory === category ? 'bg-blue-600/20 text-blue-300' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                }`}
+                            className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                activeCategory === category
+                                    ? 'bg-blue-600/20 text-blue-300'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
                         >
                             {category}
                         </button>
@@ -148,7 +185,9 @@ export default function ResourcesClient() {
                         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-400 mb-2">
                             Enablement & Resources
                         </h1>
-                        <p className="text-slate-400 mb-6">Access all sales materials, training, and operational tools.</p>
+                        <p className="text-slate-400 mb-6">
+                            Access all sales materials, training, and operational tools.
+                        </p>
 
                         <div className="flex items-center gap-4 mb-4">
                             <div className="p-1 bg-slate-800 rounded-lg flex items-center">
@@ -187,8 +226,11 @@ export default function ResourcesClient() {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredResources.map(resource => (
-                        <GlassCard key={resource.id} className="group hover:bg-slate-800/60 transition-colors flex flex-col h-full">
+                    {filteredResources.map((resource) => (
+                        <GlassCard
+                            key={resource.id}
+                            className="group hover:bg-slate-800/60 transition-colors flex flex-col h-full"
+                        >
                             <div className="flex justify-between items-start mb-4">
                                 <div className="p-2 bg-slate-800 rounded-lg group-hover:bg-slate-700 transition-colors">
                                     {getIcon(resource.type)}
@@ -239,22 +281,34 @@ export default function ResourcesClient() {
                         </button>
 
                         <h2 className="text-xl font-bold text-white mb-1">Upload Resource</h2>
-                        <p className="text-sm text-slate-400 mb-6">Add a document to your knowledge hub.</p>
+                        <p className="text-sm text-slate-400 mb-6">
+                            Add a document to your knowledge hub.
+                        </p>
 
                         <form onSubmit={handleUpload} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Category</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                    Category
+                                </label>
                                 <select
                                     value={uploadCategory}
-                                    onChange={(e) => setUploadCategory(e.target.value as ResourceCategory)}
+                                    onChange={(e) =>
+                                        setUploadCategory(e.target.value as ResourceCategory)
+                                    }
                                     className="glass-input w-full"
                                 >
-                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    {CATEGORIES.map((c) => (
+                                        <option key={c} value={c}>
+                                            {c}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                    Description
+                                </label>
                                 <textarea
                                     value={uploadDesc}
                                     onChange={(e) => setUploadDesc(e.target.value)}
@@ -281,7 +335,11 @@ export default function ResourcesClient() {
                                 disabled={isUploading || !uploadFile}
                                 className="glass-button w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 flex justify-center"
                             >
-                                {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Upload Resource'}
+                                {isUploading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    'Upload Resource'
+                                )}
                             </button>
                         </form>
                     </GlassCard>

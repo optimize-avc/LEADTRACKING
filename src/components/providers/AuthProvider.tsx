@@ -6,7 +6,7 @@ import {
     onAuthStateChanged,
     signInWithPopup,
     GoogleAuthProvider,
-    signOut
+    signOut,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { ProfileService, UserProfile } from '@/lib/firebase/services';
@@ -24,9 +24,9 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     profile: null,
     loading: true,
-    signInWithGoogle: async () => { },
-    logout: async () => { },
-    refreshProfile: async () => { },
+    signInWithGoogle: async () => {},
+    logout: async () => {},
+    refreshProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         onboarded: false,
                         tier: 'free',
                         createdAt: now,
-                        updatedAt: now
+                        updatedAt: now,
                     };
                     await ProfileService.updateProfile(currentUser.uid, newProfile);
                     p = await ProfileService.getProfile(currentUser.uid);
@@ -89,7 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, logout, refreshProfile }}>
+        <AuthContext.Provider
+            value={{ user, profile, loading, signInWithGoogle, logout, refreshProfile }}
+        >
             {children}
         </AuthContext.Provider>
     );

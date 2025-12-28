@@ -8,7 +8,9 @@ import { CreditCard, ExternalLink, ShieldCheck } from 'lucide-react';
 import { isGmailConnected } from '@/lib/gmail/gmail-service';
 import { toast } from 'sonner';
 
-async function checkTwilioStatusViaAPI(userId: string): Promise<{ connected: boolean; phoneNumber: string | null }> {
+async function checkTwilioStatusViaAPI(
+    userId: string
+): Promise<{ connected: boolean; phoneNumber: string | null }> {
     try {
         const response = await fetch(`/api/twilio/status?userId=${userId}`);
         if (!response.ok) {
@@ -48,7 +50,7 @@ export default function SettingsClient() {
             setTwilioConnected(twilioStatus?.connected ?? false);
             setTwilioPhone(twilioStatus?.phoneNumber ?? null);
         } catch (error: unknown) {
-            toast.error(error instanceof Error ? error.message : "Cleanup failed");
+            toast.error(error instanceof Error ? error.message : 'Cleanup failed');
         } finally {
             setIsLoading(false);
         }
@@ -69,7 +71,10 @@ export default function SettingsClient() {
             const response = await fetch('/api/stripe/portal', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.uid, customerId: (profile as any)?.stripeCustomerId }),
+                body: JSON.stringify({
+                    userId: user.uid,
+                    customerId: (profile as { stripeCustomerId?: string } | null)?.stripeCustomerId,
+                }),
             });
             const data = await response.json();
             if (data.url) {
@@ -88,7 +93,9 @@ export default function SettingsClient() {
     if (authLoading || isLoading) {
         return (
             <div className="p-8 min-h-screen flex items-center justify-center">
-                <div className="text-slate-500 italic animate-pulse">Synchronizing configurations...</div>
+                <div className="text-slate-500 italic animate-pulse">
+                    Synchronizing configurations...
+                </div>
             </div>
         );
     }
@@ -101,7 +108,9 @@ export default function SettingsClient() {
                 <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
                     Settings & Account
                 </h1>
-                <p className="text-slate-500 text-sm mt-1">Configure your professional workspace and commercial integrations</p>
+                <p className="text-slate-500 text-sm mt-1">
+                    Configure your professional workspace and commercial integrations
+                </p>
             </header>
 
             <div className="grid gap-6 max-w-2xl">
@@ -113,7 +122,9 @@ export default function SettingsClient() {
                                 <CreditCard size={24} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-white">Subscription & Billing</h3>
+                                <h3 className="text-lg font-semibold text-white">
+                                    Subscription & Billing
+                                </h3>
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className="text-sm text-slate-400">Current Plan:</span>
                                     <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 uppercase text-[10px] font-bold tracking-wider">
@@ -136,17 +147,30 @@ export default function SettingsClient() {
                 <GlassCard>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-2xl">📧</div>
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-2xl">
+                                📧
+                            </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-white">Gmail Integration</h3>
-                                <p className="text-sm text-slate-400">Sync emails with leads, track replies, and send emails directly</p>
+                                <h3 className="text-lg font-semibold text-white">
+                                    Gmail Integration
+                                </h3>
+                                <p className="text-sm text-slate-400">
+                                    Sync emails with leads, track replies, and send emails directly
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             {gmailConnected ? (
-                                <span className="text-sm text-green-400 font-medium">Connected</span>
+                                <span className="text-sm text-green-400 font-medium">
+                                    Connected
+                                </span>
                             ) : (
-                                <button onClick={handleConnectGmail} className="glass-button px-4 py-2 text-xs">Connect Gmail</button>
+                                <button
+                                    onClick={handleConnectGmail}
+                                    className="glass-button px-4 py-2 text-xs"
+                                >
+                                    Connect Gmail
+                                </button>
                             )}
                         </div>
                     </div>
@@ -155,10 +179,16 @@ export default function SettingsClient() {
                 <GlassCard>
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-2xl">📱</div>
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-2xl">
+                                📱
+                            </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-white">Twilio Telephony</h3>
-                                <p className="text-sm text-slate-400">Omnichannel communication hub for professional outreach</p>
+                                <h3 className="text-lg font-semibold text-white">
+                                    Twilio Telephony
+                                </h3>
+                                <p className="text-sm text-slate-400">
+                                    Omnichannel communication hub for professional outreach
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">

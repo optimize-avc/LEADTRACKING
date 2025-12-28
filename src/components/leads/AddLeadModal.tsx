@@ -10,11 +10,27 @@ interface AddLeadModalProps {
 }
 
 const INDUSTRIES = [
-    'SaaS', 'Generative AI', 'FinTech', 'Healthcare', 'E-commerce',
-    'Logistics', 'Manufacturing', 'Real Estate', 'Education', 'Other'
+    'SaaS',
+    'Generative AI',
+    'FinTech',
+    'Healthcare',
+    'E-commerce',
+    'Logistics',
+    'Manufacturing',
+    'Real Estate',
+    'Education',
+    'Other',
 ];
 
-const STATUSES: LeadStatus[] = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed', 'Lost'];
+const STATUSES: LeadStatus[] = [
+    'New',
+    'Contacted',
+    'Qualified',
+    'Proposal',
+    'Negotiation',
+    'Closed',
+    'Lost',
+];
 
 export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
     const [formData, setFormData] = useState({
@@ -25,7 +41,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
         value: '',
         industry: '',
         status: 'New' as LeadStatus,
-        notes: ''
+        notes: '',
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -36,7 +52,8 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
         if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
         if (!formData.contactName.trim()) newErrors.contactName = 'Contact name is required';
         if (!formData.email.trim()) newErrors.email = 'Email is required';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email format';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+            newErrors.email = 'Invalid email format';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -53,7 +70,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
             value: parseFloat(formData.value) || 0,
             industry: formData.industry,
             status: formData.status,
-            notes: formData.notes
+            notes: formData.notes,
         });
 
         // Reset form
@@ -65,7 +82,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
             value: '',
             industry: '',
             status: 'New',
-            notes: ''
+            notes: '',
         });
         onClose();
     };
@@ -73,10 +90,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
-            />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
             <div className="relative bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
@@ -86,26 +100,38 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                     {/* Company & Contact */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Company Name *</label>
+                            <label className="block text-sm text-slate-400 mb-1">
+                                Company Name *
+                            </label>
                             <input
                                 type="text"
                                 value={formData.companyName}
-                                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, companyName: e.target.value })
+                                }
                                 className="glass-input w-full"
                                 placeholder="Acme Corp"
                             />
-                            {errors.companyName && <p className="text-red-400 text-xs mt-1">{errors.companyName}</p>}
+                            {errors.companyName && (
+                                <p className="text-red-400 text-xs mt-1">{errors.companyName}</p>
+                            )}
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Contact Name *</label>
+                            <label className="block text-sm text-slate-400 mb-1">
+                                Contact Name *
+                            </label>
                             <input
                                 type="text"
                                 value={formData.contactName}
-                                onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, contactName: e.target.value })
+                                }
                                 className="glass-input w-full"
                                 placeholder="John Doe"
                             />
-                            {errors.contactName && <p className="text-red-400 text-xs mt-1">{errors.contactName}</p>}
+                            {errors.contactName && (
+                                <p className="text-red-400 text-xs mt-1">{errors.contactName}</p>
+                            )}
                         </div>
                     </div>
 
@@ -116,18 +142,24 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                             <input
                                 type="email"
                                 value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, email: e.target.value })
+                                }
                                 className="glass-input w-full"
                                 placeholder="john@acme.com"
                             />
-                            {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                            {errors.email && (
+                                <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm text-slate-400 mb-1">Phone</label>
                             <input
                                 type="tel"
                                 value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, phone: e.target.value })
+                                }
                                 className="glass-input w-full"
                                 placeholder="555-0123"
                             />
@@ -137,11 +169,15 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                     {/* Value & Industry */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1">Est. Value ($)</label>
+                            <label className="block text-sm text-slate-400 mb-1">
+                                Est. Value ($)
+                            </label>
                             <input
                                 type="number"
                                 value={formData.value}
-                                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, value: e.target.value })
+                                }
                                 className="glass-input w-full"
                                 placeholder="5000"
                             />
@@ -150,12 +186,16 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                             <label className="block text-sm text-slate-400 mb-1">Industry</label>
                             <select
                                 value={formData.industry}
-                                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, industry: e.target.value })
+                                }
                                 className="glass-input w-full bg-slate-900"
                             >
                                 <option value="">Select industry...</option>
-                                {INDUSTRIES.map(ind => (
-                                    <option key={ind} value={ind}>{ind}</option>
+                                {INDUSTRIES.map((ind) => (
+                                    <option key={ind} value={ind}>
+                                        {ind}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -166,11 +206,15 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                         <label className="block text-sm text-slate-400 mb-1">Status</label>
                         <select
                             value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value as LeadStatus })}
+                            onChange={(e) =>
+                                setFormData({ ...formData, status: e.target.value as LeadStatus })
+                            }
                             className="glass-input w-full bg-slate-900"
                         >
-                            {STATUSES.map(status => (
-                                <option key={status} value={status}>{status}</option>
+                            {STATUSES.map((status) => (
+                                <option key={status} value={status}>
+                                    {status}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -195,10 +239,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                         >
                             Cancel
                         </button>
-                        <button
-                            type="submit"
-                            className="glass-button px-6 py-2"
-                        >
+                        <button type="submit" className="glass-button px-6 py-2">
                             Create Lead
                         </button>
                     </div>

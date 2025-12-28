@@ -4,7 +4,9 @@ let stripePromise: Promise<Stripe | null>;
 
 export const getStripe = () => {
     if (!stripePromise) {
-        stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_mock');
+        stripePromise = loadStripe(
+            process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_mock'
+        );
     }
     return stripePromise;
 };

@@ -8,11 +8,13 @@ export function useActivities(leadId?: string) {
     const queryClient = useQueryClient();
 
     // Key includes leadId if provided, otherwise generic user activities
-    const queryKey = leadId
-        ? ['activities', 'lead', leadId]
-        : ['activities', 'user', user?.uid];
+    const queryKey = leadId ? ['activities', 'lead', leadId] : ['activities', 'user', user?.uid];
 
-    const { data: activities = [], isLoading, error } = useQuery({
+    const {
+        data: activities = [],
+        isLoading,
+        error,
+    } = useQuery({
         queryKey,
         queryFn: () => {
             if (leadId) {
@@ -27,10 +29,10 @@ export function useActivities(leadId?: string) {
 
     const logActivityMutation = useMutation({
         mutationFn: (newActivity: Omit<Activity, 'id' | 'timestamp'>) => {
-            if (!user?.uid) throw new Error("User not authenticated");
+            if (!user?.uid) throw new Error('User not authenticated');
             return ActivitiesService.logActivity(user.uid, {
                 ...newActivity,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             });
         },
         onSuccess: () => {
@@ -39,7 +41,7 @@ export function useActivities(leadId?: string) {
                 // Also invalidate the generic user feed if we logged a specific lead activity
                 queryClient.invalidateQueries({ queryKey: ['activities', 'user', user?.uid] });
             }
-        }
+        },
     });
 
     return {
@@ -47,6 +49,6 @@ export function useActivities(leadId?: string) {
         isLoading,
         error,
         logActivity: logActivityMutation.mutateAsync,
-        isLogging: logActivityMutation.isPending
+        isLogging: logActivityMutation.isPending,
     };
 }

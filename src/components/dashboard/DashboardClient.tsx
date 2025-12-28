@@ -39,12 +39,17 @@ export default function DashboardClient() {
 
         // Connect Rate (Simple version for now)
         const calls = todayActivities.filter((a: Activity) => a.type === 'call');
-        const connects = calls.filter((a: Activity) => ['connected', 'meeting_set', 'qualified'].includes(a.outcome)).length;
+        const connects = calls.filter((a: Activity) =>
+            ['connected', 'meeting_set', 'qualified'].includes(a.outcome)
+        ).length;
         const connectRate = calls.length > 0 ? (connects / calls.length) * 100 : 0;
 
         // Pipeline Value
         const activeLeads = leads.filter((l: Lead) => !['Lost', 'Closed'].includes(l.status));
-        const pipelineValue = activeLeads.reduce((sum: number, lead: Lead) => sum + (lead.value || 0), 0);
+        const pipelineValue = activeLeads.reduce(
+            (sum: number, lead: Lead) => sum + (lead.value || 0),
+            0
+        );
 
         // Pipeline Distribution
         const pipelineStatusCounts: Record<string, number> = {};
@@ -57,7 +62,7 @@ export default function DashboardClient() {
             connectRate,
             pipelineValue,
             meetingsHeld,
-            pipelineStatusCounts
+            pipelineStatusCounts,
         };
     }, [user, isLoading, leads, activities]);
 
@@ -83,11 +88,13 @@ export default function DashboardClient() {
     }
 
     // Pipeline Status Display Data
-    const pipelineRows = Object.entries(metrics?.pipelineStatusCounts || {}).map(([status, count]) => ({
-        label: status,
-        count: count,
-        color: getColorForStatus(status)
-    })).sort((a, b) => b.count - a.count);
+    const pipelineRows = Object.entries(metrics?.pipelineStatusCounts || {})
+        .map(([status, count]) => ({
+            label: status,
+            count: count,
+            color: getColorForStatus(status),
+        }))
+        .sort((a, b) => b.count - a.count);
 
     return (
         <>
@@ -98,7 +105,7 @@ export default function DashboardClient() {
                     value={metrics?.dials || 0}
                     subvalue="/50"
                     glowColor="bg-blue-500"
-                    percent={(metrics?.dials || 0) / 50 * 100}
+                    percent={((metrics?.dials || 0) / 50) * 100}
                 />
                 <KpiCard
                     title="Connect Rate"
@@ -129,7 +136,9 @@ export default function DashboardClient() {
                 <div className="glass-card lg:col-span-2 min-h-[500px] flex flex-col">
                     <h2 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-2">
                         Activity Performance
-                        <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs text-slate-400 font-normal border border-white/5">This Week</span>
+                        <span className="px-2 py-0.5 rounded-full bg-slate-800 text-xs text-slate-400 font-normal border border-white/5">
+                            This Week
+                        </span>
                     </h2>
 
                     {/* Placeholder for Recharts implementation - utilizing data prop later */}
@@ -143,13 +152,23 @@ export default function DashboardClient() {
                     <h2 className="text-xl font-bold text-slate-100 mb-6">Pipeline Status</h2>
                     <div className="space-y-3">
                         {pipelineRows.length === 0 ? (
-                            <div className="text-slate-500 text-sm text-center py-4">No active opportunities</div>
+                            <div className="text-slate-500 text-sm text-center py-4">
+                                No active opportunities
+                            </div>
                         ) : (
                             pipelineRows.map((stage) => (
-                                <div key={stage.label} className="group flex items-center justify-between p-4 bg-slate-900/40 border border-white/5 rounded-xl hover:border-white/10 hover:bg-slate-800/60 transition-all cursor-pointer" onClick={() => router.push('/leads')}>
+                                <div
+                                    key={stage.label}
+                                    className="group flex items-center justify-between p-4 bg-slate-900/40 border border-white/5 rounded-xl hover:border-white/10 hover:bg-slate-800/60 transition-all cursor-pointer"
+                                    onClick={() => router.push('/leads')}
+                                >
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-2 h-2 rounded-full ${stage.color} shadow-[0_0_8px_currentColor] opacity-80 group-hover:opacity-100`} />
-                                        <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">{stage.label}</span>
+                                        <div
+                                            className={`w-2 h-2 rounded-full ${stage.color} shadow-[0_0_8px_currentColor] opacity-80 group-hover:opacity-100`}
+                                        />
+                                        <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
+                                            {stage.label}
+                                        </span>
                                     </div>
                                     <span className="text-xs font-bold bg-slate-950 px-2.5 py-1 rounded-md text-slate-400 border border-white/5 group-hover:border-white/10 group-hover:text-white transition-all">
                                         {stage.count}
@@ -183,7 +202,15 @@ interface KpiCardProps {
     textColor?: string;
 }
 
-function KpiCard({ title, value, subvalue, subtext, glowColor, percent, textColor = "text-slate-100" }: KpiCardProps) {
+function KpiCard({
+    title,
+    value,
+    subvalue,
+    subtext,
+    glowColor,
+    percent,
+    textColor = 'text-slate-100',
+}: KpiCardProps) {
     return (
         <div className="glass-card group relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -198,7 +225,10 @@ function KpiCard({ title, value, subvalue, subtext, glowColor, percent, textColo
             {percent !== undefined ? (
                 <div className="mt-4 flex items-center gap-2">
                     <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                        <div className={`h-full ${glowColor.replace('bg-', 'bg-')} shadow-[0_0_12px_rgba(59,130,246,0.5)]`} style={{ width: `${percent}%` }}></div>
+                        <div
+                            className={`h-full ${glowColor.replace('bg-', 'bg-')} shadow-[0_0_12px_rgba(59,130,246,0.5)]`}
+                            style={{ width: `${percent}%` }}
+                        ></div>
                     </div>
                     <span className="text-xs text-blue-400 font-bold">{percent.toFixed(0)}%</span>
                 </div>
@@ -213,7 +243,9 @@ function DashboardSkeleton() {
     return (
         <div className="animate-pulse">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                {[1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-slate-800/50 rounded-2xl" />)}
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-40 bg-slate-800/50 rounded-2xl" />
+                ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 h-[500px] bg-slate-800/50 rounded-2xl" />
@@ -225,12 +257,19 @@ function DashboardSkeleton() {
 
 function getColorForStatus(status: string) {
     switch (status) {
-        case 'New': return 'bg-blue-500';
-        case 'Contacted': return 'bg-indigo-500';
-        case 'Qualified': return 'bg-emerald-500';
-        case 'Proposal': return 'bg-violet-500';
-        case 'Negotiation': return 'bg-amber-500';
-        case 'Closed': return 'bg-green-500';
-        default: return 'bg-slate-500';
+        case 'New':
+            return 'bg-blue-500';
+        case 'Contacted':
+            return 'bg-indigo-500';
+        case 'Qualified':
+            return 'bg-emerald-500';
+        case 'Proposal':
+            return 'bg-violet-500';
+        case 'Negotiation':
+            return 'bg-amber-500';
+        case 'Closed':
+            return 'bg-green-500';
+        default:
+            return 'bg-slate-500';
     }
 }

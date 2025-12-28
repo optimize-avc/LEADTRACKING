@@ -4,7 +4,8 @@ export const COURSES: Course[] = [
     {
         id: 'advanced-negotiation',
         title: 'Advanced Negotiation Mastery',
-        description: 'Learn the psychological triggers that close 7-figure deals. This module covers mirroring, labeling, and the rules of compromise.',
+        description:
+            'Learn the psychological triggers that close 7-figure deals. This module covers mirroring, labeling, and the rules of compromise.',
         author: 'Chris Voss (AI)',
         duration: '4h 30m',
         level: 'Advanced',
@@ -30,9 +31,10 @@ export const COURSES: Course[] = [
                                     bullets: [
                                         'It brings you attention.',
                                         'It encourages collaboration.',
-                                        'It gets you past the "No".'
+                                        'It gets you past the "No".',
                                     ],
-                                    imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1000&q=80'
+                                    imageUrl:
+                                        'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1000&q=80',
                                 },
                                 {
                                     id: 's2',
@@ -42,17 +44,18 @@ export const COURSES: Course[] = [
                                         'Use a "Late Night FM DJ Voice".',
                                         'Start with "I am sorry..."',
                                         'Repeat the crux of the speech.',
-                                        'Silence. Let it sit.'
-                                    ]
+                                        'Silence. Let it sit.',
+                                    ],
                                 },
                                 {
                                     id: 's3',
                                     title: 'Example Scenario',
                                     body: '**Client:** "We just can\'t do that price."\n\n**You:** "Can\'t do that price?"\n\n**Client:** "No, our budget is locked until Q3."\n\n**You:** "Locked until Q3?"',
-                                    imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1000&q=80'
-                                }
-                            ]
-                        }
+                                    imageUrl:
+                                        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1000&q=80',
+                                },
+                            ],
+                        },
                     },
                     {
                         id: 'les-2',
@@ -69,10 +72,11 @@ export const COURSES: Course[] = [
                                         'To annoy the opponent',
                                         'To show you are listening and encourage them to talk more',
                                         'To prove you are smarter',
-                                        'To change the subject'
+                                        'To change the subject',
                                     ],
                                     correctOptionIndex: 1,
-                                    explanation: 'Mirroring encourages the other side to elaborate and reveals more information.'
+                                    explanation:
+                                        'Mirroring encourages the other side to elaborate and reveals more information.',
                                 },
                                 {
                                     id: 'q2',
@@ -81,15 +85,16 @@ export const COURSES: Course[] = [
                                         'High energy and loud',
                                         'Aggressive and dominant',
                                         'Late Night FM DJ Voice (Calm & Downward)',
-                                        'Fast and urgent'
+                                        'Fast and urgent',
                                     ],
                                     correctOptionIndex: 2,
-                                    explanation: 'A calm, downward-inflecting voice signals authority and trustworthiness without triggering defensiveness.'
-                                }
-                            ]
-                        }
-                    }
-                ]
+                                    explanation:
+                                        'A calm, downward-inflecting voice signals authority and trustworthiness without triggering defensiveness.',
+                                },
+                            ],
+                        },
+                    },
+                ],
             },
             {
                 id: 'mod-2',
@@ -110,14 +115,14 @@ export const COURSES: Course[] = [
                                     bullets: [
                                         '"You are going to think we are expensive."',
                                         '"You will think I am being difficult."',
-                                        '"it is going to seem like I do not understand your business."'
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-        ]
-    }
+                                        '"it is going to seem like I do not understand your business."',
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        ],
+    },
 ];

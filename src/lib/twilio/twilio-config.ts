@@ -14,16 +14,12 @@ export const TWILIO_CONFIG = {
 
 // Check if Twilio is configured
 export function isTwilioConfigured(): boolean {
-    return !!(
-        TWILIO_CONFIG.accountSid &&
-        TWILIO_CONFIG.authToken &&
-        TWILIO_CONFIG.phoneNumber
-    );
+    return !!(TWILIO_CONFIG.accountSid && TWILIO_CONFIG.authToken && TWILIO_CONFIG.phoneNumber);
 }
 
 export function getTwilioClient() {
     if (!isTwilioConfigured()) {
-        console.warn("Twilio client requested but not configured!");
+        console.warn('Twilio client requested but not configured!');
         // Return a mock or throw? For safety, let's return a dummy or allow it to fail gracefully if possible?
         // But the callers usually throw.
         // Let's rely on twilio() throwing if empty, or just return existing logic.

@@ -35,7 +35,7 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
     useEffect(() => {
         if (isTimerRunning) {
             timerRef.current = setInterval(() => {
-                setElapsedSeconds(prev => prev + 1);
+                setElapsedSeconds((prev) => prev + 1);
             }, 1000);
         } else if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -74,20 +74,23 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                 duration: elapsedSeconds,
                 notes: notes || undefined,
                 timestamp: Date.now(),
-                repId: userId
+                repId: userId,
             });
 
             // Update lead if outcome warrants it
-            const selectedOutcome = OUTCOMES.find(o => o.value === outcome);
+            const selectedOutcome = OUTCOMES.find((o) => o.value === outcome);
             const updates: Partial<Lead> = {
-                lastContact: Date.now()
+                lastContact: Date.now(),
             };
 
             if (nextStep) {
                 updates.nextStep = nextStep;
             }
 
-            if (selectedOutcome?.statusUpdate && (lead.status === 'New' || lead.status === 'Contacted')) {
+            if (
+                selectedOutcome?.statusUpdate &&
+                (lead.status === 'New' || lead.status === 'Contacted')
+            ) {
                 updates.status = selectedOutcome.statusUpdate as Lead['status'];
             }
 
@@ -121,7 +124,9 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white">Log Call</h2>
-                            <p className="text-sm text-slate-400">{lead.companyName} • {lead.contactName}</p>
+                            <p className="text-sm text-slate-400">
+                                {lead.companyName} • {lead.contactName}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -135,19 +140,24 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                         </div>
                         <button
                             onClick={() => setIsTimerRunning(!isTimerRunning)}
-                            className={`px-6 py-2 rounded-lg font-medium transition-all ${isTimerRunning
-                                ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
-                                : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                                }`}
+                            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                                isTimerRunning
+                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
+                                    : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                            }`}
                         >
                             {isTimerRunning ? '⏹ Stop Timer' : '▶️ Start Timer'}
                         </button>
-                        <p className="text-xs text-slate-500 mt-2">Or enter duration manually below</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                            Or enter duration manually below
+                        </p>
                     </div>
 
                     {/* Manual Duration Input */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Duration (minutes)</label>
+                        <label className="block text-sm text-slate-400 mb-2">
+                            Duration (minutes)
+                        </label>
                         <input
                             type="number"
                             min="0"
@@ -166,10 +176,11 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                                 <button
                                     key={o.value}
                                     onClick={() => setOutcome(o.value)}
-                                    className={`p-3 rounded-lg border text-left transition-all ${outcome === o.value
-                                        ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
-                                        : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
-                                        }`}
+                                    className={`p-3 rounded-lg border text-left transition-all ${
+                                        outcome === o.value
+                                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
+                                            : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                    }`}
                                 >
                                     <span className="mr-2">{o.icon}</span>
                                     <span className="text-sm">{o.label}</span>

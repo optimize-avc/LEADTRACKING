@@ -88,11 +88,16 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                     body: email,
                     status: 'sent',
                     sentAt: Date.now(),
-                    aiGenerated: true
+                    aiGenerated: true,
                 });
 
                 // Log activity
-                await ActivitiesService.logEmail(user.uid, lead.id, subject, email.substring(0, 200));
+                await ActivitiesService.logEmail(
+                    user.uid,
+                    lead.id,
+                    subject,
+                    email.substring(0, 200)
+                );
                 toast.success('Email logged to activity history');
             } catch (error) {
                 console.error('Failed to log email:', error);
@@ -117,10 +122,7 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                onClick={onClose}
-            />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
             <div className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -133,7 +135,9 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">AI Email Draft</h2>
-                                <p className="text-sm text-slate-400">For {lead.companyName} • {lead.status}</p>
+                                <p className="text-sm text-slate-400">
+                                    For {lead.companyName} • {lead.status}
+                                </p>
                             </div>
                         </div>
                         <button
@@ -164,7 +168,9 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                             <div className="text-center">
                                 <div className="w-10 h-10 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                                 <p className="text-slate-400">AI is crafting your email...</p>
-                                <p className="text-xs text-slate-600 mt-1">Using company playbooks & lead context</p>
+                                <p className="text-xs text-slate-600 mt-1">
+                                    Using company playbooks & lead context
+                                </p>
                             </div>
                         </div>
                     ) : (
@@ -178,7 +184,9 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                             {/* Custom Prompt Input */}
                             {showCustomPrompt && (
                                 <div className="mb-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-                                    <label className="block text-sm text-slate-400 mb-2">What should the email focus on?</label>
+                                    <label className="block text-sm text-slate-400 mb-2">
+                                        What should the email focus on?
+                                    </label>
                                     <textarea
                                         value={customPrompt}
                                         onChange={(e) => setCustomPrompt(e.target.value)}
@@ -204,7 +212,9 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
 
                             {/* Subject Line */}
                             <div className="mb-4">
-                                <label className="block text-sm text-slate-400 mb-2">Subject Line</label>
+                                <label className="block text-sm text-slate-400 mb-2">
+                                    Subject Line
+                                </label>
                                 <input
                                     type="text"
                                     value={subject}
@@ -216,7 +226,9 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                             {/* AI Enhancement Buttons */}
                             <div className="mb-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm text-slate-400">AI Enhancements</label>
+                                    <label className="text-sm text-slate-400">
+                                        AI Enhancements
+                                    </label>
                                     <button
                                         onClick={() => setShowCustomPrompt(true)}
                                         className="text-xs text-violet-400 hover:text-violet-300"
@@ -231,9 +243,11 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                                             onClick={() => handleEnhance(action)}
                                             disabled={isEnhancing !== null}
                                             className={`px-3 py-1.5 text-xs rounded-lg border transition-all flex items-center gap-1.5
-                                                ${isEnhancing === action
-                                                    ? 'bg-violet-500/20 border-violet-500/50 text-violet-300'
-                                                    : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white hover:border-slate-600'}
+                                                ${
+                                                    isEnhancing === action
+                                                        ? 'bg-violet-500/20 border-violet-500/50 text-violet-300'
+                                                        : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white hover:border-slate-600'
+                                                }
                                                 ${isEnhancing !== null && isEnhancing !== action ? 'opacity-50 cursor-not-allowed' : ''}
                                             `}
                                         >
@@ -250,7 +264,9 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
 
                             {/* Email Body */}
                             <div className="mb-4">
-                                <label className="block text-sm text-slate-400 mb-2">Email Body</label>
+                                <label className="block text-sm text-slate-400 mb-2">
+                                    Email Body
+                                </label>
                                 <textarea
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -288,7 +304,9 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                             </div>
                         </div>
                         <p className="text-xs text-slate-600 mt-3 text-center">
-                            {user ? 'Email will be logged to this lead\'s activity timeline' : 'Log in to track email activity'}
+                            {user
+                                ? "Email will be logged to this lead's activity timeline"
+                                : 'Log in to track email activity'}
                         </p>
                     </div>
                 )}

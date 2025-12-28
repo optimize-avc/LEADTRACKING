@@ -1,6 +1,6 @@
 /**
  * API Authentication Middleware
- * 
+ *
  * Provides secure Firebase token verification for API routes.
  * Uses firebase-admin for server-side token validation.
  */
@@ -24,7 +24,7 @@ export type AuthVerificationResult = AuthResult | AuthError;
 
 /**
  * Verify Firebase ID token from Authorization header
- * 
+ *
  * @param request - NextRequest object
  * @returns AuthVerificationResult with userId on success, error details on failure
  */
@@ -79,25 +79,19 @@ export async function verifyAuthToken(request: NextRequest): Promise<AuthVerific
  * Create an error response for authentication failures
  */
 export function createAuthErrorResponse(authResult: AuthError): NextResponse {
-    return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-    );
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
 }
 
 /**
  * Validate that a userId from request body matches the authenticated user
  */
-export function validateUserIdMatch(
-    authenticatedUserId: string,
-    requestedUserId: string
-): boolean {
+export function validateUserIdMatch(authenticatedUserId: string, requestedUserId: string): boolean {
     return authenticatedUserId === requestedUserId;
 }
 
 /**
  * Higher-order function to wrap API handlers with authentication
- * 
+ *
  * @example
  * ```typescript
  * export const POST = withAuth(async (request, userId) => {

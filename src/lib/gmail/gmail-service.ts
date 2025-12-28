@@ -1,6 +1,15 @@
 import { GmailMessage, GmailThread, GmailTokens, refreshAccessToken } from './gmail-auth';
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import {
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    collection,
+    query,
+    where,
+    getDocs,
+} from 'firebase/firestore';
 
 // ============================================
 // TOKEN MANAGEMENT
@@ -106,7 +115,7 @@ export function parseEmailHeaders(headers: { name: string; value: string }[]): {
     date: string;
 } {
     const getHeader = (name: string) =>
-        headers.find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+        headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value || '';
 
     return {
         from: getHeader('From'),
@@ -126,12 +135,15 @@ export function decodeBase64(data: string): string {
         // Gmail uses URL-safe base64 - convert to standard base64
         const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
         // Add padding if needed
-        const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
         // Use atob for browser compatibility (works in both Node 16+ and browsers)
         const decoded = atob(padded);
         // Handle UTF-8 encoding
         return decodeURIComponent(
-            decoded.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+            decoded
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
         );
     } catch (error) {
         console.warn('Base64 decoding failed:', error);
@@ -147,11 +159,11 @@ export function getEmailBody(message: GmailMessage): string {
 
     // Try to get from parts (multipart email)
     if (message.payload.parts) {
-        const textPart = message.payload.parts.find(p => p.mimeType === 'text/plain');
+        const textPart = message.payload.parts.find((p) => p.mimeType === 'text/plain');
         if (textPart?.body?.data) {
             return decodeBase64(textPart.body.data);
         }
-        const htmlPart = message.payload.parts.find(p => p.mimeType === 'text/html');
+        const htmlPart = message.payload.parts.find((p) => p.mimeType === 'text/html');
         if (htmlPart?.body?.data) {
             // Strip HTML tags for plain text
             return decodeBase64(htmlPart.body.data).replace(/<[^>]*>/g, '');
@@ -229,10 +241,7 @@ export async function syncEmailsForLead(
         emailRecords.push(record);
 
         // Save to Firebase
-        await setDoc(
-            doc(db, 'users', userId, 'emailMessages', message.id),
-            record
-        );
+        await setDoc(doc(db, 'users', userId, 'emailMessages', message.id), record);
     }
 
     return emailRecords;
@@ -247,7 +256,7 @@ export async function getLeadEmails(userId: string, leadId: string): Promise<Ema
     const q = query(emailsRef, where('leadId', '==', leadId));
     const snapshot = await getDocs(q);
 
-    const emails = snapshot.docs.map(doc => doc.data() as EmailRecord);
+    const emails = snapshot.docs.map((doc) => doc.data() as EmailRecord);
     return emails.sort((a, b) => b.timestamp - a.timestamp);
 }
 
@@ -279,7 +288,7 @@ export async function sendEmail(
         'Content-Type: text/plain; charset=utf-8',
         'MIME-Version: 1.0',
         '',
-        body
+        body,
     ].join('\r\n');
 
     // Base64 encode (URL-safe) - using btoa for browser compatibility
@@ -288,17 +297,14 @@ export async function sendEmail(
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 
-    const response = await fetch(
-        'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
-        {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ raw: encodedEmail }),
-        }
-    );
+    const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ raw: encodedEmail }),
+    });
 
     if (!response.ok) {
         const error = await response.text();

@@ -10,7 +10,7 @@ import {
     deleteDoc,
     query,
     where,
-    orderBy
+    orderBy,
 } from 'firebase/firestore';
 import { Lead, Activity, ActivityOutcome } from '@/types';
 
@@ -35,13 +35,13 @@ export const LeadsService = {
         const leadsRef = collection(db, 'users', userId, 'leads');
         const q = query(leadsRef, orderBy('updatedAt', 'desc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => {
+        return snapshot.docs.map((doc) => {
             const data = doc.data();
             return {
                 id: doc.id,
                 ...data,
                 // Clamp value to prevent overflow
-                value: safeLeadValue(data.value)
+                value: safeLeadValue(data.value),
             };
         }) as Lead[];
     },
@@ -55,14 +55,17 @@ export const LeadsService = {
     },
 
     // Create new lead
-    async createLead(userId: string, lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>): Promise<string> {
+    async createLead(
+        userId: string,
+        lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
+    ): Promise<string> {
         const leadsRef = collection(db, 'users', userId, 'leads');
         const now = Date.now();
         const docRef = await addDoc(leadsRef, {
             ...lead,
             assignedTo: userId,
             createdAt: now,
-            updatedAt: now
+            updatedAt: now,
         });
         return docRef.id;
     },
@@ -72,7 +75,7 @@ export const LeadsService = {
         const leadRef = doc(db, 'users', userId, 'leads', leadId);
         await updateDoc(leadRef, {
             ...updates,
-            updatedAt: Date.now()
+            updatedAt: Date.now(),
         });
     },
 
@@ -80,7 +83,7 @@ export const LeadsService = {
     async deleteLead(userId: string, leadId: string): Promise<void> {
         const leadRef = doc(db, 'users', userId, 'leads', leadId);
         await deleteDoc(leadRef);
-    }
+    },
 };
 
 // ============================================
@@ -93,24 +96,20 @@ export const ActivitiesService = {
         const activitiesRef = collection(db, 'users', userId, 'activities');
         const q = query(activitiesRef, orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.slice(0, limit).map(doc => ({
+        return snapshot.docs.slice(0, limit).map((doc) => ({
             id: doc.id,
-            ...doc.data()
+            ...doc.data(),
         })) as Activity[];
     },
 
     // Get activities for a specific lead
     async getLeadActivities(userId: string, leadId: string): Promise<Activity[]> {
         const activitiesRef = collection(db, 'users', userId, 'activities');
-        const q = query(
-            activitiesRef,
-            where('leadId', '==', leadId),
-            orderBy('timestamp', 'desc')
-        );
+        const q = query(activitiesRef, where('leadId', '==', leadId), orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
+        return snapshot.docs.map((doc) => ({
             id: doc.id,
-            ...doc.data()
+            ...doc.data(),
         })) as Activity[];
     },
 
@@ -119,14 +118,14 @@ export const ActivitiesService = {
         const activitiesRef = collection(db, 'users', userId, 'activities');
         const docRef = await addDoc(activitiesRef, {
             ...activity,
-            repId: userId
+            repId: userId,
         });
 
         // Update lead's lastContact if associated with a lead
         if (activity.leadId) {
             try {
                 await LeadsService.updateLead(userId, activity.leadId, {
-                    lastContact: activity.timestamp
+                    lastContact: activity.timestamp,
                 });
             } catch (e) {
                 console.warn('Could not update lead lastContact', e);
@@ -137,7 +136,13 @@ export const ActivitiesService = {
     },
 
     // Quick log helpers
-    async logCall(userId: string, leadId: string, outcome: ActivityOutcome, duration?: number, notes?: string): Promise<string> {
+    async logCall(
+        userId: string,
+        leadId: string,
+        outcome: ActivityOutcome,
+        duration?: number,
+        notes?: string
+    ): Promise<string> {
         return this.logActivity(userId, {
             type: 'call',
             outcome,
@@ -145,29 +150,39 @@ export const ActivitiesService = {
             duration,
             notes,
             timestamp: Date.now(),
-            repId: userId
+            repId: userId,
         });
     },
 
-    async logEmail(userId: string, leadId: string, subject: string, notes?: string): Promise<string> {
+    async logEmail(
+        userId: string,
+        leadId: string,
+        subject: string,
+        notes?: string
+    ): Promise<string> {
         return this.logActivity(userId, {
             type: 'email',
             outcome: 'none',
             leadId,
             notes: notes || `Email sent: ${subject}`,
             timestamp: Date.now(),
-            repId: userId
+            repId: userId,
         });
     },
 
-    async logMeeting(userId: string, leadId: string, outcome: ActivityOutcome, notes?: string): Promise<string> {
+    async logMeeting(
+        userId: string,
+        leadId: string,
+        outcome: ActivityOutcome,
+        notes?: string
+    ): Promise<string> {
         return this.logActivity(userId, {
             type: 'meeting',
             outcome,
             leadId,
             notes,
             timestamp: Date.now(),
-            repId: userId
+            repId: userId,
         });
     },
 
@@ -178,9 +193,9 @@ export const ActivitiesService = {
             leadId,
             notes: `Reply received: ${replyContent.substring(0, 200)}...`,
             timestamp: Date.now(),
-            repId: userId
+            repId: userId,
         });
-    }
+    },
 };
 
 // ============================================
@@ -203,15 +218,11 @@ export const EmailThreadsService = {
     // Get email threads for a lead
     async getEmailThreads(userId: string, leadId: string): Promise<EmailThread[]> {
         const threadsRef = collection(db, 'users', userId, 'emailThreads');
-        const q = query(
-            threadsRef,
-            where('leadId', '==', leadId),
-            orderBy('sentAt', 'desc')
-        );
+        const q = query(threadsRef, where('leadId', '==', leadId), orderBy('sentAt', 'desc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
+        return snapshot.docs.map((doc) => ({
             id: doc.id,
-            ...doc.data()
+            ...doc.data(),
         })) as EmailThread[];
     },
 
@@ -228,9 +239,9 @@ export const EmailThreadsService = {
         await updateDoc(threadRef, {
             status: 'replied',
             repliedAt: Date.now(),
-            replyContent
+            replyContent,
         });
-    }
+    },
 };
 
 // ============================================
@@ -241,72 +252,78 @@ export const DashboardService = {
     async getMetrics(userId: string) {
         const [leads, activities] = await Promise.all([
             LeadsService.getLeads(userId),
-            ActivitiesService.getActivities(userId, 100)
+            ActivitiesService.getActivities(userId, 100),
         ]);
 
         // Calculate metrics
         const now = Date.now();
-        const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
+        const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
         const todayStart = new Date().setHours(0, 0, 0, 0);
 
-        const weekActivities = activities.filter(a => a.timestamp > weekAgo);
-        const todayActivities = activities.filter(a => a.timestamp > todayStart);
+        const weekActivities = activities.filter((a) => a.timestamp > weekAgo);
+        const todayActivities = activities.filter((a) => a.timestamp > todayStart);
 
         // Aggregate activities by day for the chart
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const activityByDay = weekActivities.reduce((acc, activity) => {
-            const date = new Date(activity.timestamp);
-            const dayName = days[date.getDay()];
+        const activityByDay = weekActivities.reduce(
+            (acc, activity) => {
+                const date = new Date(activity.timestamp);
+                const dayName = days[date.getDay()];
 
-            if (!acc[dayName]) {
-                acc[dayName] = { day: dayName, dials: 0, connects: 0 };
-            }
-
-            if (activity.type === 'call') {
-                acc[dayName].dials++;
-                if (activity.outcome === 'connected' || activity.outcome === 'meeting_set') {
-                    acc[dayName].connects++;
+                if (!acc[dayName]) {
+                    acc[dayName] = { day: dayName, dials: 0, connects: 0 };
                 }
-            }
-            return acc;
-        }, {} as Record<string, { day: string; dials: number; connects: number }>);
+
+                if (activity.type === 'call') {
+                    acc[dayName].dials++;
+                    if (activity.outcome === 'connected' || activity.outcome === 'meeting_set') {
+                        acc[dayName].connects++;
+                    }
+                }
+                return acc;
+            },
+            {} as Record<string, { day: string; dials: number; connects: number }>
+        );
 
         // Ensure we have entries for all days in the last week (or at least today)
         // For simplicity in this chart, we might just show what we have or fill gaps.
         // Let's return the last 7 days in order.
         const chartData = [];
         for (let i = 6; i >= 0; i--) {
-            const d = new Date(now - (i * 24 * 60 * 60 * 1000));
+            const d = new Date(now - i * 24 * 60 * 60 * 1000);
             const dayName = days[d.getDay()];
             chartData.push(activityByDay[dayName] || { day: dayName, dials: 0, connects: 0 });
         }
 
         return {
             // Dials today
-            dials: todayActivities.filter(a => a.type === 'call').length,
+            dials: todayActivities.filter((a) => a.type === 'call').length,
 
             // Pipeline value (sum of all lead values)
             pipelineValue: leads.reduce((sum, l) => sum + (l.value || 0), 0),
 
             // Meetings this week
-            meetingsHeld: weekActivities.filter(a => a.type === 'meeting').length,
+            meetingsHeld: weekActivities.filter((a) => a.type === 'meeting').length,
 
             // Pipeline status counts
-            pipelineStatusCounts: leads.reduce((acc, lead) => {
-                acc[lead.status] = (acc[lead.status] || 0) + 1;
-                return acc;
-            }, {} as Record<string, number>),
+            pipelineStatusCounts: leads.reduce(
+                (acc, lead) => {
+                    acc[lead.status] = (acc[lead.status] || 0) + 1;
+                    return acc;
+                },
+                {} as Record<string, number>
+            ),
 
             // Total leads
             totalLeads: leads.length,
 
             // Emails sent this week
-            emailsSent: weekActivities.filter(a => a.type === 'email').length,
+            emailsSent: weekActivities.filter((a) => a.type === 'email').length,
 
             // Chart data
-            activityChart: chartData
+            activityChart: chartData,
         };
-    }
+    },
 };
 
 // ============================================
@@ -351,13 +368,17 @@ export const ProfileService = {
     async updateProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
         const profileRef = doc(db, 'users', userId);
         const now = Date.now();
-        await setDoc(profileRef, {
-            ...data,
-            updatedAt: now
-        }, { merge: true });
+        await setDoc(
+            profileRef,
+            {
+                ...data,
+                updatedAt: now,
+            },
+            { merge: true }
+        );
     },
 
     async setOnboarded(userId: string): Promise<void> {
         await this.updateProfile(userId, { onboarded: true });
-    }
+    },
 };

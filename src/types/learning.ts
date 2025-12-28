@@ -28,7 +28,7 @@ export interface Lesson {
     duration: string; // e.g. "5 min"
     content: VideoContent | SlideContent | QuizContent | ExternalContent;
     isCompleted?: boolean; // Runtime state
-    isLocked?: boolean;    // Runtime state
+    isLocked?: boolean; // Runtime state
 }
 
 export interface VideoContent {

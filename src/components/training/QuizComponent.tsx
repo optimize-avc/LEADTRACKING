@@ -27,13 +27,13 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
         setIsAnswered(true);
 
         if (index === question.correctOptionIndex) {
-            setScore(s => s + 1);
+            setScore((s) => s + 1);
         }
     };
 
     const handleNext = () => {
         if (currentQuestionIndex < content.questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
+            setCurrentQuestionIndex((prev) => prev + 1);
             setSelectedOption(null);
             setIsAnswered(false);
         } else {
@@ -43,7 +43,9 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
 
     const finishQuiz = () => {
         setShowResults(true);
-        const finalScore = Math.round(((score + (isCorrect ? 0 : 0)) / content.questions.length) * 100); // Wait, score is already updated? No, state update allows reading reliable next step.
+        const finalScore = Math.round(
+            ((score + (isCorrect ? 0 : 0)) / content.questions.length) * 100
+        ); // Wait, score is already updated? No, state update allows reading reliable next step.
         // Actually, let's recalculate based on current state knowing we passed previous step
         const calculateScore = Math.round((score / content.questions.length) * 100);
 
@@ -51,7 +53,7 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
             confetti({
                 particleCount: 150,
                 spread: 70,
-                origin: { y: 0.6 }
+                origin: { y: 0.6 },
             });
         }
         onComplete(calculateScore);
@@ -63,19 +65,27 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
 
         return (
             <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-fade-in-up">
-                <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-2xl ${passed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}>
+                <div
+                    className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-2xl ${passed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}
+                >
                     {passed ? <Trophy size={48} /> : <AlertCircle size={48} />}
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-2">{passed ? 'Quiz Passed!' : 'Needs Improvement'}</h2>
+                <h2 className="text-3xl font-bold text-white mb-2">
+                    {passed ? 'Quiz Passed!' : 'Needs Improvement'}
+                </h2>
                 <p className="text-slate-400 mb-8 max-w-md">
                     {passed
                         ? 'Great job demonstrating your knowledge. You have officially completed this module.'
                         : 'You did not meet the passing score for this quiz. Review the material and try again to earn your XP.'}
                 </p>
 
-                <div className="text-6xl font-black text-white mb-2 tracking-tighter">{percentage}%</div>
-                <div className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-10">Final Score</div>
+                <div className="text-6xl font-black text-white mb-2 tracking-tighter">
+                    {percentage}%
+                </div>
+                <div className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-10">
+                    Final Score
+                </div>
 
                 <div className="flex gap-4">
                     {!passed && (
@@ -126,15 +136,17 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
 
                 <div className="p-4 space-y-3">
                     {question.options.map((option, index) => {
-                        let statusClass = "border-white/5 hover:bg-white/5 hover:border-white/20 text-slate-300"; // Default
+                        let statusClass =
+                            'border-white/5 hover:bg-white/5 hover:border-white/20 text-slate-300'; // Default
 
                         if (isAnswered) {
                             if (index === question.correctOptionIndex) {
-                                statusClass = "bg-emerald-500/20 border-emerald-500/50 text-emerald-100 ring-1 ring-emerald-500/50";
+                                statusClass =
+                                    'bg-emerald-500/20 border-emerald-500/50 text-emerald-100 ring-1 ring-emerald-500/50';
                             } else if (index === selectedOption) {
-                                statusClass = "bg-red-500/20 border-red-500/50 text-red-100";
+                                statusClass = 'bg-red-500/20 border-red-500/50 text-red-100';
                             } else {
-                                statusClass = "opacity-50 border-transparent";
+                                statusClass = 'opacity-50 border-transparent';
                             }
                         }
 
@@ -149,9 +161,11 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
                                 {isAnswered && index === question.correctOptionIndex && (
                                     <CheckCircle className="text-emerald-400" size={20} />
                                 )}
-                                {isAnswered && index === selectedOption && index !== question.correctOptionIndex && (
-                                    <XCircle className="text-red-400" size={20} />
-                                )}
+                                {isAnswered &&
+                                    index === selectedOption &&
+                                    index !== question.correctOptionIndex && (
+                                        <XCircle className="text-red-400" size={20} />
+                                    )}
                             </button>
                         );
                     })}
@@ -166,11 +180,19 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
                             className={`p-6 border-t ${isCorrect ? 'bg-emerald-900/20 border-emerald-500/20' : 'bg-red-900/20 border-red-500/20'}`}
                         >
                             <div className="flex items-start gap-4 mb-6">
-                                <div className={`mt-1 p-2 rounded-full ${isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                                    {isCorrect ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
+                                <div
+                                    className={`mt-1 p-2 rounded-full ${isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}
+                                >
+                                    {isCorrect ? (
+                                        <CheckCircle size={24} />
+                                    ) : (
+                                        <AlertCircle size={24} />
+                                    )}
                                 </div>
                                 <div>
-                                    <h4 className={`font-bold mb-1 ${isCorrect ? 'text-emerald-300' : 'text-red-300'}`}>
+                                    <h4
+                                        className={`font-bold mb-1 ${isCorrect ? 'text-emerald-300' : 'text-red-300'}`}
+                                    >
                                         {isCorrect ? 'Correct!' : 'Incorrect'}
                                     </h4>
                                     <p className="text-slate-300 leading-relaxed text-sm">
@@ -184,7 +206,9 @@ export function QuizComponent({ content, onComplete }: QuizComponentProps) {
                                     onClick={handleNext}
                                     className="px-8 py-3 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-lg shadow-white/10"
                                 >
-                                    {currentQuestionIndex === content.questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                                    {currentQuestionIndex === content.questions.length - 1
+                                        ? 'Finish Quiz'
+                                        : 'Next Question'}
                                 </button>
                             </div>
                         </motion.div>

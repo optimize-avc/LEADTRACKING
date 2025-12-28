@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Mic, Send, User, Bot, AlertCircle, CheckCircle, RefreshCw, Loader2, Database, FileText } from 'lucide-react';
+import {
+    X,
+    Mic,
+    Send,
+    User,
+    Bot,
+    AlertCircle,
+    CheckCircle,
+    RefreshCw,
+    Loader2,
+    Database,
+    FileText,
+} from 'lucide-react';
 import { GeminiService } from '@/lib/ai/gemini';
 import { ResourcesService } from '@/lib/firebase/resources';
 import { Resource } from '@/types';
@@ -26,13 +38,13 @@ type Message = {
 
 // Default persona if generation fails
 const DEFAULT_PERSONA: AIPersona = {
-    name: "Marcus Steele",
-    role: "CFO",
-    company: "Nexus Financial",
-    personality: "Direct, skeptical, focused on bottom-line ROI. Impatient with fluff.",
-    painPoints: ["Rising operational costs", "Vendor sprawl"],
-    hiddenAgenda: "Looking to cut 10% of budget to meet Q4 targets",
-    objections: ["Price is too high", "Timing isn't right"]
+    name: 'Marcus Steele',
+    role: 'CFO',
+    company: 'Nexus Financial',
+    personality: 'Direct, skeptical, focused on bottom-line ROI. Impatient with fluff.',
+    painPoints: ['Rising operational costs', 'Vendor sprawl'],
+    hiddenAgenda: 'Looking to cut 10% of budget to meet Q4 targets',
+    objections: ['Price is too high', "Timing isn't right"],
 };
 
 export function DojoRunner({ onClose }: DojoRunnerProps) {
@@ -48,7 +60,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
     const [resources, setResources] = useState<Resource[]>([]);
     const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
     const [loadingResources, setLoadingResources] = useState(false);
-    const [contextContent, setContextContent] = useState<string>("");
+    const [contextContent, setContextContent] = useState<string>('');
 
     const chatEndRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
@@ -66,7 +78,13 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                 const allData = [...companyData, ...userData];
 
                 // Filter for likely text-based files
-                const textBased = allData.filter(r => r.type === 'document' || r.type === 'sheet' || r.title.endsWith('.txt') || r.title.endsWith('.md'));
+                const textBased = allData.filter(
+                    (r) =>
+                        r.type === 'document' ||
+                        r.type === 'sheet' ||
+                        r.title.endsWith('.txt') ||
+                        r.title.endsWith('.md')
+                );
                 setResources(textBased);
             } catch (err) {
                 console.error(err);
@@ -84,37 +102,51 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
 
         try {
             // 1. Fetch text if selected
-            let content = "";
+            let content = '';
             if (selectedResourceId) {
-                const res = resources.find(r => r.id === selectedResourceId);
+                const res = resources.find((r) => r.id === selectedResourceId);
                 if (res?.url) {
                     try {
                         const response = await fetch(res.url);
                         content = await response.text();
                         setContextContent(content); // Save for replies
-                    } catch (e) { console.error(e); }
+                    } catch (e) {
+                        console.error(e);
+                    }
                 }
             }
 
             // 2. Generate Persona
             const token = await user?.getIdToken();
-            const newPersona = await GeminiService.generatePersona("CFO", "SaaS Tech", content, token);
+            const newPersona = await GeminiService.generatePersona(
+                'CFO',
+                'SaaS Tech',
+                content,
+                token
+            );
             const activePersona = newPersona || DEFAULT_PERSONA;
 
             setPersona(activePersona);
 
             // 3. Greeting
-            const greeting = await GeminiService.generateReply(activePersona, [], "Start the conversation by stating your main objection immediately.", content, token);
+            const greeting = await GeminiService.generateReply(
+                activePersona,
+                [],
+                'Start the conversation by stating your main objection immediately.',
+                content,
+                token
+            );
 
-            setMessages([{
-                id: 'welcome',
-                sender: 'ai',
-                text: greeting,
-                timestamp: Date.now()
-            }]);
-
+            setMessages([
+                {
+                    id: 'welcome',
+                    sender: 'ai',
+                    text: greeting,
+                    timestamp: Date.now(),
+                },
+            ]);
         } catch (error) {
-            console.error("Failed to init Dojo", error);
+            console.error('Failed to init Dojo', error);
             setPersona(DEFAULT_PERSONA);
         } finally {
             setLoadingPersona(false);
@@ -136,21 +168,27 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
             timestamp: Date.now(),
         };
 
-        setMessages(prev => [...prev, newUserMsg]);
+        setMessages((prev) => [...prev, newUserMsg]);
         setInputText('');
         setIsTyping(true);
 
         try {
             // Convert current messages to history format
-            const history = messages.map(m => ({
+            const history = messages.map((m) => ({
                 role: m.sender,
-                content: m.text
+                content: m.text,
             }));
 
             // Add latest user message to context implicitly or explicitly
             // Add latest user message to context implicitly or explicitly
             const token = await user?.getIdToken();
-            const aiResponseText = await GeminiService.generateReply(persona, history, newUserMsg.text, contextContent, token);
+            const aiResponseText = await GeminiService.generateReply(
+                persona,
+                history,
+                newUserMsg.text,
+                contextContent,
+                token
+            );
 
             const newAiMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -162,12 +200,12 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                     empathy: Math.floor(Math.random() * 20) + 70,
                     clarity: Math.floor(Math.random() * 20) + 75,
                     confidence: Math.floor(Math.random() * 20) + 80,
-                }
+                },
             };
 
-            setMessages(prev => [...prev, newAiMsg]);
+            setMessages((prev) => [...prev, newAiMsg]);
         } catch (error) {
-            console.error("AI Reply Failed", error);
+            console.error('AI Reply Failed', error);
         } finally {
             setIsTyping(false);
         }
@@ -186,49 +224,75 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                 <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
-                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white">
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-slate-500 hover:text-white"
+                    >
                         <X className="w-6 h-6" />
                     </button>
 
                     <div className="mb-8">
                         <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                            <span className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400"><Bot className="w-6 h-6" /></span>
+                            <span className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
+                                <Bot className="w-6 h-6" />
+                            </span>
                             Dojo Setup
                         </h2>
-                        <p className="text-slate-400">Configure your sparring partner. Upload enablement docs to practice against real objections.</p>
+                        <p className="text-slate-400">
+                            Configure your sparring partner. Upload enablement docs to practice
+                            against real objections.
+                        </p>
                     </div>
 
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">Enablement Context (Optional)</label>
+                            <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">
+                                Enablement Context (Optional)
+                            </label>
 
                             {loadingResources ? (
                                 <div className="flex items-center gap-2 text-slate-500 p-4 border border-dashed border-slate-800 rounded-lg">
-                                    <Loader2 className="w-4 h-4 animate-spin" /> Loading resources...
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Loading
+                                    resources...
                                 </div>
                             ) : resources.length === 0 ? (
                                 <div className="p-4 border border-dashed border-slate-800 rounded-lg text-slate-500 text-sm text-center">
-                                    No text-based resources found. Upload documents in the Resources tab.
+                                    No text-based resources found. Upload documents in the Resources
+                                    tab.
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                                    {resources.map(res => (
+                                    {resources.map((res) => (
                                         <div
                                             key={res.id}
-                                            onClick={() => setSelectedResourceId(selectedResourceId === res.id ? null : res.id)}
+                                            onClick={() =>
+                                                setSelectedResourceId(
+                                                    selectedResourceId === res.id ? null : res.id
+                                                )
+                                            }
                                             className={`
                                                 p-3 rounded-lg border cursor-pointer transition-all flex items-center gap-3
-                                                ${selectedResourceId === res.id
-                                                    ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]'
-                                                    : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800 hover:border-slate-600'}
+                                                ${
+                                                    selectedResourceId === res.id
+                                                        ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]'
+                                                        : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800 hover:border-slate-600'
+                                                }
                                             `}
                                         >
-                                            <FileText className={`w-5 h-5 ${selectedResourceId === res.id ? 'text-indigo-400' : 'text-slate-500'}`} />
+                                            <FileText
+                                                className={`w-5 h-5 ${selectedResourceId === res.id ? 'text-indigo-400' : 'text-slate-500'}`}
+                                            />
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-medium truncate text-sm">{res.title}</div>
-                                                <div className="text-xs opacity-60 truncate">{res.category}</div>
+                                                <div className="font-medium truncate text-sm">
+                                                    {res.title}
+                                                </div>
+                                                <div className="text-xs opacity-60 truncate">
+                                                    {res.category}
+                                                </div>
                                             </div>
-                                            {selectedResourceId === res.id && <CheckCircle className="w-4 h-4 text-indigo-400" />}
+                                            {selectedResourceId === res.id && (
+                                                <CheckCircle className="w-4 h-4 text-indigo-400" />
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -236,7 +300,10 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                         </div>
 
                         <div className="pt-6 border-t border-slate-800 flex justify-end gap-3">
-                            <button onClick={onClose} className="px-6 py-3 rounded-lg text-slate-400 font-medium hover:text-white transition-colors">
+                            <button
+                                onClick={onClose}
+                                className="px-6 py-3 rounded-lg text-slate-400 font-medium hover:text-white transition-colors"
+                            >
                                 Cancel
                             </button>
                             <button
@@ -259,7 +326,9 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                 <div className="flex flex-col items-center gap-4 text-white">
                     <Loader2 size={48} className="animate-spin text-indigo-500" />
                     <div className="text-xl font-bold animate-pulse">Summoning Prospect...</div>
-                    <div className="text-sm text-slate-400">Generative AI is creating a unique persona</div>
+                    <div className="text-sm text-slate-400">
+                        Generative AI is creating a unique persona
+                    </div>
                 </div>
             </div>
         );
@@ -268,7 +337,6 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
     return (
         <div className="fixed inset-0 left-64 z-50 flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
             <div className="w-full max-w-5xl h-[90vh] flex gap-6">
-
                 {/* Main Chat Area */}
                 <div className="flex-1 glass-card flex flex-col p-0 overflow-hidden relative">
                     {/* Header */}
@@ -285,7 +353,10 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                                 </div>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors">
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"
+                        >
                             <X size={20} />
                         </button>
                     </div>
@@ -304,20 +375,31 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                         </div>
 
                         {messages.map((msg) => (
-                            <div key={msg.id} className={`flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-                                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${msg.sender === 'user'
-                                    ? 'bg-fuchsia-600 text-white'
-                                    : 'bg-indigo-600 text-white'
-                                    }`}>
+                            <div
+                                key={msg.id}
+                                className={`flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+                            >
+                                <div
+                                    className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
+                                        msg.sender === 'user'
+                                            ? 'bg-fuchsia-600 text-white'
+                                            : 'bg-indigo-600 text-white'
+                                    }`}
+                                >
                                     {msg.sender === 'user' ? <User size={14} /> : <Bot size={14} />}
                                 </div>
 
                                 <div className={`max-w-[70%] space-y-2`}>
-                                    <div className={`p-4 rounded-2xl ${msg.sender === 'user'
-                                        ? 'bg-fuchsia-600/20 border border-fuchsia-500/30 text-white rounded-tr-none'
-                                        : 'bg-indigo-600/20 border border-indigo-500/30 text-slate-100 rounded-tl-none'
-                                        }`}>
-                                        <p className="leading-relaxed text-sm md:text-base">{msg.text}</p>
+                                    <div
+                                        className={`p-4 rounded-2xl ${
+                                            msg.sender === 'user'
+                                                ? 'bg-fuchsia-600/20 border border-fuchsia-500/30 text-white rounded-tr-none'
+                                                : 'bg-indigo-600/20 border border-indigo-500/30 text-slate-100 rounded-tl-none'
+                                        }`}
+                                    >
+                                        <p className="leading-relaxed text-sm md:text-base">
+                                            {msg.text}
+                                        </p>
                                     </div>
 
                                     {/* Score Feedback */}
@@ -354,10 +436,11 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                     <div className="p-4 bg-slate-900/50 border-t border-white/10">
                         <div className="flex gap-2">
                             <button
-                                className={`p-3 rounded-xl border border-slate-700 transition-colors ${isRecording
-                                    ? 'bg-red-500/20 border-red-500/50 text-red-500 animate-pulse'
-                                    : 'hover:bg-slate-800 text-slate-400 hover:text-white'
-                                    }`}
+                                className={`p-3 rounded-xl border border-slate-700 transition-colors ${
+                                    isRecording
+                                        ? 'bg-red-500/20 border-red-500/50 text-red-500 animate-pulse'
+                                        : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                                }`}
                                 onClick={() => setIsRecording(!isRecording)}
                             >
                                 <Mic size={20} />
@@ -395,7 +478,9 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
 
                     <div className="space-y-6">
                         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                            <div className="text-xs font-bold text-slate-400 uppercase mb-2">Current Tone</div>
+                            <div className="text-xs font-bold text-slate-400 uppercase mb-2">
+                                Current Tone
+                            </div>
                             <div className="flex items-center gap-2 text-emerald-400 font-semibold">
                                 <CheckCircle size={16} /> Calm & Assertive
                             </div>
@@ -424,17 +509,31 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                         <div className="mt-8">
                             <h4 className="font-bold text-white text-sm mb-3">AI Suggestions</h4>
                             <div className="space-y-2">
-                                <button onClick={() => setInputText("It sounds like budget is a major concern specifically for Q4.")} className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all">
+                                <button
+                                    onClick={() =>
+                                        setInputText(
+                                            'It sounds like budget is a major concern specifically for Q4.'
+                                        )
+                                    }
+                                    className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all"
+                                >
                                     &ldquo;It sounds like budget is a major concern...&rdquo;
                                 </button>
-                                <button onClick={() => setInputText("What if we structured this to start billing in January?")} className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all">
-                                    &ldquo;What if we structured this to start billing in Jan?&rdquo;
+                                <button
+                                    onClick={() =>
+                                        setInputText(
+                                            'What if we structured this to start billing in January?'
+                                        )
+                                    }
+                                    className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all"
+                                >
+                                    &ldquo;What if we structured this to start billing in
+                                    Jan?&rdquo;
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     );

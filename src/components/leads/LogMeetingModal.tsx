@@ -29,7 +29,13 @@ const MEETING_OUTCOMES: { value: ActivityOutcome; label: string; statusUpdate?: 
 
 const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120];
 
-export function LogMeetingModal({ lead, userId, isOpen, onClose, onSuccess }: LogMeetingModalProps) {
+export function LogMeetingModal({
+    lead,
+    userId,
+    isOpen,
+    onClose,
+    onSuccess,
+}: LogMeetingModalProps) {
     const [meetingType, setMeetingType] = useState('video');
     const [duration, setDuration] = useState(30);
     const [outcome, setOutcome] = useState<ActivityOutcome>('qualified');
@@ -66,13 +72,13 @@ export function LogMeetingModal({ lead, userId, isOpen, onClose, onSuccess }: Lo
                 duration: duration * 60, // Convert to seconds
                 notes: `${meetingType.toUpperCase()} meeting. ${notes}`,
                 timestamp,
-                repId: userId
+                repId: userId,
             });
 
             // Update lead based on outcome
-            const selectedOutcome = MEETING_OUTCOMES.find(o => o.value === outcome);
+            const selectedOutcome = MEETING_OUTCOMES.find((o) => o.value === outcome);
             const updates: Partial<Lead> = {
-                lastContact: Date.now()
+                lastContact: Date.now(),
             };
 
             if (selectedOutcome?.statusUpdate) {
@@ -109,7 +115,9 @@ export function LogMeetingModal({ lead, userId, isOpen, onClose, onSuccess }: Lo
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white">Log Meeting</h2>
-                            <p className="text-sm text-slate-400">{lead.companyName} • {lead.contactName}</p>
+                            <p className="text-sm text-slate-400">
+                                {lead.companyName} • {lead.contactName}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -146,10 +154,11 @@ export function LogMeetingModal({ lead, userId, isOpen, onClose, onSuccess }: Lo
                                 <button
                                     key={type.value}
                                     onClick={() => setMeetingType(type.value)}
-                                    className={`flex-1 p-3 rounded-lg border text-center transition-all ${meetingType === type.value
+                                    className={`flex-1 p-3 rounded-lg border text-center transition-all ${
+                                        meetingType === type.value
                                             ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
                                             : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
-                                        }`}
+                                    }`}
                                 >
                                     <div className="text-xl mb-1">{type.icon}</div>
                                     <div className="text-xs">{type.label}</div>
@@ -166,10 +175,11 @@ export function LogMeetingModal({ lead, userId, isOpen, onClose, onSuccess }: Lo
                                 <button
                                     key={mins}
                                     onClick={() => setDuration(mins)}
-                                    className={`px-4 py-2 rounded-lg border text-sm transition-all ${duration === mins
+                                    className={`px-4 py-2 rounded-lg border text-sm transition-all ${
+                                        duration === mins
                                             ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
                                             : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
-                                        }`}
+                                    }`}
                                 >
                                     {mins} min
                                 </button>
@@ -186,7 +196,9 @@ export function LogMeetingModal({ lead, userId, isOpen, onClose, onSuccess }: Lo
                             className="glass-input w-full bg-slate-900"
                         >
                             {MEETING_OUTCOMES.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
+                                <option key={o.value} value={o.value}>
+                                    {o.label}
+                                </option>
                             ))}
                         </select>
                     </div>

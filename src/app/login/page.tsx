@@ -23,9 +23,12 @@ export default function LoginPage() {
             router.push('/');
         } catch (error: unknown) {
             const authError = error as { code?: string; message?: string };
-            toast.error(authError.message || "Login failed");
+            toast.error(authError.message || 'Login failed');
             // Ignore if user closed the popup
-            if (authError.code === 'auth/popup-closed-by-user' || authError.message?.includes('closed-by-user')) {
+            if (
+                authError.code === 'auth/popup-closed-by-user' ||
+                authError.message?.includes('closed-by-user')
+            ) {
                 return;
             }
             console.error('Sign in error:', error);
@@ -98,13 +101,16 @@ export default function LoginPage() {
                     {/* Demo Mode Notice */}
                     <div className="mt-6 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
                         <p className="text-sm text-slate-400 text-center">
-                            <span className="text-amber-400">💡 Tip:</span> Use your Google account to get started instantly.
+                            <span className="text-amber-400">💡 Tip:</span> Use your Google account
+                            to get started instantly.
                         </p>
                     </div>
 
                     {/* Features Preview */}
                     <div className="mt-8 pt-6 border-t border-slate-700">
-                        <p className="text-xs text-slate-500 text-center mb-4">WHAT YOU&apos;LL GET ACCESS TO</p>
+                        <p className="text-xs text-slate-500 text-center mb-4">
+                            WHAT YOU&apos;LL GET ACCESS TO
+                        </p>
                         <div className="grid grid-cols-2 gap-3">
                             {[
                                 { icon: '📊', label: 'Lead Pipeline' },

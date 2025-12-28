@@ -31,6 +31,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: session.url });
     } catch (error: unknown) {
         console.error('Portal Error:', error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : 'Portal failed' }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'Portal failed' },
+            { status: 500 }
+        );
     }
 }

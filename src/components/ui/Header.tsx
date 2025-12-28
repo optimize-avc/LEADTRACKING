@@ -4,7 +4,16 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../providers/AuthProvider';
-import { Menu, X, ChevronRight, LogOut, LayoutDashboard, Database, Activity, BookOpen } from 'lucide-react';
+import {
+    Menu,
+    X,
+    ChevronRight,
+    LogOut,
+    LayoutDashboard,
+    Database,
+    Activity,
+    BookOpen,
+} from 'lucide-react';
 
 export function Header() {
     const { user, signInWithGoogle, logout } = useAuth();
@@ -35,10 +44,11 @@ export function Header() {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${scrolled
-                ? 'bg-[#020617]/80 backdrop-blur-xl border-white/5 shadow-2xl py-3'
-                : 'bg-transparent border-transparent py-5'
-                }`}
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+                scrolled
+                    ? 'bg-[#020617]/80 backdrop-blur-xl border-white/5 shadow-2xl py-3'
+                    : 'bg-transparent border-transparent py-5'
+            }`}
         >
             <div className="max-w-7xl mx-auto px-6 h-12 flex items-center justify-between">
                 {/* Logo Area */}
@@ -55,10 +65,18 @@ export function Header() {
                     {/* Desktop Navigation */}
                     <nav className="desktop-nav-container hidden md:flex items-center h-full">
                         <div className="flex items-center p-1.5 rounded-full border border-white/5 bg-white/5 backdrop-blur-md shadow-inner">
-                            <NavLink href="/" active={pathname === '/'}>Dashboard</NavLink>
-                            <NavLink href="/leads" active={pathname.startsWith('/leads')}>Leads</NavLink>
-                            <NavLink href="/activities" active={pathname.startsWith('/activities')}>Activities</NavLink>
-                            <NavLink href="/resources" active={pathname.startsWith('/resources')}>Enablement</NavLink>
+                            <NavLink href="/" active={pathname === '/'}>
+                                Dashboard
+                            </NavLink>
+                            <NavLink href="/leads" active={pathname.startsWith('/leads')}>
+                                Leads
+                            </NavLink>
+                            <NavLink href="/activities" active={pathname.startsWith('/activities')}>
+                                Activities
+                            </NavLink>
+                            <NavLink href="/resources" active={pathname.startsWith('/resources')}>
+                                Enablement
+                            </NavLink>
                         </div>
                     </nav>
                 </div>
@@ -68,8 +86,12 @@ export function Header() {
                     {user ? (
                         <div className="flex items-center gap-4 pl-6 border-l border-white/10">
                             <div className="text-right">
-                                <div className="text-sm font-medium text-white">{user.displayName || 'User'}</div>
-                                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Workspace</div>
+                                <div className="text-sm font-medium text-white">
+                                    {user.displayName || 'User'}
+                                </div>
+                                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                                    Workspace
+                                </div>
                             </div>
                             <button
                                 onClick={logout}
@@ -86,7 +108,9 @@ export function Header() {
                                         />
                                     </div>
                                 ) : (
-                                    <span className="font-bold text-slate-300">{user.displayName?.[0] || 'U'}</span>
+                                    <span className="font-bold text-slate-300">
+                                        {user.displayName?.[0] || 'U'}
+                                    </span>
                                 )}
                                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full"></span>
                             </button>
@@ -120,12 +144,38 @@ export function Header() {
             </div>
 
             {/* Mobile Menu Overlay */}
-            <div className={`fixed inset-0 bg-[#020617]/95 backdrop-blur-2xl z-40 transition-all duration-300 md:hidden flex flex-col pt-24 px-6 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div
+                className={`fixed inset-0 bg-[#020617]/95 backdrop-blur-2xl z-40 transition-all duration-300 md:hidden flex flex-col pt-24 px-6 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+            >
                 <nav className="flex flex-col gap-2">
-                    <MobileNavLink href="/" active={pathname === '/'} icon={<LayoutDashboard size={20} />}>Dashboard</MobileNavLink>
-                    <MobileNavLink href="/leads" active={pathname.startsWith('/leads')} icon={<Database size={20} />}>Leads Pipeline</MobileNavLink>
-                    <MobileNavLink href="/activities" active={pathname.startsWith('/activities')} icon={<Activity size={20} />}>Activities</MobileNavLink>
-                    <MobileNavLink href="/resources" active={pathname.startsWith('/resources')} icon={<BookOpen size={20} />}>Enablement & Resources</MobileNavLink>
+                    <MobileNavLink
+                        href="/"
+                        active={pathname === '/'}
+                        icon={<LayoutDashboard size={20} />}
+                    >
+                        Dashboard
+                    </MobileNavLink>
+                    <MobileNavLink
+                        href="/leads"
+                        active={pathname.startsWith('/leads')}
+                        icon={<Database size={20} />}
+                    >
+                        Leads Pipeline
+                    </MobileNavLink>
+                    <MobileNavLink
+                        href="/activities"
+                        active={pathname.startsWith('/activities')}
+                        icon={<Activity size={20} />}
+                    >
+                        Activities
+                    </MobileNavLink>
+                    <MobileNavLink
+                        href="/resources"
+                        active={pathname.startsWith('/resources')}
+                        icon={<BookOpen size={20} />}
+                    >
+                        Enablement & Resources
+                    </MobileNavLink>
                 </nav>
 
                 <div className="mt-8 pt-8 border-t border-white/10">
@@ -143,11 +193,15 @@ export function Header() {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">{user.displayName?.[0] || 'U'}</div>
+                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">
+                                            {user.displayName?.[0] || 'U'}
+                                        </div>
                                     )}
                                 </div>
                                 <div>
-                                    <div className="font-medium text-white text-lg">{user.displayName || 'User'}</div>
+                                    <div className="font-medium text-white text-lg">
+                                        {user.displayName || 'User'}
+                                    </div>
                                     <div className="text-sm text-slate-400">{user.email}</div>
                                 </div>
                             </div>
@@ -155,7 +209,9 @@ export function Header() {
                                 onClick={logout}
                                 className="w-full h-12 rounded-xl border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors text-sm font-semibold uppercase tracking-wider"
                             >
-                                <span className="flex items-center gap-3 font-medium"><LogOut size={18} /> Sign Out</span>
+                                <span className="flex items-center gap-3 font-medium">
+                                    <LogOut size={18} /> Sign Out
+                                </span>
                             </button>
                         </div>
                     ) : (
@@ -183,16 +239,21 @@ export function Header() {
     );
 }
 
-function NavLink({ href, children, active }: { href: string; children: React.ReactNode; active?: boolean }) {
+function NavLink({
+    href,
+    children,
+    active,
+}: {
+    href: string;
+    children: React.ReactNode;
+    active?: boolean;
+}) {
     return (
         <Link
             href={href}
             className={`
                 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 relative z-10
-                ${active
-                    ? 'text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }
+                ${active ? 'text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}
             `}
         >
             {children}
@@ -203,15 +264,26 @@ function NavLink({ href, children, active }: { href: string; children: React.Rea
     );
 }
 
-function MobileNavLink({ href, children, active, icon }: { href: string; children: React.ReactNode; active?: boolean; icon: React.ReactNode }) {
+function MobileNavLink({
+    href,
+    children,
+    active,
+    icon,
+}: {
+    href: string;
+    children: React.ReactNode;
+    active?: boolean;
+    icon: React.ReactNode;
+}) {
     return (
         <Link
             href={href}
             className={`
                 flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 border
-                ${active
-                    ? 'bg-primary/10 border-primary/20 text-white shadow-lg shadow-primary/10'
-                    : 'bg-transparent border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
+                ${
+                    active
+                        ? 'bg-primary/10 border-primary/20 text-white shadow-lg shadow-primary/10'
+                        : 'bg-transparent border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
                 }
             `}
         >

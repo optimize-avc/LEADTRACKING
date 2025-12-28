@@ -52,7 +52,10 @@ Rules:
     try {
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const cleanText = text
+            .replace(/```json\n?/g, '')
+            .replace(/```\n?/g, '')
+            .trim();
         return JSON.parse(cleanText);
     } catch (error) {
         console.error('Email analysis failed:', error);
@@ -82,7 +85,7 @@ export async function analyzeEmailThread(emails: EmailRecord[]): Promise<{
 
     const threadContent = emails
         .sort((a, b) => a.timestamp - b.timestamp)
-        .map(e => `[${e.direction.toUpperCase()}] ${e.subject}\n${e.body.substring(0, 500)}`)
+        .map((e) => `[${e.direction.toUpperCase()}] ${e.subject}\n${e.body.substring(0, 500)}`)
         .join('\n\n---\n\n');
 
     const prompt = `Analyze this email thread between a sales rep and prospect.
@@ -108,7 +111,10 @@ Consider:
     try {
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const cleanText = text
+            .replace(/```json\n?/g, '')
+            .replace(/```\n?/g, '')
+            .trim();
         return JSON.parse(cleanText);
     } catch (error) {
         console.error('Thread analysis failed:', error);
@@ -125,7 +131,10 @@ Consider:
 /**
  * Generate a reply suggestion based on the email thread
  */
-export async function suggestReply(emails: EmailRecord[], customContext?: string): Promise<{
+export async function suggestReply(
+    emails: EmailRecord[],
+    customContext?: string
+): Promise<{
     subject: string;
     body: string;
 }> {
@@ -139,7 +148,7 @@ export async function suggestReply(emails: EmailRecord[], customContext?: string
     const lastEmail = emails[0];
     const threadContext = emails
         .slice(0, 5)
-        .map(e => `[${e.direction}] ${e.body.substring(0, 300)}`)
+        .map((e) => `[${e.direction}] ${e.body.substring(0, 300)}`)
         .join('\n\n');
 
     const prompt = `Generate a reply to this email thread.
@@ -163,7 +172,10 @@ Keep the reply:
     try {
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const cleanText = text
+            .replace(/```json\n?/g, '')
+            .replace(/```\n?/g, '')
+            .trim();
         return JSON.parse(cleanText);
     } catch (error) {
         console.error('Reply suggestion failed:', error);

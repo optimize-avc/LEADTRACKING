@@ -15,7 +15,10 @@ export default function NotFound() {
                 <h2 className="text-3xl font-bold text-white mb-2">Page Not Found</h2>
                 <div className="text-violet-400 font-medium mb-4">Error 404</div>
 
-                <p className="text-slate-400 mb-8 max-w-md mx-auto">We couldn&apos;t find the page you&apos;re looking for. It might have been moved or deleted. Please check the URL or navigate back home.</p>
+                <p className="text-slate-400 mb-8 max-w-md mx-auto">
+                    We couldn&apos;t find the page you&apos;re looking for. It might have been moved
+                    or deleted. Please check the URL or navigate back home.
+                </p>
 
                 <Link
                     href="/"

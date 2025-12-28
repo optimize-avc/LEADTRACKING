@@ -1,6 +1,6 @@
 /**
  * API Client Utilities
- * 
+ *
  * Provides a consistent, type-safe way to make authenticated API calls.
  * Handles token management, error responses, and request formatting.
  */
@@ -59,18 +59,18 @@ function buildUrl(endpoint: string, params?: Record<string, string>): string {
 
 /**
  * Make an authenticated API request
- * 
+ *
  * @param endpoint - API endpoint path (e.g., '/api/email/send')
  * @param options - Request options
  * @returns Promise with typed response
- * 
+ *
  * @example
  * ```typescript
  * const response = await apiRequest<{ messageId: string }>('/api/email/send', {
  *     method: 'POST',
  *     body: { to: 'email@example.com', subject: 'Hello' },
  * });
- * 
+ *
  * if (response.success) {
  *     console.log(response.data.messageId);
  * }
@@ -80,12 +80,7 @@ export async function apiRequest<T = unknown>(
     endpoint: string,
     options: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
-    const {
-        method = 'GET',
-        body,
-        params,
-        requireAuth = true,
-    } = options;
+    const { method = 'GET', body, params, requireAuth = true } = options;
 
     try {
         const headers: Record<string, string> = {

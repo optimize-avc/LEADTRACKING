@@ -25,12 +25,10 @@ export default function LeadsError({
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">Failed to load leads</h2>
                 <p className="text-slate-400 mb-6">
-                    {error.message || 'Unable to fetch your leads. Please check your connection and try again.'}
+                    {error.message ||
+                        'Unable to fetch your leads. Please check your connection and try again.'}
                 </p>
-                <button
-                    onClick={reset}
-                    className="glass-button inline-flex items-center gap-2"
-                >
+                <button onClick={reset} className="glass-button inline-flex items-center gap-2">
                     <RefreshCw className="w-4 h-4" />
                     Retry
                 </button>

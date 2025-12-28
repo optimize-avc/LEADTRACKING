@@ -16,14 +16,10 @@ export function AIContextProvider({ children }: { children: React.ReactNode }) {
     const [courses, setCourses] = useState<Course[]>(MOCK_COURSES);
 
     const addCourse = (course: Course) => {
-        setCourses(prev => [course, ...prev]);
+        setCourses((prev) => [course, ...prev]);
     };
 
-    return (
-        <AIContext.Provider value={{ courses, addCourse }}>
-            {children}
-        </AIContext.Provider>
-    );
+    return <AIContext.Provider value={{ courses, addCourse }}>{children}</AIContext.Provider>;
 }
 
 export function useAI() {

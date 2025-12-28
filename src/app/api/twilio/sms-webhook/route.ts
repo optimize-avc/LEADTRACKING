@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
         const userId = request.nextUrl.searchParams.get('userId');
         const leadId = request.nextUrl.searchParams.get('leadId');
 
-
-
         // Map Twilio status
         const validStatuses = ['queued', 'sent', 'delivered', 'failed', 'undelivered'];
-        const status = validStatuses.includes(messageStatus) ? messageStatus as any : 'sent';
+        const status = validStatuses.includes(messageStatus)
+            ? (messageStatus as 'queued' | 'sent' | 'delivered' | 'failed' | 'undelivered')
+            : 'sent';
 
         if (userId && messageSid) {
             try {
@@ -29,13 +29,10 @@ export async function POST(request: NextRequest) {
             console.warn('Missing userId or messageSid in SMS webhook');
         }
 
-        return new NextResponse(
-            '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
-            {
-                status: 200,
-                headers: { 'Content-Type': 'text/xml' }
-            }
-        );
+        return new NextResponse('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+            status: 200,
+            headers: { 'Content-Type': 'text/xml' },
+        });
     } catch (error: unknown) {
         console.error('Webhook Error:', error);
         return NextResponse.json({ error: 'Webhook failed' }, { status: 500 });

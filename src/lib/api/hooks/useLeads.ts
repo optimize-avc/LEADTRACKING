@@ -7,7 +7,11 @@ export function useLeads() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
 
-    const { data: leads = [], isLoading, error } = useQuery({
+    const {
+        data: leads = [],
+        isLoading,
+        error,
+    } = useQuery({
         queryKey: ['leads', user?.uid],
         queryFn: () => {
             if (!user?.uid) return Promise.resolve([]);
@@ -18,13 +22,13 @@ export function useLeads() {
 
     const addLeadMutation = useMutation({
         mutationFn: (newLead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>) => {
-            if (!user?.uid) throw new Error("User not authenticated");
+            if (!user?.uid) throw new Error('User not authenticated');
             return LeadsService.createLead(user.uid, newLead);
         },
         onSuccess: () => {
             // Invalidate to refetch
             queryClient.invalidateQueries({ queryKey: ['leads', user?.uid] });
-        }
+        },
     });
 
     return {
@@ -32,6 +36,6 @@ export function useLeads() {
         isLoading,
         error,
         addLead: addLeadMutation.mutateAsync,
-        isAdding: addLeadMutation.isPending
+        isAdding: addLeadMutation.isPending,
     };
 }

@@ -1,4 +1,12 @@
-import { TWILIO_CONFIG, isTwilioConfigured, SMSMessage, SMSResult, CallResult, TwilioCredentials, getTwilioClient } from './twilio-config';
+import {
+    TWILIO_CONFIG,
+    isTwilioConfigured,
+    SMSMessage,
+    SMSResult,
+    CallResult,
+    TwilioCredentials,
+    getTwilioClient,
+} from './twilio-config';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 
@@ -112,9 +120,7 @@ export async function initiateCallWithLogging(
         timestamp: Date.now(),
         repId: userId,
         leadId,
-        notes: result.success
-            ? `Call initiated to ${to}`
-            : `Call failed: ${result.error}`,
+        notes: result.success ? `Call initiated to ${to}` : `Call failed: ${result.error}`,
         callSid: result.callSid,
     });
 

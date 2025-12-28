@@ -33,9 +33,7 @@ export async function GET(request: NextRequest) {
         await saveGmailTokens(state, tokens);
 
         // Redirect back to settings with success
-        return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings?gmail=connected`
-        );
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/settings?gmail=connected`);
     } catch (err) {
         console.error('Gmail OAuth error:', err);
         return NextResponse.redirect(

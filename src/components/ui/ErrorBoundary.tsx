@@ -2,7 +2,7 @@
 
 /**
  * Error Boundary Component
- * 
+ *
  * Catches JavaScript errors anywhere in the child component tree,
  * logs those errors, and displays a fallback UI instead of crashing.
  */
@@ -86,8 +86,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                         </h2>
 
                         <p className="text-slate-400 text-sm mb-6">
-                            An unexpected error occurred. You can try refreshing the page
-                            or go back to the dashboard.
+                            An unexpected error occurred. You can try refreshing the page or go back
+                            to the dashboard.
                         </p>
 
                         {process.env.NODE_ENV === 'development' && this.state.error && (

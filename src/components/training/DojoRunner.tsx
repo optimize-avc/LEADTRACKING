@@ -22,6 +22,10 @@ import { AIPersona } from '@/types/ai';
 
 interface DojoRunnerProps {
     onClose: () => void;
+    config?: {
+        industry: string;
+        customerType: string;
+    };
 }
 
 type Message = {
@@ -47,7 +51,7 @@ const DEFAULT_PERSONA: AIPersona = {
     objections: ['Price is too high', "Timing isn't right"],
 };
 
-export function DojoRunner({ onClose }: DojoRunnerProps) {
+export function DojoRunner({ onClose, config }: DojoRunnerProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isRecording, setIsRecording] = useState(false);
@@ -55,6 +59,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
     const [loadingPersona, setLoadingPersona] = useState(false); // Start false, wait for setup
     const [persona, setPersona] = useState<AIPersona | null>(null);
     const [status, setStatus] = useState<'setup' | 'playing'>('setup');
+    const [coachingTips, setCoachingTips] = useState<{ tone: string; tips: string[] } | null>(null);
 
     // Setup State
     const [resources, setResources] = useState<Resource[]>([]);
@@ -120,7 +125,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
             const token = await user?.getIdToken();
             const newPersona = await GeminiService.generatePersona(
                 'CFO',
-                'SaaS Tech',
+                config?.industry || 'SaaS Tech', // Use config industry
                 content,
                 token
             );
@@ -175,20 +180,35 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
         try {
             // Convert current messages to history format
             const history = messages.map((m) => ({
-                role: m.sender,
-                content: m.text,
+                sender: m.sender,
+                text: m.text,
             }));
 
-            // Add latest user message to context implicitly or explicitly
-            // Add latest user message to context implicitly or explicitly
+            // Add user message to history provided to services
+            const conversationHistory = [
+                ...history,
+                { sender: 'user' as const, text: newUserMsg.text },
+            ];
+
             const token = await user?.getIdToken();
-            const aiResponseText = await GeminiService.generateReply(
-                persona,
-                history,
-                newUserMsg.text,
-                contextContent,
-                token
-            );
+
+            // Parallel: Generate Reply AND Coaching Tips
+            const [aiResponseText, coachingData] = await Promise.all([
+                GeminiService.generateReply(
+                    persona || DEFAULT_PERSONA,
+                    conversationHistory.map((h) => ({ role: h.sender, content: h.text })),
+                    newUserMsg.text,
+                    contextContent,
+                    token
+                ),
+                GeminiService.generateCoachingTips(
+                    conversationHistory,
+                    persona || DEFAULT_PERSONA,
+                    token
+                ),
+            ]);
+
+            setCoachingTips(coachingData);
 
             const newAiMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -220,7 +240,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
 
     if (status === 'setup') {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
                 <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
@@ -322,7 +342,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
 
     if (loadingPersona || !persona) {
         return (
-            <div className="fixed inset-0 left-64 z-50 flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
                 <div className="flex flex-col items-center gap-4 text-white">
                     <Loader2 size={48} className="animate-spin text-indigo-500" />
                     <div className="text-xl font-bold animate-pulse">Summoning Prospect...</div>
@@ -335,7 +355,7 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
     }
 
     return (
-        <div className="fixed inset-0 left-64 z-50 flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
             <div className="w-full max-w-5xl h-[90vh] flex gap-6">
                 {/* Main Chat Area */}
                 <div className="flex-1 glass-card flex flex-col p-0 overflow-hidden relative">
@@ -479,57 +499,41 @@ export function DojoRunner({ onClose }: DojoRunnerProps) {
                     <div className="space-y-6">
                         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                             <div className="text-xs font-bold text-slate-400 uppercase mb-2">
-                                Current Tone
+                                Detected Tone
                             </div>
-                            <div className="flex items-center gap-2 text-emerald-400 font-semibold">
-                                <CheckCircle size={16} /> Calm & Assertive
+                            <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+                                <CheckCircle size={16} /> {coachingTips?.tone || 'Listening...'}
                             </div>
                         </div>
 
                         <div>
                             <div className="flex justify-between text-xs text-slate-400 mb-2">
                                 <span>Pacing</span>
-                                <span>120 wpm</span>
+                                <span>{isRecording ? 'Detecting...' : 'Normal'}</span>
                             </div>
                             <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
                                 <div className="h-full bg-indigo-500 w-[60%]"></div>
                             </div>
                         </div>
 
-                        <div>
-                            <div className="flex justify-between text-xs text-slate-400 mb-2">
-                                <span>Sentiment</span>
-                                <span>Positive</span>
-                            </div>
-                            <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
-                                <div className="h-full bg-fuchsia-500 w-[75%]"></div>
-                            </div>
-                        </div>
-
                         <div className="mt-8">
                             <h4 className="font-bold text-white text-sm mb-3">AI Suggestions</h4>
                             <div className="space-y-2">
-                                <button
-                                    onClick={() =>
-                                        setInputText(
-                                            'It sounds like budget is a major concern specifically for Q4.'
-                                        )
-                                    }
-                                    className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all"
-                                >
-                                    &ldquo;It sounds like budget is a major concern...&rdquo;
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        setInputText(
-                                            'What if we structured this to start billing in January?'
-                                        )
-                                    }
-                                    className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all"
-                                >
-                                    &ldquo;What if we structured this to start billing in
-                                    Jan?&rdquo;
-                                </button>
+                                {!coachingTips ? (
+                                    <div className="text-xs text-slate-500 italic">
+                                        Waiting for conversation...
+                                    </div>
+                                ) : (
+                                    coachingTips.tips.map((tip, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setInputText(tip)}
+                                            className="w-full text-left p-2 rounded hover:bg-white/5 text-xs text-slate-300 border border-transparent hover:border-indigo-500/30 transition-all"
+                                        >
+                                            &ldquo;{tip}&rdquo;
+                                        </button>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>

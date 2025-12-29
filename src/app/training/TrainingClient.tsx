@@ -227,29 +227,134 @@ export default function TrainingClient() {
         return Math.round(totalProgress / course.modules.length);
     };
 
+    // Training Context State
+    const [trainingConfig, setTrainingConfig] = useState<{
+        industry: string;
+        customerType: string;
+    }>({
+        industry: 'SaaS Technology',
+        customerType: 'Enterprise',
+    });
+
+    const [showSettings, setShowSettings] = useState(false);
+
+    const INDUSTRIES = [
+        'SaaS Technology',
+        'Retail & E-commerce',
+        'Healthcare & MedTech',
+        'Finance & Banking',
+        'Manufacturing & Logistics',
+        'Real Estate',
+    ];
+
+    const CUSTOMER_TYPES = ['Enterprise', 'Mid-Market', 'SMB', 'Government'];
+
     // Render Active Tool Modal/Overlay
     if (activeTool === 'war-room') {
-        return <WarRoomRunner onClose={() => setActiveTool(null)} />;
+        return (
+            <WarRoomRunner
+                onClose={() => setActiveTool(null)}
+                initialContext={{
+                    company: 'Target Corp',
+                    industry: trainingConfig.industry,
+                    value: '$100k',
+                    stage: 'Discovery',
+                }}
+            />
+        );
     }
     if (activeTool === 'dojo') {
-        return <DojoRunner onClose={() => setActiveTool(null)} />;
+        return <DojoRunner onClose={() => setActiveTool(null)} config={trainingConfig} />;
     }
     if (activeTool === 'pitch') {
-        return <PitchRecorder onClose={() => setActiveTool(null)} />;
+        return <PitchRecorder onClose={() => setActiveTool(null)} config={trainingConfig} />;
     }
     if (activeTool === 'boardroom') {
-        return <BoardroomRunner onClose={() => setActiveTool(null)} />;
+        return <BoardroomRunner onClose={() => setActiveTool(null)} config={trainingConfig} />;
     }
 
     return (
-        <div className="p-8 min-h-screen">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">
-                    Sales Training Academy
-                </h1>
-                <p className="text-slate-500 text-sm mt-1">
-                    Level up your skills with guided learning paths and AI tools
-                </p>
+        <div className="p-4 md:p-8 min-h-screen">
+            <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">
+                        Sales Training Academy
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-1">
+                        Level up your skills with guided learning paths and AI tools
+                    </p>
+                </div>
+
+                <div className="relative">
+                    <button
+                        onClick={() => setShowSettings(!showSettings)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 transition-colors border border-slate-700"
+                    >
+                        <Target className="w-4 h-4 text-indigo-400" />
+                        <span className="text-sm">
+                            Target:{' '}
+                            <span className="text-white font-medium">
+                                {trainingConfig.industry}
+                            </span>{' '}
+                            ({trainingConfig.customerType})
+                        </span>
+                    </button>
+
+                    {showSettings && (
+                        <div className="absolute top-full right-0 mt-2 w-72 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-4 z-50">
+                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                                <Users className="w-4 h-4 text-indigo-400" />
+                                Simulation Context
+                            </h3>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs text-slate-500 block mb-1">
+                                        Target Industry
+                                    </label>
+                                    <select
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={trainingConfig.industry}
+                                        onChange={(e) =>
+                                            setTrainingConfig((prev) => ({
+                                                ...prev,
+                                                industry: e.target.value,
+                                            }))
+                                        }
+                                    >
+                                        {INDUSTRIES.map((ind) => (
+                                            <option key={ind} value={ind}>
+                                                {ind}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-slate-500 block mb-1">
+                                        Customer Type
+                                    </label>
+                                    <select
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={trainingConfig.customerType}
+                                        onChange={(e) =>
+                                            setTrainingConfig((prev) => ({
+                                                ...prev,
+                                                customerType: e.target.value,
+                                            }))
+                                        }
+                                    >
+                                        {CUSTOMER_TYPES.map((type) => (
+                                            <option key={type} value={type}>
+                                                {type}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </header>
 
             {/* AI Training Tools Section */}

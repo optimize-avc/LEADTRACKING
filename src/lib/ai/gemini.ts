@@ -140,10 +140,68 @@ INSTRUCTION: The user is selling the product described above.
         return await this.generateText(fullPrompt, token);
     },
 
-    async analyzePitch(transcript: string, token?: string): Promise<AIPitchAnalysis | null> {
+    async generateCoachingTips(
+        history: { sender: 'user' | 'ai'; text: string }[],
+        persona: AIPersona,
+        token?: string
+    ): Promise<{ tone: string; tips: string[] } | null> {
+        const lastFew = history
+            .slice(-4)
+            .map((h) => `${h.sender.toUpperCase()}: ${h.text}`)
+            .join('\n');
+
+        const prompt = `
+            You are a Sales Coach monitoring a roleplay.
+            
+            SCENARIO:
+            Prospect: ${persona.name} (${persona.role} at ${persona.company})
+            Personality: ${persona.personality}
+            
+            RECENT CONVERSATION:
+            ${lastFew}
+            
+            INSTRUCTION:
+            Analyze the USER'S performance.
+            1. Identify their Tone (1-2 words, e.g. "Too Aggressive", "Empathetic", "Hesitant").
+            2. Provide 2 specific, short suggestions for what they should say or do next to handle this prospect.
+            
+            Return JSON:
+            {
+                "tone": "Target Tone",
+                "tips": ["Tip 1", "Tip 2"]
+            }
+        `;
+
+        try {
+            const response = await this.generateText(prompt, token);
+            const jsonStr = response
+                .replace(/^```json/, '')
+                .replace(/```$/, '')
+                .trim();
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            console.error('Coaching generation failed', e);
+            return null;
+        }
+    },
+
+    async analyzePitch(
+        transcript: string,
+        context: { industry: string; customerType: string } = {
+            industry: 'General',
+            customerType: 'General',
+        },
+        token?: string
+    ): Promise<AIPitchAnalysis | null> {
         const prompt = `
             Analyze this sales pitch transcript: "${transcript}"
             
+            Target Audience Context:
+            - Industry: ${context.industry}
+            - Customer Type: ${context.customerType}
+
+            INSTRUCTION: Evaluate not just delivery, but RELEVANCE to this specific audience. Is the tone appropriate? (e.g. Formal for Finance, Empathetic for Healthcare).
+
             Return ONLY a JSON object with this structure:
             {
                 "score": 85, // 0-100 based on clarity, persuasion, and confidence
@@ -350,11 +408,19 @@ INSTRUCTION: The user is selling the product described above.
         }
     },
 
-    async generateBoardroomScenario(token?: string): Promise<AIBoardroomScenario | null> {
+    async generateBoardroomScenario(
+        industry: string = 'Tech',
+        companyType: string = 'Enterprise',
+        token?: string
+    ): Promise<AIBoardroomScenario | null> {
         const prompt = `
             Generate a 3-agent B2B buying committee for a "Boardroom" simulation.
             They must have CONFLICTING goals.
             
+            Target Context:
+            Industry: ${industry}
+            Company Type: ${companyType}
+
             Roles needed:
             1. The Blocker (e.g. CFO, Legal) - Skeptical, budget-conscious.
             2. The Champion (e.g. Head of Sales, VP) - Enthusiastic but needs help.
@@ -362,22 +428,22 @@ INSTRUCTION: The user is selling the product described above.
 
             Return ONLY a JSON object:
             {
-                "company": "TechCorp Inc.",
+                "company": "Generated Company Name",
                 "stakeholders": [
                     {
-                        "id": "s1", "name": "Marcus Grip", "role": "CFO", "archetype": "Blocker",
+                        "id": "s1", "name": "Full Name", "role": "Relevant Job Title", "archetype": "Blocker",
                         "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus",
-                        "dominance": 90, "patience": 30, "hiddenAgenda": "Wants to cut budget by 20%."
+                        "dominance": 90, "patience": 30, "hiddenAgenda": "Specific hidden agenda related to ${industry}."
                     },
                     {
-                        "id": "s2", "name": "Sarah Chen", "role": "VP of Sales", "archetype": "Champion",
+                        "id": "s2", "name": "Full Name", "role": "Relevant Job Title", "archetype": "Champion",
                         "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-                        "dominance": 60, "patience": 80, "hiddenAgenda": "Needs a win to get promoted."
+                        "dominance": 60, "patience": 80, "hiddenAgenda": "Needs a win."
                     },
                     {
-                        "id": "s3", "name": "David Okonjo", "role": "CTO", "archetype": "Neutral",
+                        "id": "s3", "name": "Full Name", "role": "Relevant Job Title", "archetype": "Neutral",
                         "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
-                        "dominance": 80, "patience": 60, "hiddenAgenda": "Cares only about security compliance."
+                        "dominance": 80, "patience": 60, "hiddenAgenda": "Cares only about ROI/Compliance."
                     }
                 ]
             }

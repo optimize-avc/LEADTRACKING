@@ -390,12 +390,10 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
 
     // --- RENDERING ---
 
-    // --- RENDERING ---
-
     if (gameState.status === 'setup') {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
-                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
+                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden flex flex-col max-h-full">
                     {/* Decorative Background */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
@@ -406,7 +404,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                         <X className="w-6 h-6" />
                     </button>
 
-                    <div className="mb-8">
+                    <div className="mb-6 shrink-0">
                         <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
                             <span className="p-2 bg-blue-600/20 rounded-lg text-blue-400">
                                 <Database className="w-6 h-6" />
@@ -419,7 +417,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                         </p>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-6 overflow-y-auto custom-scrollbar flex-1 pr-2">
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">
                                 Enablement Context (Optional)
@@ -523,7 +521,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                             )}
                         </div>
 
-                        <div className="pt-6 border-t border-slate-800 flex justify-end gap-3">
+                        <div className="pt-6 border-t border-slate-800 flex justify-end gap-3 shrink-0">
                             <button
                                 onClick={onClose}
                                 className="px-6 py-3 rounded-lg text-slate-400 font-medium hover:text-white transition-colors"
@@ -546,7 +544,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
 
     if (gameState.status === 'initializing') {
         return (
-            <div className="fixed inset-0 left-64 z-50 flex items-center justify-center bg-slate-950">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950">
                 <div className="text-center space-y-4">
                     <div className="relative w-24 h-24 mx-auto">
                         <div className="absolute inset-0 border-4 border-orange-500/30 rounded-full animate-ping"></div>
@@ -569,32 +567,36 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
     const activeStakeholder = gameState.stakeholders.find((s) => s.id === selectedStakeholderId);
 
     return (
-        <div className="fixed inset-0 left-64 z-50 bg-slate-950 text-slate-200 font-sans overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-slate-950 text-slate-200 font-sans overflow-hidden flex flex-col">
             {/* --- HEADER HUD --- */}
-            <div className="h-16 border-b border-orange-500/20 bg-slate-900/50 backdrop-blur-md flex items-center justify-between px-6 shrink-0 relative z-20">
+            <div className="h-16 border-b border-orange-500/20 bg-slate-900/50 backdrop-blur-md flex items-center justify-between px-4 md:px-6 shrink-0 relative z-20">
                 <div className="flex items-center gap-4">
                     <div className="p-2 bg-orange-500/10 rounded border border-orange-500/20">
                         <ShieldAlert className="text-orange-500" size={20} />
                     </div>
                     <div>
-                        <h1 className="font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                            {gameState.scenario?.company}
-                            <span className="text-xs bg-slate-800 px-2 py-0.5 rounded text-orange-400 border border-orange-500/20">
+                        <h1 className="font-bold text-white uppercase tracking-wider flex items-center gap-2 text-sm md:text-base">
+                            <span className="truncate max-w-[120px] md:max-w-none">
+                                {gameState.scenario?.company}
+                            </span>
+                            <span className="text-xs bg-slate-800 px-2 py-0.5 rounded text-orange-400 border border-orange-500/20 hidden md:inline-block">
                                 {gameState.scenario?.difficulty}
                             </span>
                         </h1>
-                        <div className="text-xs text-slate-500 font-mono">
+                        <div className="text-xs text-slate-500 font-mono hidden md:block">
                             VAL: {gameState.scenario?.dealValue} • IND:{' '}
                             {gameState.scenario?.industry}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-4 md:gap-8">
                     {/* Deal Health Bar */}
-                    <div className="flex flex-col items-end w-64">
+                    <div className="flex flex-col items-end w-24 md:w-64">
                         <div className="flex justify-between w-full text-xs font-bold uppercase mb-1">
-                            <span className="text-slate-500">Deal Probability</span>
+                            <span className="text-slate-500 hidden md:inline">
+                                Deal Probability
+                            </span>
                             <span
                                 className={
                                     gameState.dealHealth > 50 ? 'text-green-500' : 'text-red-500'
@@ -612,7 +614,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                     </div>
 
                     {/* Turn Counter */}
-                    <div className="text-center">
+                    <div className="text-center hidden md:block">
                         <div className="text-2xl font-bold text-white font-mono">
                             {gameState.turnCount}{' '}
                             <span className="text-slate-600 text-sm">/ {gameState.maxTurns}</span>
@@ -632,20 +634,20 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
             </div>
 
             {/* --- MAIN CONTENT GRID --- */}
-            <div className="flex-1 overflow-hidden flex relative">
+            <div className="flex-1 overflow-hidden flex flex-col md:flex-row relative">
                 {/* LEFT: STAKEHOLDERS (The Board) */}
-                <div className="w-1/3 border-r border-orange-500/10 bg-slate-900/30 flex flex-col p-6 overflow-y-auto">
-                    <h3 className="text-xs font-bold uppercase text-slate-500 mb-4 flex items-center gap-2">
+                <div className="w-full md:w-1/3 h-auto md:h-full shrink-0 border-b md:border-b-0 md:border-r border-orange-500/10 bg-slate-900/30 flex flex-row md:flex-col p-4 md:p-6 overflow-x-auto md:overflow-y-auto gap-3 md:gap-0 custom-scrollbar">
+                    <h3 className="hidden md:flex text-xs font-bold uppercase text-slate-500 mb-4 items-center gap-2">
                         <Users size={14} /> Key Stakeholders
                     </h3>
 
-                    <div className="space-y-4">
+                    <div className="flex items-center md:block gap-4 md:gap-0 md:space-y-4">
                         {gameState.stakeholders.map((stakeholder) => (
                             <div
                                 key={stakeholder.id}
                                 onClick={() => setSelectedStakeholderId(stakeholder.id)}
                                 className={`
-                                    relative p-4 rounded-xl border cursor-pointer transition-all duration-300 group
+                                    relative p-4 rounded-xl border cursor-pointer transition-all duration-300 group min-w-[200px] md:min-w-0 w-64 md:w-full
                                     ${
                                         selectedStakeholderId === stakeholder.id
                                             ? 'bg-orange-500/10 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.15)]'
@@ -655,16 +657,16 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <div className="font-bold text-slate-100">
+                                        <div className="font-bold text-slate-100 truncate">
                                             {stakeholder.name}
                                         </div>
-                                        <div className="text-xs text-orange-400 font-mono">
+                                        <div className="text-xs text-orange-400 font-mono truncate">
                                             {stakeholder.role}
                                         </div>
                                     </div>
                                     <div
                                         className={`
-                                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs
+                                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0
                                         ${stakeholder.sentiment >= 70 ? 'bg-green-500/20 text-green-400' : stakeholder.sentiment <= 40 ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}
                                     `}
                                     >
@@ -672,10 +674,10 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2 mt-3">
-                                    {stakeholder.traits.map((trait) => (
+                                    {stakeholder.traits.slice(0, 2).map((trait) => (
                                         <span
                                             key={trait}
-                                            className="px-2 py-0.5 rounded text-[10px] uppercase bg-black/30 text-slate-400 border border-white/5"
+                                            className="px-2 py-0.5 rounded text-[10px] uppercase bg-black/30 text-slate-400 border border-white/5 truncate max-w-[100px]"
                                         >
                                             {trait}
                                         </span>
@@ -683,7 +685,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                                 </div>
 
                                 {selectedStakeholderId === stakeholder.id && (
-                                    <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-12 bg-orange-500 rounded-l-full blur-[2px]"></div>
+                                    <div className="absolute -left-1 md:-right-1 md:left-auto bottom-1/2 translate-y-1/2 md:-translate-y-1/2 w-12 md:w-2 h-1 md:h-12 bg-orange-500 rounded-full blur-[2px]"></div>
                                 )}
                             </div>
                         ))}
@@ -691,36 +693,36 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                 </div>
 
                 {/* MIDDLE: ACTION CENTER */}
-                <div className="flex-1 flex flex-col bg-slate-950 relative">
+                <div className="flex-1 flex flex-col bg-slate-950 relative overflow-hidden">
                     {/* Background Grid */}
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
                     <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-transparent to-slate-950"></div>
 
                     {/* Active Target Info */}
-                    <div className="relative z-10 p-8 text-center border-b border-white/5 bg-slate-900/40 backdrop-blur-sm h-48 flex flex-col justify-center">
+                    <div className="relative z-10 p-4 md:p-8 text-center border-b border-white/5 bg-slate-900/40 backdrop-blur-sm shrink-0 flex flex-col justify-center min-h-[120px] md:h-48">
                         {activeStakeholder ? (
                             <div className="animate-in fade-in zoom-in-95 duration-300">
-                                <div className="text-sm text-orange-400 font-mono uppercase tracking-widest mb-2">
+                                <div className="text-xs md:text-sm text-orange-400 font-mono uppercase tracking-widest mb-1 md:mb-2">
                                     Target Locked
                                 </div>
-                                <h2 className="text-3xl font-bold text-white mb-2">
+                                <h2 className="text-xl md:text-3xl font-bold text-white mb-2">
                                     {activeStakeholder.name}
                                 </h2>
-                                <p className="text-slate-400 max-w-md mx-auto">
+                                <p className="text-xs md:text-base text-slate-400 max-w-md mx-auto line-clamp-2 md:line-clamp-none">
                                     {gameState.status === 'playing'
                                         ? 'Select a strategic action below to influence this stakeholder.'
                                         : 'Simulation Ended.'}
                                 </p>
                             </div>
                         ) : (
-                            <div className="text-slate-500 italic">
+                            <div className="text-slate-500 italic text-sm md:text-base">
                                 Select a stakeholder to target...
                             </div>
                         )}
                     </div>
 
                     {/* Action Deck */}
-                    <div className="flex-1 p-8 grid grid-cols-2 md:grid-cols-3 gap-4 content-start overflow-y-auto z-10">
+                    <div className="flex-1 p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 content-start overflow-y-auto z-10 custom-scrollbar">
                         {gameState.status === 'playing' &&
                             ACTION_DECK.map((card) => (
                                 <button
@@ -729,7 +731,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                                     onClick={() => handleAction(card.id)}
                                     className={`
                                     relative group p-4 rounded-xl border text-left transition-all duration-300
-                                    flex flex-col gap-3 overflow-hidden
+                                    flex flex-col gap-2 md:gap-3 overflow-hidden
                                     ${
                                         !selectedStakeholderId
                                             ? 'opacity-50 border-white/5 cursor-not-allowed grayscale'
@@ -754,10 +756,10 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                                         </span>
                                     </div>
                                     <div>
-                                        <div className="font-bold text-slate-200 group-hover:text-orange-100">
+                                        <div className="font-bold text-sm md:text-base text-slate-200 group-hover:text-orange-100">
                                             {card.label}
                                         </div>
-                                        <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+                                        <div className="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">
                                             {card.description}
                                         </div>
                                     </div>
@@ -767,13 +769,13 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                 </div>
 
                 {/* RIGHT: LIVE LOG (The "Wire") */}
-                <div className="w-80 border-l border-orange-500/10 bg-black/40 flex flex-col">
-                    <div className="p-4 border-b border-white/10 bg-slate-900/50 backdrop-blur">
+                <div className="w-full md:w-80 h-48 md:h-full shrink-0 border-t md:border-t-0 md:border-l border-orange-500/10 bg-black/40 flex flex-col">
+                    <div className="p-3 md:p-4 border-b border-white/10 bg-slate-900/50 backdrop-blur sticky top-0 z-20">
                         <h3 className="text-xs font-bold uppercase text-orange-500 flex items-center gap-2">
                             <Activity size={14} /> Mission Log
                         </h3>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-sm relative">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-sm relative custom-scrollbar">
                         {gameState.logs.map((log) => (
                             <div
                                 key={log.id}
@@ -832,8 +834,8 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
 
             {/* GAME OVER MODAL */}
             {(gameState.status === 'won' || gameState.status === 'lost') && (
-                <div className="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center animate-in fade-in duration-500">
-                    <div className="max-w-md w-full glass-card p-8 text-center border-orange-500/30">
+                <div className="absolute inset-0 z-[100] bg-slate-950/90 backdrop-blur-lg flex items-center justify-center animate-in fade-in duration-500">
+                    <div className="max-w-md w-full glass-card p-8 text-center border-orange-500/30 m-4">
                         <div
                             className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 border-4 ${gameState.status === 'won' ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-red-500/30 bg-red-500/10 text-red-500'}`}
                         >

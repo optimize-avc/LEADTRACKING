@@ -60,11 +60,15 @@ interface SpeechRecognitionType extends EventTarget {
 
 interface PitchRecorderProps {
     onClose: () => void;
+    config?: {
+        industry: string;
+        customerType: string;
+    };
 }
 
 type RecordingState = 'idle' | 'recording' | 'analyzing' | 'complete';
 
-export function PitchRecorder({ onClose }: PitchRecorderProps) {
+export function PitchRecorder({ onClose, config }: PitchRecorderProps) {
     const [state, setState] = useState<RecordingState>('idle');
     const [duration, setDuration] = useState(0);
     const [transcript, setTranscript] = useState('');
@@ -195,7 +199,11 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
             "Hi, I'm calling from OmniStream to see if you have time to discuss your social media automation needs. Our tool is 20 percent cheaper than Hootsuite and has better analytics.";
 
         const token = await user?.getIdToken();
-        const result = await GeminiService.analyzePitch(textToAnalyze, token);
+        const result = await GeminiService.analyzePitch(
+            textToAnalyze,
+            config || { industry: 'General', customerType: 'General' },
+            token
+        );
         setAnalysis(result);
         setState('complete');
     };

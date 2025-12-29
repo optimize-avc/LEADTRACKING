@@ -20,13 +20,17 @@ import { TimeMachine } from '@/components/training/TimeMachine';
 
 interface BoardroomRunnerProps {
     onClose: () => void;
+    config?: {
+        industry: string;
+        customerType: string;
+    };
 }
 
 type Agent = AIBoardroomAgent;
 
 type TranscriptItem = AIBoardroomTranscriptItem;
 
-export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
+export function BoardroomRunner({ onClose, config }: BoardroomRunnerProps) {
     const { user } = useAuth();
     const [status, setStatus] = useState<'init' | 'playing' | 'loading_turn' | 'time_machine'>(
         'init'
@@ -42,7 +46,12 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
         async function init() {
             try {
                 const token = await user?.getIdToken();
-                const scenario = await GeminiService.generateBoardroomScenario(token);
+                // Use config from props or default
+                const scenario = await GeminiService.generateBoardroomScenario(
+                    config?.industry || 'Tech',
+                    config?.customerType || 'Enterprise',
+                    token
+                );
                 if (scenario && scenario.stakeholders) {
                     setAgents(scenario.stakeholders);
                     setStatus('playing');
@@ -185,7 +194,7 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-slate-950 text-slate-200 font-sans flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-slate-950 text-slate-200 font-sans flex flex-col">
             {/* HEADER */}
             <div className="h-16 border-b border-white/10 bg-slate-900 flex items-center justify-between px-6 shrink-0 relative z-20">
                 <h1 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -210,7 +219,7 @@ export function BoardroomRunner({ onClose }: BoardroomRunnerProps) {
             {/* MAIN STAGE (Isometric View Simulation) */}
             <div className="flex-1 overflow-hidden relative bg-[#0f172a] perspective-1000">
                 {/* Table Surface */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-indigo-950/20 rounded-[100px] border border-indigo-500/20 shadow-[0_0_100px_rgba(79,70,229,0.1)] transform rotate-x-60"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-[800px] h-[200px] md:h-[400px] bg-indigo-950/20 rounded-[50px] md:rounded-[100px] border border-indigo-500/20 shadow-[0_0_100px_rgba(79,70,229,0.1)] transform rotate-x-60"></div>
 
                 {/* Agents */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

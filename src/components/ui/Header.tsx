@@ -136,8 +136,13 @@ export function Header() {
 
                 {/* Mobile Menu Toggle */}
                 <button
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="mobile-toggle-btn md:hidden relative z-50 w-10 h-10 flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setMobileMenuOpen(!mobileMenuOpen);
+                    }}
+                    className="mobile-toggle-btn md:hidden relative z-[60] w-11 h-11 flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation"
+                    aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                    aria-expanded={mobileMenuOpen}
                 >
                     {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
@@ -145,7 +150,8 @@ export function Header() {
 
             {/* Mobile Menu Overlay */}
             <div
-                className={`fixed inset-0 bg-[#020617]/95 backdrop-blur-2xl z-40 transition-all duration-300 md:hidden flex flex-col pt-24 px-6 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 bg-[#020617]/98 backdrop-blur-2xl z-[55] transition-all duration-300 md:hidden flex flex-col pt-20 px-6 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                style={{ top: 0, left: 0, right: 0, bottom: 0 }}
             >
                 <nav className="flex flex-col gap-2">
                     <MobileNavLink
@@ -207,7 +213,7 @@ export function Header() {
                             </div>
                             <button
                                 onClick={logout}
-                                className="w-full h-12 rounded-xl border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors text-sm font-semibold uppercase tracking-wider"
+                                className="w-full h-14 rounded-xl border border-white/10 flex items-center justify-center text-slate-400 hover:text-white active:bg-white/5 transition-colors text-sm font-semibold uppercase tracking-wider touch-manipulation active:scale-[0.98]"
                             >
                                 <span className="flex items-center gap-3 font-medium">
                                     <LogOut size={18} /> Sign Out
@@ -227,7 +233,7 @@ export function Header() {
                                         }
                                     }
                                 }}
-                                className="w-full h-12 glass-button justify-center text-base"
+                                className="w-full h-14 glass-button justify-center text-base touch-manipulation active:scale-[0.98]"
                             >
                                 Sign In with Google
                             </button>
@@ -279,11 +285,11 @@ function MobileNavLink({
         <Link
             href={href}
             className={`
-                flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 border
+                flex items-center gap-4 px-4 py-4 min-h-[56px] rounded-xl transition-all duration-200 border touch-manipulation active:scale-[0.98]
                 ${
                     active
                         ? 'bg-primary/10 border-primary/20 text-white shadow-lg shadow-primary/10'
-                        : 'bg-transparent border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
+                        : 'bg-transparent border-transparent text-slate-400 hover:bg-white/5 active:bg-white/10 hover:text-white'
                 }
             `}
         >

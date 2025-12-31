@@ -194,54 +194,69 @@ export function BoardroomRunner({ onClose, config }: BoardroomRunnerProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-950 text-slate-200 font-sans flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-slate-950 text-slate-200 font-sans flex flex-col overflow-y-auto modal-scrollable">
             {/* HEADER */}
-            <div className="h-16 border-b border-white/10 bg-slate-900 flex items-center justify-between px-6 shrink-0 relative z-20">
-                <h1 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <div className="h-14 md:h-16 border-b border-white/10 bg-slate-900 flex items-center justify-between px-4 md:px-6 shrink-0 relative z-20">
+                <h1 className="text-base md:text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <Users className="text-blue-500" /> The Boardroom
                 </h1>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={handleEndMeeting}
-                        className="px-3 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-full text-xs font-bold uppercase tracking-wider border border-red-500/20 transition-all"
+                        className="px-3 py-2 min-h-[44px] bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-full text-xs font-bold uppercase tracking-wider border border-red-500/20 transition-all"
                     >
                         End Meeting
                     </button>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 min-w-[44px] min-h-[44px] hover:bg-white/10 rounded-full transition-colors flex items-center justify-center"
                     >
                         <X size={20} />
                     </button>
                 </div>
             </div>
 
-            {/* MAIN STAGE (Isometric View Simulation) */}
-            <div className="flex-1 overflow-hidden relative bg-[#0f172a] perspective-1000">
-                {/* Table Surface */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-[800px] h-[200px] md:h-[400px] bg-indigo-950/20 rounded-[50px] md:rounded-[100px] border border-indigo-500/20 shadow-[0_0_100px_rgba(79,70,229,0.1)] transform rotate-x-60"></div>
+            {/* MAIN STAGE - Mobile: vertical stack, Desktop: isometric view */}
+            <div className="flex-1 overflow-hidden relative bg-[#0f172a] flex flex-col md:block">
+                {/* Table Surface - Hidden on mobile */}
+                <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-indigo-950/20 rounded-[100px] border border-indigo-500/20 shadow-[0_0_100px_rgba(79,70,229,0.1)] transform rotate-x-60"></div>
 
-                {/* Agents */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    {/* Left Agent (Champion) */}
-                    <div className="absolute left-[15%] top-[40%] text-center transform hover:scale-105 transition-transform duration-500 pointer-events-auto">
-                        <AgentAvatar agent={agents[1]} isSpeaking={false} />
+                {/* Agents - Mobile: horizontal scroll, Desktop: absolute positioning */}
+                <div className="md:absolute md:inset-0 flex md:items-center md:justify-center shrink-0">
+                    {/* Mobile: horizontal scroll container */}
+                    <div className="flex md:hidden overflow-x-auto gap-4 p-4 w-full justify-start">
+                        {agents.map((agent, idx) => (
+                            <div
+                                key={agent?.id || idx}
+                                className="shrink-0 active:scale-95 transition-transform"
+                            >
+                                <AgentAvatar agent={agent} isSpeaking={false} />
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Middle Agent (Decision Maker) */}
-                    <div className="absolute top-[20%] text-center transform hover:scale-105 transition-transform duration-500 pointer-events-auto">
-                        <AgentAvatar agent={agents[2]} isSpeaking={false} />
-                    </div>
+                    {/* Desktop: absolute positioned agents */}
+                    <div className="hidden md:block">
+                        {/* Left Agent (Champion) */}
+                        <div className="absolute left-[15%] top-[40%] text-center transform hover:scale-105 transition-transform duration-500">
+                            <AgentAvatar agent={agents[1]} isSpeaking={false} />
+                        </div>
 
-                    {/* Right Agent (Blocker) */}
-                    <div className="absolute right-[15%] top-[40%] text-center transform hover:scale-105 transition-transform duration-500 pointer-events-auto">
-                        <AgentAvatar agent={agents[0]} isSpeaking={false} />
+                        {/* Middle Agent (Decision Maker) */}
+                        <div className="absolute left-1/2 -translate-x-1/2 top-[20%] text-center transform hover:scale-105 transition-transform duration-500">
+                            <AgentAvatar agent={agents[2]} isSpeaking={false} />
+                        </div>
+
+                        {/* Right Agent (Blocker) */}
+                        <div className="absolute right-[15%] top-[40%] text-center transform hover:scale-105 transition-transform duration-500">
+                            <AgentAvatar agent={agents[0]} isSpeaking={false} />
+                        </div>
                     </div>
                 </div>
 
-                {/* Transcript Overlay (Floating HUD) */}
-                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[300px] pointer-events-auto">
-                    <div className="h-full overflow-y-auto px-4 space-y-4 custom-scrollbar mask-image-linear-to-t">
+                {/* Transcript Overlay - Mobile: takes remaining space, Desktop: floating HUD */}
+                <div className="flex-1 md:absolute md:bottom-24 md:left-1/2 md:-translate-x-1/2 w-full max-w-3xl md:h-[300px] overflow-hidden">
+                    <div className="h-full overflow-y-auto px-4 py-2 space-y-4 custom-scrollbar modal-scrollable">
                         {transcript.map((item) => (
                             <ChatBubble key={item.id} item={item} />
                         ))}
@@ -259,7 +274,7 @@ export function BoardroomRunner({ onClose, config }: BoardroomRunnerProps) {
             </div>
 
             {/* INPUT AREA */}
-            <div className="h-20 bg-slate-900 border-t border-white/5 p-4 flex items-center justify-center gap-4 relative z-20">
+            <div className="min-h-[80px] bg-slate-900 border-t border-white/5 p-3 md:p-4 flex items-center justify-center gap-2 md:gap-4 relative z-20 shrink-0">
                 <div className="w-full max-w-3xl relative">
                     <input
                         type="text"
@@ -267,13 +282,14 @@ export function BoardroomRunner({ onClose, config }: BoardroomRunnerProps) {
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleTurn()}
                         placeholder="Make your pitch..."
-                        className="w-full bg-slate-950/50 border border-slate-700 rounded-full px-6 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium"
-                        autoFocus
+                        className="w-full bg-slate-950/50 border border-slate-700 rounded-full px-4 md:px-6 py-3 min-h-[48px] text-base text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium pr-14"
+                        inputMode="text"
+                        autoComplete="off"
                     />
                     <button
                         onClick={handleTurn}
                         disabled={status === 'loading_turn' || !inputValue.trim()}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 min-w-[44px] min-h-[44px] bg-blue-600 active:bg-blue-700 hover:bg-blue-500 text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                         <Send size={18} />
                     </button>
@@ -291,13 +307,13 @@ function AgentAvatar({ agent, isSpeaking }: { agent: Agent; isSpeaking: boolean 
         <div className="flex flex-col items-center group">
             <div
                 className={`
-                w-24 h-24 rounded-full border-4 overflow-hidden bg-slate-800 shadow-2xl relative transition-all duration-300
+                w-16 h-16 md:w-24 md:h-24 rounded-full border-4 overflow-hidden bg-slate-800 shadow-2xl relative transition-all duration-300
                 ${
                     agent.archetype === 'Blocker'
-                        ? 'border-red-500/30 group-hover:border-red-500'
+                        ? 'border-red-500/30 group-hover:border-red-500 group-active:border-red-500'
                         : agent.archetype === 'Champion'
-                          ? 'border-green-500/30 group-hover:border-green-500'
-                          : 'border-blue-500/30 group-hover:border-blue-500'
+                          ? 'border-green-500/30 group-hover:border-green-500 group-active:border-green-500'
+                          : 'border-blue-500/30 group-hover:border-blue-500 group-active:border-blue-500'
                 }
                 ${isSpeaking ? 'scale-110 shadow-[0_0_30px_rgba(255,255,255,0.2)]' : ''}
             `}
@@ -306,15 +322,17 @@ function AgentAvatar({ agent, isSpeaking }: { agent: Agent; isSpeaking: boolean 
             </div>
 
             {/* Nameplate */}
-            <div className="mt-4 bg-slate-900/80 backdrop-blur border border-white/10 px-4 py-2 rounded-lg text-center transform transition-transform group-hover:-translate-y-1">
-                <div className="font-bold text-white text-sm">{agent.name}</div>
-                <div className="text-[10px] uppercase tracking-wider font-mono text-slate-400">
+            <div className="mt-2 md:mt-4 bg-slate-900/80 backdrop-blur border border-white/10 px-2 md:px-4 py-1 md:py-2 rounded-lg text-center transform transition-transform group-hover:-translate-y-1 group-active:-translate-y-1">
+                <div className="font-bold text-white text-xs md:text-sm whitespace-nowrap">
+                    {agent.name}
+                </div>
+                <div className="text-[8px] md:text-[10px] uppercase tracking-wider font-mono text-slate-400">
                     {agent.role}
                 </div>
             </div>
 
-            {/* Hover Info */}
-            <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-black/60 px-2 py-1 rounded text-slate-300">
+            {/* Hover/Active Info */}
+            <div className="mt-1 md:mt-2 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity text-[8px] md:text-[10px] bg-black/60 px-2 py-1 rounded text-slate-300 whitespace-nowrap">
                 {agent.archetype} • Dom: {agent.dominance}%
             </div>
         </div>

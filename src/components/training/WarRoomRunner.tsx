@@ -392,20 +392,20 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
 
     if (gameState.status === 'setup') {
         return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
-                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden flex flex-col max-h-full">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-2 md:p-4 overflow-y-auto modal-scrollable">
+                <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-xl p-4 md:p-8 shadow-2xl relative overflow-hidden flex flex-col max-h-[95vh] my-auto">
                     {/* Decorative Background */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 text-slate-500 hover:text-white"
+                        className="absolute top-4 right-4 text-slate-500 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                         <X className="w-6 h-6" />
                     </button>
 
-                    <div className="mb-6 shrink-0">
-                        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    <div className="mb-4 md:mb-6 shrink-0">
+                        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
                             <span className="p-2 bg-blue-600/20 rounded-lg text-blue-400">
                                 <Database className="w-6 h-6" />
                             </span>
@@ -521,16 +521,16 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                             )}
                         </div>
 
-                        <div className="pt-6 border-t border-slate-800 flex justify-end gap-3 shrink-0">
+                        <div className="pt-4 md:pt-6 border-t border-slate-800 flex flex-col md:flex-row justify-end gap-3 shrink-0">
                             <button
                                 onClick={onClose}
-                                className="px-6 py-3 rounded-lg text-slate-400 font-medium hover:text-white transition-colors"
+                                className="px-6 py-3 min-h-[44px] rounded-lg text-slate-400 font-medium hover:text-white transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={startGame}
-                                className="px-8 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 group transition-all transform hover:scale-[1.02]"
+                                className="px-8 py-3 min-h-[44px] rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 group transition-all transform hover:scale-[1.02]"
                             >
                                 <Play className="w-5 h-5 fill-current" />
                                 Start Simulation
@@ -567,9 +567,9 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
     const activeStakeholder = gameState.stakeholders.find((s) => s.id === selectedStakeholderId);
 
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-950 text-slate-200 font-sans overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-slate-950 text-slate-200 font-sans overflow-hidden flex flex-col modal-scrollable">
             {/* --- HEADER HUD --- */}
-            <div className="h-16 border-b border-orange-500/20 bg-slate-900/50 backdrop-blur-md flex items-center justify-between px-4 md:px-6 shrink-0 relative z-20">
+            <div className="h-14 md:h-16 border-b border-orange-500/20 bg-slate-900/50 backdrop-blur-md flex items-center justify-between px-3 md:px-6 shrink-0 relative z-20">
                 <div className="flex items-center gap-4">
                     <div className="p-2 bg-orange-500/10 rounded border border-orange-500/20">
                         <ShieldAlert className="text-orange-500" size={20} />
@@ -626,7 +626,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
 
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                         <X size={24} className="text-slate-400 hover:text-white" />
                     </button>
@@ -634,7 +634,7 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
             </div>
 
             {/* --- MAIN CONTENT GRID --- */}
-            <div className="flex-1 overflow-hidden flex flex-col md:flex-row relative">
+            <div className="flex-1 overflow-hidden flex flex-col md:flex-row relative overflow-y-auto modal-scrollable">
                 {/* LEFT: STAKEHOLDERS (The Board) */}
                 <div className="w-full md:w-1/3 h-auto md:h-full shrink-0 border-b md:border-b-0 md:border-r border-orange-500/10 bg-slate-900/30 flex flex-row md:flex-col p-4 md:p-6 overflow-x-auto md:overflow-y-auto gap-3 md:gap-0 custom-scrollbar">
                     <h3 className="hidden md:flex text-xs font-bold uppercase text-slate-500 mb-4 items-center gap-2">
@@ -731,11 +731,11 @@ export function WarRoomRunner({ onClose, initialContext }: WarRoomRunnerProps) {
                                     onClick={() => handleAction(card.id)}
                                     className={`
                                     relative group p-4 rounded-xl border text-left transition-all duration-300
-                                    flex flex-col gap-2 md:gap-3 overflow-hidden
+                                    flex flex-col gap-2 md:gap-3 overflow-hidden min-h-[100px]
                                     ${
                                         !selectedStakeholderId
                                             ? 'opacity-50 border-white/5 cursor-not-allowed grayscale'
-                                            : 'bg-slate-900/80 border-white/10 hover:border-orange-500/50 hover:bg-slate-800 hover:shadow-lg hover:-translate-y-1'
+                                            : 'bg-slate-900/80 border-white/10 hover:border-orange-500/50 hover:bg-slate-800 hover:shadow-lg active:scale-[0.98]'
                                     }
                                 `}
                                 >

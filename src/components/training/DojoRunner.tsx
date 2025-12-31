@@ -355,10 +355,10 @@ export function DojoRunner({ onClose, config }: DojoRunnerProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
-            <div className="w-full max-w-5xl h-[90vh] flex gap-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4 bg-slate-900/95 backdrop-blur-md overflow-y-auto modal-scrollable">
+            <div className="w-full max-w-5xl h-full md:h-[90vh] flex flex-col lg:flex-row gap-4 md:gap-6 my-auto">
                 {/* Main Chat Area */}
-                <div className="flex-1 glass-card flex flex-col p-0 overflow-hidden relative">
+                <div className="flex-1 glass-card flex flex-col p-0 overflow-hidden relative min-h-[60vh] lg:min-h-0">
                     {/* Header */}
                     <div className="p-4 border-b border-white/10 flex justify-between items-center bg-indigo-900/20">
                         <div className="flex items-center gap-3">
@@ -453,10 +453,10 @@ export function DojoRunner({ onClose, config }: DojoRunnerProps) {
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-4 bg-slate-900/50 border-t border-white/10">
+                    <div className="p-3 md:p-4 bg-slate-900/50 border-t border-white/10">
                         <div className="flex gap-2">
                             <button
-                                className={`p-3 rounded-xl border border-slate-700 transition-colors ${
+                                className={`p-3 min-w-[44px] min-h-[44px] rounded-xl border border-slate-700 transition-colors ${
                                     isRecording
                                         ? 'bg-red-500/20 border-red-500/50 text-red-500 animate-pulse'
                                         : 'hover:bg-slate-800 text-slate-400 hover:text-white'
@@ -468,30 +468,32 @@ export function DojoRunner({ onClose, config }: DojoRunnerProps) {
                             <div className="flex-1 relative">
                                 <input
                                     type="text"
+                                    inputMode="text"
+                                    autoComplete="off"
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="Type your objection handler..."
-                                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-600"
+                                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-600 min-h-[44px]"
                                 />
                             </div>
                             <button
                                 onClick={handleSend}
                                 disabled={!inputText.trim() || isTyping}
-                                className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-3 min-w-[44px] min-h-[44px] bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Send size={20} />
                             </button>
                         </div>
-                        <div className="text-center mt-2 text-xs text-slate-500">
+                        <div className="text-center mt-2 text-xs text-slate-500 hidden md:block">
                             Tip: Use &ldquo;Tactical Empathy&rdquo; to disarm the prospect.
                         </div>
                     </div>
                 </div>
 
-                {/* Right Sidebar: Real-time Analysis */}
-                <div className="w-80 glass-card p-6 flex flex-col hidden lg:flex">
-                    <h3 className="font-bold text-white mb-6 flex items-center gap-2">
+                {/* Right Sidebar: Real-time Analysis - Now visible on mobile */}
+                <div className="w-full lg:w-80 glass-card p-4 md:p-6 flex flex-col order-first lg:order-last shrink-0">
+                    <h3 className="font-bold text-white mb-4 md:mb-6 flex items-center gap-2">
                         <AlertCircle size={18} className="text-indigo-400" />
                         Live Coaching
                     </h3>

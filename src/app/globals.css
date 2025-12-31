@@ -157,3 +157,53 @@ h6 {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--secondary-foreground);
 }
+
+/* Mobile Touch Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Ensure minimum touch target size of 44px */
+    button,
+    a,
+    [role='button'],
+    input[type='submit'],
+    input[type='button'] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Prevent tap highlight flash */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Improve touch scrolling */
+    .custom-scrollbar {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Remove hover effects on touch devices */
+    .glass-card:hover {
+        transform: none;
+    }
+
+    /* Make buttons more tappable */
+    .glass-button {
+        padding: 1rem 1.5rem;
+    }
+}
+
+/* Fix for iOS safe areas */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
+/* Ensure modals are scrollable on mobile */
+.modal-scrollable {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    max-height: 100vh;
+    max-height: 100dvh;
+}

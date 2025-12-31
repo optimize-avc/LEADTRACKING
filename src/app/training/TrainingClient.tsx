@@ -267,7 +267,7 @@ export default function TrainingClient() {
         return <DojoRunner onClose={() => setActiveTool(null)} config={trainingConfig} />;
     }
     if (activeTool === 'pitch') {
-        return <PitchRecorder onClose={() => setActiveTool(null)} config={trainingConfig} />;
+        return <PitchRecorder onClose={() => setActiveTool(null)} />;
     }
     if (activeTool === 'boardroom') {
         return <BoardroomRunner onClose={() => setActiveTool(null)} config={trainingConfig} />;
@@ -363,67 +363,75 @@ export default function TrainingClient() {
                     <Zap className="w-5 h-5 text-amber-400" />
                     AI Training Tools
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <GlassCard
-                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-red-500"
+                        className="cursor-pointer hover:bg-white/5 active:bg-white/10 active:scale-[0.98] transition-all group border-l-4 border-l-red-500 min-h-[140px]"
                         onClick={() => handleToolSelect('war-room')}
                     >
                         <div className="flex items-start justify-between mb-4">
-                            <div className="p-3 bg-red-500/20 rounded-lg group-hover:bg-red-500/30 transition-colors">
+                            <div className="p-3 bg-red-500/20 rounded-lg group-hover:bg-red-500/30 group-active:bg-red-500/40 transition-colors">
                                 <ShieldAlert className="w-6 h-6 text-red-400" />
                             </div>
                             <Badge variant="warning">Hard Mode</Badge>
                         </div>
-                        <h3 className="font-bold text-lg text-white mb-1">The War Room</h3>
-                        <p className="text-sm text-slate-400">
+                        <h3 className="font-bold text-base md:text-lg text-white mb-1">
+                            The War Room
+                        </h3>
+                        <p className="text-xs md:text-sm text-slate-400">
                             Simulate high-stakes deal negotiations with an aggressive AI buyer.
                         </p>
                     </GlassCard>
 
                     <GlassCard
-                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-blue-500"
+                        className="cursor-pointer hover:bg-white/5 active:bg-white/10 active:scale-[0.98] transition-all group border-l-4 border-l-blue-500 min-h-[140px]"
                         onClick={() => handleToolSelect('dojo')}
                     >
                         <div className="flex items-start justify-between mb-4">
-                            <div className="p-3 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
+                            <div className="p-3 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
                                 <Target className="w-6 h-6 text-blue-400" />
                             </div>
                             <Badge variant="default">Practice</Badge>
                         </div>
-                        <h3 className="font-bold text-lg text-white mb-1">Objection Dojo</h3>
-                        <p className="text-sm text-slate-400">
+                        <h3 className="font-bold text-base md:text-lg text-white mb-1">
+                            Objection Dojo
+                        </h3>
+                        <p className="text-xs md:text-sm text-slate-400">
                             Master common objections with rapid-fire repetition and feedback.
                         </p>
                     </GlassCard>
 
                     <GlassCard
-                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-purple-500"
+                        className="cursor-pointer hover:bg-white/5 active:bg-white/10 active:scale-[0.98] transition-all group border-l-4 border-l-purple-500 min-h-[140px]"
                         onClick={() => handleToolSelect('pitch')}
                     >
                         <div className="flex items-start justify-between mb-4">
-                            <div className="p-3 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition-colors">
+                            <div className="p-3 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
                                 <Mic className="w-6 h-6 text-purple-400" />
                             </div>
                             <Badge variant="default">Analysis</Badge>
                         </div>
-                        <h3 className="font-bold text-lg text-white mb-1">Pitch Recorder</h3>
-                        <p className="text-sm text-slate-400">
+                        <h3 className="font-bold text-base md:text-lg text-white mb-1">
+                            Pitch Recorder
+                        </h3>
+                        <p className="text-xs md:text-sm text-slate-400">
                             Record your elevator pitch and get instant AI coaching on delivery.
                         </p>
                     </GlassCard>
 
                     <GlassCard
-                        className="cursor-pointer hover:bg-white/5 transition-all group border-l-4 border-l-amber-500"
+                        className="cursor-pointer hover:bg-white/5 active:bg-white/10 active:scale-[0.98] transition-all group border-l-4 border-l-amber-500 min-h-[140px]"
                         onClick={() => handleToolSelect('boardroom')}
                     >
                         <div className="flex items-start justify-between mb-4">
-                            <div className="p-3 bg-amber-500/20 rounded-lg group-hover:bg-amber-500/30 transition-colors">
+                            <div className="p-3 bg-amber-500/20 rounded-lg group-hover:bg-amber-500/30 group-active:bg-amber-500/40 transition-colors">
                                 <Users className="w-6 h-6 text-amber-400" />
                             </div>
                             <Badge variant="warning">Venture Scale</Badge>
                         </div>
-                        <h3 className="font-bold text-lg text-white mb-1">The Boardroom</h3>
-                        <p className="text-sm text-slate-400">
+                        <h3 className="font-bold text-base md:text-lg text-white mb-1">
+                            The Boardroom
+                        </h3>
+                        <p className="text-xs md:text-sm text-slate-400">
                             Multi-agent simulation. Win over the CFO, CTO, and Champion
                             simultaneously.
                         </p>

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../providers/AuthProvider';
 import {
     Menu,
@@ -21,6 +21,11 @@ export function Header() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    // Handler to close mobile menu
+    const closeMobileMenu = useCallback(() => {
+        setMobileMenuOpen(false);
+    }, []);
+
     // Use IntersectionObserver for better performance than scroll event
     useEffect(() => {
         const handleScroll = () => {
@@ -33,14 +38,6 @@ export function Header() {
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    // Close mobile menu on path change
-    useEffect(() => {
-        if (mobileMenuOpen) {
-            // Use setTimeout to avoid synchronous state update warning during render phase
-            setTimeout(() => setMobileMenuOpen(false), 0);
-        }
-    }, [pathname, mobileMenuOpen]);
 
     return (
         <header
@@ -158,6 +155,7 @@ export function Header() {
                         href="/"
                         active={pathname === '/'}
                         icon={<LayoutDashboard size={20} />}
+                        onClick={closeMobileMenu}
                     >
                         Dashboard
                     </MobileNavLink>
@@ -165,6 +163,7 @@ export function Header() {
                         href="/leads"
                         active={pathname.startsWith('/leads')}
                         icon={<Database size={20} />}
+                        onClick={closeMobileMenu}
                     >
                         Leads Pipeline
                     </MobileNavLink>
@@ -172,6 +171,7 @@ export function Header() {
                         href="/activities"
                         active={pathname.startsWith('/activities')}
                         icon={<Activity size={20} />}
+                        onClick={closeMobileMenu}
                     >
                         Activities
                     </MobileNavLink>
@@ -179,6 +179,7 @@ export function Header() {
                         href="/resources"
                         active={pathname.startsWith('/resources')}
                         icon={<BookOpen size={20} />}
+                        onClick={closeMobileMenu}
                     >
                         Enablement & Resources
                     </MobileNavLink>
@@ -275,15 +276,18 @@ function MobileNavLink({
     children,
     active,
     icon,
+    onClick,
 }: {
     href: string;
     children: React.ReactNode;
     active?: boolean;
     icon: React.ReactNode;
+    onClick?: () => void;
 }) {
     return (
         <Link
             href={href}
+            onClick={onClick}
             className={`
                 flex items-center gap-4 px-4 py-4 min-h-[56px] rounded-xl transition-all duration-200 border touch-manipulation active:scale-[0.98]
                 ${

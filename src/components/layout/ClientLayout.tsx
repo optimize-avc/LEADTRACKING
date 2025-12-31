@@ -29,9 +29,11 @@ import { AIContextProvider } from '@/components/providers/AIContext';
 function SidebarContent({
     collapsed,
     mobileMenuOpen,
+    onNavClick,
 }: {
     collapsed: boolean;
     mobileMenuOpen: boolean;
+    onNavClick?: () => void;
 }) {
     const { user, loading, logout, signInWithGoogle } = useAuth();
     const router = useRouter();
@@ -86,6 +88,7 @@ function SidebarContent({
                     label="Dashboard"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
+                    onClick={onNavClick}
                 />
                 <NavLink
                     href="/leads"
@@ -93,6 +96,7 @@ function SidebarContent({
                     label="Leads Pipeline"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
+                    onClick={onNavClick}
                 />
                 <NavLink
                     href="/activities"
@@ -100,6 +104,7 @@ function SidebarContent({
                     label="Activities"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
+                    onClick={onNavClick}
                 />
                 <NavLink
                     href="/resources"
@@ -107,6 +112,7 @@ function SidebarContent({
                     label="Enablement"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
+                    onClick={onNavClick}
                 />
                 <NavLink
                     href="/analytics"
@@ -114,6 +120,7 @@ function SidebarContent({
                     label="Analytics"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
+                    onClick={onNavClick}
                 />
                 <NavLink
                     href="/training"
@@ -121,6 +128,7 @@ function SidebarContent({
                     label="Training"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
+                    onClick={onNavClick}
                 />
                 <NavLink
                     href="/reality-link"
@@ -128,6 +136,7 @@ function SidebarContent({
                     label="Reality Link HUD"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
+                    onClick={onNavClick}
                 />
 
                 {/* Settings - show only when logged in */}
@@ -138,6 +147,7 @@ function SidebarContent({
                         label="Settings"
                         collapsed={collapsed}
                         mobile={mobileMenuOpen}
+                        onClick={onNavClick}
                     />
                 )}
             </nav>
@@ -222,16 +232,19 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         return () => clearTimeout(timeout);
     }, []);
 
-    // Close mobile menu on route change
+    // Close mobile menu on route change - use a ref to track previous pathname
     const pathname = usePathname();
-    useEffect(() => {
-        if (mobileMenuOpen) {
-            const timeout = setTimeout(() => {
-                setMobileMenuOpen(false);
-            }, 0);
-            return () => clearTimeout(timeout);
+    const prevPathnameRef = React.useRef(pathname);
+
+    // Only close menu when pathname actually changes (not on menu state changes)
+    React.useEffect(() => {
+        if (prevPathnameRef.current !== pathname && mobileMenuOpen) {
+            prevPathnameRef.current = pathname;
+            setMobileMenuOpen(false);
+        } else {
+            prevPathnameRef.current = pathname;
         }
-    }, [pathname, mobileMenuOpen]);
+    }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Simple loading state for SSR
     if (!mounted) {
@@ -305,7 +318,11 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                         </div>
 
                         {/* Sidebar Content with Auth */}
-                        <SidebarContent collapsed={collapsed} mobileMenuOpen={mobileMenuOpen} />
+                        <SidebarContent
+                            collapsed={collapsed}
+                            mobileMenuOpen={mobileMenuOpen}
+                            onNavClick={() => setMobileMenuOpen(false)}
+                        />
 
                         {/* Collapse Toggle (Desktop Only) */}
                         <button
@@ -333,7 +350,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                             <button
                                 onClick={() => setMobileMenuOpen(true)}
                                 aria-label="Open mobile menu"
-                                className="p-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                className="p-3 min-w-[44px] min-h-[44px] text-slate-300 hover:text-white hover:bg-white/5 active:bg-white/10 rounded-lg transition-colors touch-manipulation"
                             >
                                 <Menu size={24} />
                             </button>
@@ -392,12 +409,14 @@ function NavLink({
     label,
     collapsed,
     mobile,
+    onClick,
 }: {
     href: string;
     icon: React.ReactNode;
     label: string;
     collapsed: boolean;
     mobile: boolean;
+    onClick?: () => void;
 }) {
     const pathname = usePathname();
     const isActive = pathname === href;
@@ -407,15 +426,16 @@ function NavLink({
     return (
         <Link
             href={href}
+            onClick={onClick}
             title={!showLabel ? label : ''}
             aria-label={label}
             className={`
-                group flex items-center rounded-xl transition-all duration-300 ease-out relative
+                group flex items-center rounded-xl transition-all duration-300 ease-out relative min-h-[44px] touch-manipulation active:scale-[0.98]
                 ${!showLabel ? 'justify-center p-3' : 'px-4 py-3'}
                 ${
                     isActive
                         ? 'bg-gradient-to-r from-indigo-500/20 to-violet-500/5 text-indigo-300 border-l-2 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)]'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 active:bg-white/10 border-l-2 border-transparent'
                 }
             `}
         >

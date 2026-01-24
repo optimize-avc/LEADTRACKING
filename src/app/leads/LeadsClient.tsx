@@ -183,9 +183,9 @@ export default function LeadsClient() {
             const query = searchQuery.toLowerCase();
             result = result.filter(
                 (lead) =>
-                    lead.companyName.toLowerCase().includes(query) ||
-                    lead.contactName.toLowerCase().includes(query) ||
-                    lead.email.toLowerCase().includes(query)
+                    (lead.companyName?.toLowerCase() || '').includes(query) ||
+                    (lead.contactName?.toLowerCase() || '').includes(query) ||
+                    (lead.email?.toLowerCase() || '').includes(query)
             );
         }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lead, LeadStatus } from '@/types';
+import { Lead, LeadStatus, LeadSource } from '@/types';
 
 interface AddLeadModalProps {
     isOpen: boolean;
@@ -32,6 +32,17 @@ const STATUSES: LeadStatus[] = [
     'Lost',
 ];
 
+const SOURCES: LeadSource[] = [
+    'Website',
+    'Referral',
+    'Cold Call',
+    'LinkedIn',
+    'Event',
+    'Email Campaign',
+    'Partner',
+    'Other',
+];
+
 export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
     const [formData, setFormData] = useState({
         companyName: '',
@@ -40,6 +51,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
         phone: '',
         value: '',
         industry: '',
+        source: '' as LeadSource | '',
         status: 'New' as LeadStatus,
         notes: '',
     });
@@ -69,6 +81,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
             phone: formData.phone,
             value: parseFloat(formData.value) || 0,
             industry: formData.industry,
+            source: formData.source || undefined,
             status: formData.status,
             notes: formData.notes,
         });
@@ -81,6 +94,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
             phone: '',
             value: '',
             industry: '',
+            source: '',
             status: 'New',
             notes: '',
         });
@@ -201,22 +215,47 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                         </div>
                     </div>
 
-                    {/* Status */}
-                    <div>
-                        <label className="block text-sm text-slate-400 mb-1">Status</label>
-                        <select
-                            value={formData.status}
-                            onChange={(e) =>
-                                setFormData({ ...formData, status: e.target.value as LeadStatus })
-                            }
-                            className="glass-input w-full bg-slate-900"
-                        >
-                            {STATUSES.map((status) => (
-                                <option key={status} value={status}>
-                                    {status}
-                                </option>
-                            ))}
-                        </select>
+                    {/* Status & Source */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm text-slate-400 mb-1">Status</label>
+                            <select
+                                value={formData.status}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        status: e.target.value as LeadStatus,
+                                    })
+                                }
+                                className="glass-input w-full bg-slate-900"
+                            >
+                                {STATUSES.map((status) => (
+                                    <option key={status} value={status}>
+                                        {status}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm text-slate-400 mb-1">Lead Source</label>
+                            <select
+                                value={formData.source}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        source: e.target.value as LeadSource,
+                                    })
+                                }
+                                className="glass-input w-full bg-slate-900"
+                            >
+                                <option value="">Select source...</option>
+                                {SOURCES.map((source) => (
+                                    <option key={source} value={source}>
+                                        {source}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     {/* Notes */}

@@ -18,6 +18,16 @@ export type LeadStatus =
     | 'Closed'
     | 'Lost';
 
+export type LeadSource =
+    | 'Website'
+    | 'Referral'
+    | 'Cold Call'
+    | 'LinkedIn'
+    | 'Event'
+    | 'Email Campaign'
+    | 'Partner'
+    | 'Other';
+
 export interface Lead {
     id: string;
     companyName: string;

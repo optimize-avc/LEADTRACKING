@@ -11,6 +11,8 @@ import { LogMeetingModal } from '@/components/leads/LogMeetingModal';
 import { LogReplyModal } from '@/components/leads/LogReplyModal';
 import { KanbanView } from '@/components/leads/KanbanView';
 import { AILeadInsights } from '@/components/leads/AILeadInsights';
+import { QuickEditModal } from '@/components/leads/QuickEditModal';
+import { ImportCSVModal } from '@/components/leads/ImportCSVModal';
 import { AIEmailDraft } from '@/components/ai/AIEmailDraft';
 import { LeadsService, ActivitiesService } from '@/lib/firebase/services';
 import { formatCurrency } from '@/lib/utils/formatters';
@@ -113,6 +115,8 @@ export default function LeadsClient() {
     const [isCallModalOpen, setIsCallModalOpen] = useState(false);
     const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
     const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+    const [isQuickEditOpen, setIsQuickEditOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
 
@@ -423,6 +427,41 @@ export default function LeadsClient() {
         }
     };
 
+    // Quick edit handler
+    const handleQuickEditSave = async (leadId: string, updates: Partial<Lead>) => {
+        if (!user) {
+            setLeads(leads.map((l) => (l.id === leadId ? { ...l, ...updates } : l)));
+            toast.success('Lead updated (demo mode)');
+            return;
+        }
+
+        await LeadsService.updateLead(user.uid, leadId, updates);
+        toast.success('Lead updated');
+        loadLeads();
+    };
+
+    // CSV import handler
+    const handleCSVImport = async (
+        newLeads: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>[]
+    ) => {
+        if (!user) {
+            toast.error('Please log in to import leads');
+            return;
+        }
+
+        let imported = 0;
+        for (const lead of newLeads) {
+            try {
+                await LeadsService.createLead(user.uid, lead);
+                imported++;
+            } catch (error) {
+                console.error('Failed to import lead:', lead.companyName, error);
+            }
+        }
+        toast.success(`Imported ${imported} of ${newLeads.length} leads`);
+        loadLeads();
+    };
+
     if (isLoading) {
         return (
             <div className="p-8 min-h-screen flex items-center justify-center">
@@ -453,6 +492,13 @@ export default function LeadsClient() {
                             title="Export leads to CSV"
                         >
                             <Download size={16} /> Export
+                        </button>
+                        <button
+                            onClick={() => setIsImportModalOpen(true)}
+                            className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white"
+                            title="Import leads from CSV"
+                        >
+                            <Upload size={16} /> Import
                         </button>
                         <button onClick={() => setIsAddModalOpen(true)} className="glass-button">
                             + Add New Lead
@@ -1003,6 +1049,24 @@ export default function LeadsClient() {
                     )}
                 </>
             )}
+
+            {/* Quick Edit Modal */}
+            <QuickEditModal
+                lead={selectedLead}
+                isOpen={isQuickEditOpen}
+                onClose={() => {
+                    setIsQuickEditOpen(false);
+                    setSelectedLead(null);
+                }}
+                onSave={handleQuickEditSave}
+            />
+
+            {/* Import CSV Modal */}
+            <ImportCSVModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={handleCSVImport}
+            />
         </div>
     );
 }

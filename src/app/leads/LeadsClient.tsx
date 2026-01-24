@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { Lead, Activity, LeadStatus } from '@/types';
@@ -9,6 +9,7 @@ import { AddLeadModal } from '@/components/leads/AddLeadModal';
 import { LogCallModal } from '@/components/leads/LogCallModal';
 import { LogMeetingModal } from '@/components/leads/LogMeetingModal';
 import { LogReplyModal } from '@/components/leads/LogReplyModal';
+import { KanbanView } from '@/components/leads/KanbanView';
 import { AIEmailDraft } from '@/components/ai/AIEmailDraft';
 import { LeadsService, ActivitiesService } from '@/lib/firebase/services';
 import { formatCurrency } from '@/lib/utils/formatters';
@@ -26,6 +27,13 @@ import {
     Square,
     Trash2,
     Mail as MailIcon,
+    Search,
+    Filter,
+    ArrowUpDown,
+    LayoutGrid,
+    Columns,
+    X,
+    Upload,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateLeadVelocity } from '@/lib/utils/scoring';
@@ -87,6 +95,16 @@ export default function LeadsClient() {
     const [gmailHistory, setGmailHistory] = useState<Record<string, EmailRecord[]>>({});
     const [gmailConnected, setGmailConnected] = useState(false);
 
+    // Search, Filter, Sort state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
+    const [industryFilter, setIndustryFilter] = useState<string>('all');
+    const [sortBy, setSortBy] = useState<
+        'value-desc' | 'value-asc' | 'newest' | 'oldest' | 'velocity'
+    >('newest');
+    const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid');
+    const [showFilters, setShowFilters] = useState(false);
+
     // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -108,11 +126,12 @@ export default function LeadsClient() {
         setIsLoading(true);
         try {
             const data = await LeadsService.getLeads(user.uid);
-            setLeads(data.length > 0 ? data : MOCK_LEADS);
+            // Don't fall back to mock data - show empty state instead
+            setLeads(data);
         } catch (error) {
             console.error('Error loading leads:', error);
             toast.error('Failed to load leads');
-            setLeads(MOCK_LEADS);
+            setLeads([]);
         } finally {
             setIsLoading(false);
         }
@@ -143,6 +162,63 @@ export default function LeadsClient() {
 
         loadLeads();
     }, [user, authLoading, loadLeads]);
+
+    // Get unique industries for filter dropdown
+    const uniqueIndustries = useMemo(() => {
+        const industries = leads.map((l) => l.industry).filter(Boolean) as string[];
+        return [...new Set(industries)];
+    }, [leads]);
+
+    // Filter, search, and sort leads
+    const filteredLeads = useMemo(() => {
+        let result = [...leads];
+
+        // Search filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(
+                (lead) =>
+                    lead.companyName.toLowerCase().includes(query) ||
+                    lead.contactName.toLowerCase().includes(query) ||
+                    lead.email.toLowerCase().includes(query)
+            );
+        }
+
+        // Status filter
+        if (statusFilter !== 'all') {
+            result = result.filter((lead) => lead.status === statusFilter);
+        }
+
+        // Industry filter
+        if (industryFilter !== 'all') {
+            result = result.filter((lead) => lead.industry === industryFilter);
+        }
+
+        // Sort
+        switch (sortBy) {
+            case 'value-desc':
+                result.sort((a, b) => b.value - a.value);
+                break;
+            case 'value-asc':
+                result.sort((a, b) => a.value - b.value);
+                break;
+            case 'newest':
+                result.sort((a, b) => b.createdAt - a.createdAt);
+                break;
+            case 'oldest':
+                result.sort((a, b) => a.createdAt - b.createdAt);
+                break;
+            case 'velocity':
+                result.sort((a, b) => {
+                    const velA = calculateLeadVelocity(a, activities[a.id]);
+                    const velB = calculateLeadVelocity(b, activities[b.id]);
+                    return velB.score - velA.score;
+                });
+                break;
+        }
+
+        return result;
+    }, [leads, searchQuery, statusFilter, industryFilter, sortBy, activities]);
 
     const handleAddLead = async (
         leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
@@ -328,6 +404,24 @@ export default function LeadsClient() {
         }
     };
 
+    // Single lead status change (for Kanban drag-drop)
+    const handleLeadStatusChange = async (leadId: string, newStatus: LeadStatus) => {
+        if (!user) {
+            setLeads(leads.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l)));
+            toast.success('Lead moved (demo mode)');
+            return;
+        }
+
+        try {
+            await LeadsService.updateLead(user.uid, leadId, { status: newStatus });
+            toast.success(`Lead moved to ${newStatus}`);
+            loadLeads();
+        } catch (error) {
+            console.error('Status update failed', error);
+            toast.error('Failed to update lead status');
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="p-8 min-h-screen flex items-center justify-center">
@@ -338,335 +432,479 @@ export default function LeadsClient() {
 
     return (
         <div className="p-8 min-h-screen">
-            <header className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
-                        Leads Pipeline
-                    </h1>
-                    <p className="text-slate-500 text-sm mt-1">
-                        {user ? `${leads.length} leads` : 'Demo Mode - Log in to save data'}
-                    </p>
+            {/* Header */}
+            <header className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
+                            Leads Pipeline
+                        </h1>
+                        <p className="text-slate-500 text-sm mt-1">
+                            {user
+                                ? `${filteredLeads.length} of ${leads.length} leads`
+                                : 'Demo Mode - Log in to save data'}
+                        </p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleExportCSV}
+                            className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white"
+                            title="Export leads to CSV"
+                        >
+                            <Download size={16} /> Export
+                        </button>
+                        <button onClick={() => setIsAddModalOpen(true)} className="glass-button">
+                            + Add New Lead
+                        </button>
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={handleExportCSV}
-                        className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white"
-                        title="Export leads to CSV"
+
+                {/* Search, Filter, Sort Bar */}
+                <div className="flex flex-wrap gap-3 items-center">
+                    {/* Search */}
+                    <div className="relative flex-1 min-w-[200px] max-w-md">
+                        <Search
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                            size={16}
+                        />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search company, contact, email..."
+                            className="w-full pl-10 pr-8 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Status Filter */}
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value as LeadStatus | 'all')}
+                        className="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
                     >
-                        <Download size={16} /> Export CSV
-                    </button>
-                    <button onClick={() => setIsAddModalOpen(true)} className="glass-button">
-                        + Add New Lead
-                    </button>
+                        <option value="all">All Status</option>
+                        <option value="New">New</option>
+                        <option value="Qualified">Qualified</option>
+                        <option value="Proposal">Proposal</option>
+                        <option value="Negotiation">Negotiation</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Lost">Lost</option>
+                    </select>
+
+                    {/* Industry Filter */}
+                    {uniqueIndustries.length > 0 && (
+                        <select
+                            value={industryFilter}
+                            onChange={(e) => setIndustryFilter(e.target.value)}
+                            className="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        >
+                            <option value="all">All Industries</option>
+                            {uniqueIndustries.map((ind) => (
+                                <option key={ind} value={ind}>
+                                    {ind}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+
+                    {/* Sort */}
+                    <select
+                        value={sortBy}
+                        onChange={(e) =>
+                            setSortBy(
+                                e.target.value as
+                                    | 'value-desc'
+                                    | 'value-asc'
+                                    | 'newest'
+                                    | 'oldest'
+                                    | 'velocity'
+                            )
+                        }
+                        className="px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    >
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="value-desc">Value (High→Low)</option>
+                        <option value="value-asc">Value (Low→High)</option>
+                        <option value="velocity">Velocity</option>
+                    </select>
+
+                    {/* View Toggle */}
+                    <div className="flex border border-white/10 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`p-2 ${
+                                viewMode === 'grid'
+                                    ? 'bg-violet-600 text-white'
+                                    : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                            } transition-colors`}
+                            title="Grid View"
+                        >
+                            <LayoutGrid size={16} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('kanban')}
+                            className={`p-2 ${
+                                viewMode === 'kanban'
+                                    ? 'bg-violet-600 text-white'
+                                    : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                            } transition-colors`}
+                            title="Kanban View"
+                        >
+                            <Columns size={16} />
+                        </button>
+                    </div>
+
+                    {/* Clear Filters */}
+                    {(searchQuery || statusFilter !== 'all' || industryFilter !== 'all') && (
+                        <button
+                            onClick={() => {
+                                setSearchQuery('');
+                                setStatusFilter('all');
+                                setIndustryFilter('all');
+                            }}
+                            className="px-3 py-2 text-xs text-slate-400 hover:text-white border border-slate-700 rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                            Clear Filters
+                        </button>
+                    )}
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {leads.map((lead) => (
-                    <GlassCard
-                        key={lead.id}
-                        onClick={() => expandedLeadId !== lead.id && handleExpandLead(lead.id)}
-                        className={`cursor-pointer group relative overflow-hidden transition-all border-l-4 ${
-                            selectedLeadIds.has(lead.id)
-                                ? 'border-l-blue-500 bg-blue-500/5'
-                                : 'border-l-transparent'
-                        } ${expandedLeadId === lead.id ? 'md:col-span-2 lg:col-span-2' : ''}`}
-                    >
-                        {/* Multi-select checkbox */}
-                        <div
-                            onClick={(e) => toggleSelectLead(lead.id, e)}
-                            className="absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+            {/* Kanban View */}
+            {viewMode === 'kanban' ? (
+                <KanbanView
+                    leads={filteredLeads}
+                    activities={activities}
+                    onLeadClick={handleExpandLead}
+                    onStatusChange={handleLeadStatusChange}
+                    selectedLeadIds={selectedLeadIds}
+                />
+            ) : (
+                /* Grid View */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredLeads.map((lead) => (
+                        <GlassCard
+                            key={lead.id}
+                            onClick={() => expandedLeadId !== lead.id && handleExpandLead(lead.id)}
+                            className={`cursor-pointer group relative overflow-hidden transition-all border-l-4 ${
+                                selectedLeadIds.has(lead.id)
+                                    ? 'border-l-blue-500 bg-blue-500/5'
+                                    : 'border-l-transparent'
+                            } ${expandedLeadId === lead.id ? 'md:col-span-2 lg:col-span-2' : ''}`}
                         >
-                            {selectedLeadIds.has(lead.id) ? (
-                                <CheckSquare size={16} className="text-blue-400" />
-                            ) : (
-                                <Square size={16} className="text-slate-600 hover:text-blue-400" />
-                            )}
-                        </div>
-
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                        {/* Velocity Gauge Overlay */}
-                        {(() => {
-                            const velocity = calculateLeadVelocity(lead, activities[lead.id]);
-                            return (
-                                <div className="absolute top-0 right-0 p-2 opacity-30 group-hover:opacity-100 transition-all">
-                                    <div
-                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 ${
-                                            velocity.status === 'hot'
-                                                ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                                                : velocity.status === 'warm'
-                                                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                                  : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                                        }`}
-                                    >
-                                        <Gauge size={10} />
-                                        Velocity: {velocity.score}%
-                                        {velocity.momentum === 'rising' ? (
-                                            <VelocityUp size={10} />
-                                        ) : velocity.momentum === 'dropping' ? (
-                                            <VelocityDown size={10} />
-                                        ) : (
-                                            <Minus size={10} />
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-
-                        <div className="relative z-10">
-                            {/* Lead Header */}
+                            {/* Multi-select checkbox */}
                             <div
-                                className="flex justify-between items-start mb-3"
-                                onClick={() => handleExpandLead(lead.id)}
+                                onClick={(e) => toggleSelectLead(lead.id, e)}
+                                className="absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                                <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
-                                    {lead.companyName}
-                                </h3>
-                                <Badge
-                                    variant={
-                                        lead.status === 'New'
-                                            ? 'info'
-                                            : lead.status === 'Qualified'
-                                              ? 'success'
-                                              : lead.status === 'Closed'
-                                                ? 'success'
-                                                : 'warning'
-                                    }
-                                >
-                                    {lead.status}
-                                </Badge>
+                                {selectedLeadIds.has(lead.id) ? (
+                                    <CheckSquare size={16} className="text-blue-400" />
+                                ) : (
+                                    <Square
+                                        size={16}
+                                        className="text-slate-600 hover:text-blue-400"
+                                    />
+                                )}
                             </div>
 
-                            {/* Lead Info */}
-                            <div className="mb-4">
-                                <p className="text-slate-300 text-sm font-medium">
-                                    {lead.contactName}
-                                </p>
-                                <p className="text-slate-500 text-xs">{lead.email}</p>
-                                {lead.industry && (
-                                    <span className="inline-block mt-2 text-[10px] uppercase tracking-wider text-slate-500 border border-slate-700 px-1.5 py-0.5 rounded">
-                                        {lead.industry}
-                                    </span>
-                                )}
-                                {lead.nextStep && (
-                                    <p className="text-xs text-amber-400 mt-2 font-medium flex items-center gap-1">
-                                        <PulseIcon size={12} /> {lead.nextStep}
-                                    </p>
-                                )}
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                {/* AI Intelligence Signal */}
-                                {leadIntel[lead.id] ? (
-                                    <div className="mt-3 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 relative group/intel animate-in fade-in zoom-in-95 duration-300">
-                                        <div className="flex items-center gap-1.5 mb-1">
-                                            <Sparkles size={12} className="text-blue-400" />
-                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">
-                                                AI Intelligence
-                                            </span>
-                                            <Badge
-                                                variant="info"
-                                                className="ml-auto text-[8px] py-0 px-1 border-blue-500/20"
-                                            >
-                                                {leadIntel[lead.id].signal}
-                                            </Badge>
+                            {/* Velocity Gauge Overlay */}
+                            {(() => {
+                                const velocity = calculateLeadVelocity(lead, activities[lead.id]);
+                                return (
+                                    <div className="absolute top-0 right-0 p-2 opacity-30 group-hover:opacity-100 transition-all">
+                                        <div
+                                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 ${
+                                                velocity.status === 'hot'
+                                                    ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                                                    : velocity.status === 'warm'
+                                                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                                      : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                                            }`}
+                                        >
+                                            <Gauge size={10} />
+                                            Velocity: {velocity.score}%
+                                            {velocity.momentum === 'rising' ? (
+                                                <VelocityUp size={10} />
+                                            ) : velocity.momentum === 'dropping' ? (
+                                                <VelocityDown size={10} />
+                                            ) : (
+                                                <Minus size={10} />
+                                            )}
                                         </div>
-                                        <p className="text-[11px] text-slate-400 leading-tight italic line-clamp-2">
-                                            &ldquo;{leadIntel[lead.id].justification}&rdquo;
-                                        </p>
                                     </div>
-                                ) : (
+                                );
+                            })()}
+
+                            <div className="relative z-10">
+                                {/* Lead Header */}
+                                <div
+                                    className="flex justify-between items-start mb-3"
+                                    onClick={() => handleExpandLead(lead.id)}
+                                >
+                                    <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                                        {lead.companyName}
+                                    </h3>
+                                    <Badge
+                                        variant={
+                                            lead.status === 'New'
+                                                ? 'info'
+                                                : lead.status === 'Qualified'
+                                                  ? 'success'
+                                                  : lead.status === 'Closed'
+                                                    ? 'success'
+                                                    : 'warning'
+                                        }
+                                    >
+                                        {lead.status}
+                                    </Badge>
+                                </div>
+
+                                {/* Lead Info */}
+                                <div className="mb-4">
+                                    <p className="text-slate-300 text-sm font-medium">
+                                        {lead.contactName}
+                                    </p>
+                                    <p className="text-slate-500 text-xs">{lead.email}</p>
+                                    {lead.industry && (
+                                        <span className="inline-block mt-2 text-[10px] uppercase tracking-wider text-slate-500 border border-slate-700 px-1.5 py-0.5 rounded">
+                                            {lead.industry}
+                                        </span>
+                                    )}
+                                    {lead.nextStep && (
+                                        <p className="text-xs text-amber-400 mt-2 font-medium flex items-center gap-1">
+                                            <PulseIcon size={12} /> {lead.nextStep}
+                                        </p>
+                                    )}
+
+                                    {/* AI Intelligence Signal */}
+                                    {leadIntel[lead.id] ? (
+                                        <div className="mt-3 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 relative group/intel animate-in fade-in zoom-in-95 duration-300">
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <Sparkles size={12} className="text-blue-400" />
+                                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">
+                                                    AI Intelligence
+                                                </span>
+                                                <Badge
+                                                    variant="info"
+                                                    className="ml-auto text-[8px] py-0 px-1 border-blue-500/20"
+                                                >
+                                                    {leadIntel[lead.id].signal}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-[11px] text-slate-400 leading-tight italic line-clamp-2">
+                                                &ldquo;{leadIntel[lead.id].justification}&rdquo;
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleIntelRequest(lead);
+                                            }}
+                                            className="mt-3 w-full py-1 text-[10px] text-slate-500 hover:text-blue-400 border border-dashed border-slate-700 hover:border-blue-500/40 rounded transition-all italic flex items-center justify-center gap-1"
+                                        >
+                                            <Sparkles size={10} /> Analyze Deal Sentiment
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Value & Date */}
+                                <div className="flex justify-between items-center border-t border-slate-700/50 pt-3 mt-2">
+                                    <span className="text-xl font-bold text-emerald-400">
+                                        {formatCurrency(lead.value)}
+                                    </span>
+                                    <span className="text-xs text-slate-600">
+                                        {lead.lastContact
+                                            ? `Last: ${new Date(lead.lastContact).toLocaleDateString()}`
+                                            : new Date(lead.updatedAt).toLocaleDateString()}
+                                    </span>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="mt-3 flex gap-2">
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            handleIntelRequest(lead);
+                                            setSelectedLead(lead);
+                                            setIsEmailDraftOpen(true);
                                         }}
-                                        className="mt-3 w-full py-1 text-[10px] text-slate-500 hover:text-blue-400 border border-dashed border-slate-700 hover:border-blue-500/40 rounded transition-all italic flex items-center justify-center gap-1"
+                                        className="flex-1 py-2 text-xs bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 hover:from-violet-600/40 hover:to-fuchsia-600/40 border border-violet-500/30 rounded-lg text-violet-300 transition-all flex items-center justify-center gap-1"
                                     >
-                                        <Sparkles size={10} /> Analyze Deal Sentiment
+                                        ✨ Email
                                     </button>
-                                )}
-                            </div>
-
-                            {/* Value & Date */}
-                            <div className="flex justify-between items-center border-t border-slate-700/50 pt-3 mt-2">
-                                <span className="text-xl font-bold text-emerald-400">
-                                    {formatCurrency(lead.value)}
-                                </span>
-                                <span className="text-xs text-slate-600">
-                                    {lead.lastContact
-                                        ? `Last: ${new Date(lead.lastContact).toLocaleDateString()}`
-                                        : new Date(lead.updatedAt).toLocaleDateString()}
-                                </span>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="mt-3 flex gap-2">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedLead(lead);
-                                        setIsEmailDraftOpen(true);
-                                    }}
-                                    className="flex-1 py-2 text-xs bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 hover:from-violet-600/40 hover:to-fuchsia-600/40 border border-violet-500/30 rounded-lg text-violet-300 transition-all flex items-center justify-center gap-1"
-                                >
-                                    ✨ Email
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!user) {
-                                            toast.info('Log in to track calls');
-                                            return;
-                                        }
-                                        setSelectedLead(lead);
-                                        setIsCallModalOpen(true);
-                                    }}
-                                    className="px-3 py-2 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 transition-all"
-                                    title="Log Call"
-                                >
-                                    📞
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!user) {
-                                            toast.info('Log in to track meetings');
-                                            return;
-                                        }
-                                        setSelectedLead(lead);
-                                        setIsMeetingModalOpen(true);
-                                    }}
-                                    className="px-3 py-2 text-xs bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 transition-all"
-                                    title="Log Meeting"
-                                >
-                                    📅
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!user) {
-                                            toast.info('Log in to track replies');
-                                            return;
-                                        }
-                                        setSelectedLead(lead);
-                                        setIsReplyModalOpen(true);
-                                    }}
-                                    className="px-3 py-2 text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-amber-400 transition-all"
-                                    title="Log Reply Received"
-                                >
-                                    📩
-                                </button>
-                            </div>
-
-                            {/* Expanded Activity Timeline */}
-                            {expandedLeadId === lead.id && (
-                                <div className="mt-4 pt-4 border-t border-slate-700/50">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <PulseIcon size={14} className="text-blue-400" />
-                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                            Unified Engagement History
-                                        </h4>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        {/* Combined Timeline: Activities + Gmail */}
-                                        {(() => {
-                                            const leadActivities = activities[lead.id] || [];
-                                            const leadEmails = gmailHistory[lead.id] || [];
-
-                                            const timeline = [
-                                                ...leadActivities.map((a) => ({
-                                                    ...a,
-                                                    sortKey: a.timestamp,
-                                                    timelineType: 'activity' as const,
-                                                })),
-                                                ...leadEmails.map((e) => ({
-                                                    ...e,
-                                                    sortKey: e.timestamp,
-                                                    timelineType: 'email' as const,
-                                                })),
-                                            ].sort((a, b) => b.sortKey - a.sortKey);
-
-                                            if (timeline.length === 0) {
-                                                return (
-                                                    <p className="text-xs text-slate-600 italic py-4">
-                                                        No recent engagement recorded.
-                                                    </p>
-                                                );
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!user) {
+                                                toast.info('Log in to track calls');
+                                                return;
                                             }
+                                            setSelectedLead(lead);
+                                            setIsCallModalOpen(true);
+                                        }}
+                                        className="px-3 py-2 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 transition-all"
+                                        title="Log Call"
+                                    >
+                                        📞
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!user) {
+                                                toast.info('Log in to track meetings');
+                                                return;
+                                            }
+                                            setSelectedLead(lead);
+                                            setIsMeetingModalOpen(true);
+                                        }}
+                                        className="px-3 py-2 text-xs bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 transition-all"
+                                        title="Log Meeting"
+                                    >
+                                        📅
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!user) {
+                                                toast.info('Log in to track replies');
+                                                return;
+                                            }
+                                            setSelectedLead(lead);
+                                            setIsReplyModalOpen(true);
+                                        }}
+                                        className="px-3 py-2 text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-amber-400 transition-all"
+                                        title="Log Reply Received"
+                                    >
+                                        📩
+                                    </button>
+                                </div>
 
-                                            return timeline.map((item, idx) => (
-                                                <div key={idx} className="flex gap-3 group/item">
-                                                    <div className="flex flex-col items-center">
-                                                        <div
-                                                            className={`w-8 h-8 rounded-full flex items-center justify-center border ${
-                                                                item.timelineType === 'email'
-                                                                    ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
-                                                                    : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                                                            }`}
-                                                        >
-                                                            {item.timelineType === 'email' ? (
-                                                                <MailIcon size={12} />
-                                                            ) : (
-                                                                <PulseIcon size={12} />
+                                {/* Expanded Activity Timeline */}
+                                {expandedLeadId === lead.id && (
+                                    <div className="mt-4 pt-4 border-t border-slate-700/50">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <PulseIcon size={14} className="text-blue-400" />
+                                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                Unified Engagement History
+                                            </h4>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {/* Combined Timeline: Activities + Gmail */}
+                                            {(() => {
+                                                const leadActivities = activities[lead.id] || [];
+                                                const leadEmails = gmailHistory[lead.id] || [];
+
+                                                const timeline = [
+                                                    ...leadActivities.map((a) => ({
+                                                        ...a,
+                                                        sortKey: a.timestamp,
+                                                        timelineType: 'activity' as const,
+                                                    })),
+                                                    ...leadEmails.map((e) => ({
+                                                        ...e,
+                                                        sortKey: e.timestamp,
+                                                        timelineType: 'email' as const,
+                                                    })),
+                                                ].sort((a, b) => b.sortKey - a.sortKey);
+
+                                                if (timeline.length === 0) {
+                                                    return (
+                                                        <p className="text-xs text-slate-600 italic py-4">
+                                                            No recent engagement recorded.
+                                                        </p>
+                                                    );
+                                                }
+
+                                                return timeline.map((item, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex gap-3 group/item"
+                                                    >
+                                                        <div className="flex flex-col items-center">
+                                                            <div
+                                                                className={`w-8 h-8 rounded-full flex items-center justify-center border ${
+                                                                    item.timelineType === 'email'
+                                                                        ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                                                                        : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                                                }`}
+                                                            >
+                                                                {item.timelineType === 'email' ? (
+                                                                    <MailIcon size={12} />
+                                                                ) : (
+                                                                    <PulseIcon size={12} />
+                                                                )}
+                                                            </div>
+                                                            {idx < timeline.length - 1 && (
+                                                                <div className="w-px flex-1 bg-slate-800 my-1" />
                                                             )}
                                                         </div>
-                                                        {idx < timeline.length - 1 && (
-                                                            <div className="w-px flex-1 bg-slate-800 my-1" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 pb-4">
-                                                        <div className="flex justify-between items-start mb-1">
-                                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">
+                                                        <div className="flex-1 pb-4">
+                                                            <div className="flex justify-between items-start mb-1">
+                                                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">
+                                                                    {item.timelineType === 'email'
+                                                                        ? (item as EmailRecord)
+                                                                              .subject
+                                                                        : (
+                                                                              item as unknown as Activity
+                                                                          ).type}
+                                                                </span>
+                                                                <span className="text-[9px] text-slate-500">
+                                                                    {new Date(
+                                                                        item.sortKey
+                                                                    ).toLocaleDateString()}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2 italic">
                                                                 {item.timelineType === 'email'
-                                                                    ? (item as EmailRecord).subject
+                                                                    ? (item as EmailRecord).snippet
                                                                     : (item as unknown as Activity)
-                                                                          .type}
-                                                            </span>
-                                                            <span className="text-[9px] text-slate-500">
-                                                                {new Date(
-                                                                    item.sortKey
-                                                                ).toLocaleDateString()}
-                                                            </span>
+                                                                          .notes}
+                                                            </p>
                                                         </div>
-                                                        <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2 italic">
-                                                            {item.timelineType === 'email'
-                                                                ? (item as EmailRecord).snippet
-                                                                : (item as unknown as Activity)
-                                                                      .notes}
-                                                        </p>
                                                     </div>
-                                                </div>
-                                            ));
-                                        })()}
-                                    </div>
-
-                                    {!gmailConnected && (
-                                        <div className="mt-4 p-3 bg-purple-500/5 border border-purple-500/10 rounded-xl flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-purple-400">
-                                                <MailIcon size={14} />
-                                                <span className="text-[10px] font-medium">
-                                                    Connect Gmail for live thread sync
-                                                </span>
-                                            </div>
-                                            <button
-                                                onClick={() =>
-                                                    (window.location.href = `/api/auth/gmail?userId=${user?.uid}`)
-                                                }
-                                                className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] rounded-lg transition-all"
-                                            >
-                                                Connect
-                                            </button>
+                                                ));
+                                            })()}
                                         </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </GlassCard>
-                ))}
-            </div>
 
-            {leads.length === 0 && (
+                                        {!gmailConnected && (
+                                            <div className="mt-4 p-3 bg-purple-500/5 border border-purple-500/10 rounded-xl flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-purple-400">
+                                                    <MailIcon size={14} />
+                                                    <span className="text-[10px] font-medium">
+                                                        Connect Gmail for live thread sync
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={() =>
+                                                        (window.location.href = `/api/auth/gmail?userId=${user?.uid}`)
+                                                    }
+                                                    className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] rounded-lg transition-all"
+                                                >
+                                                    Connect
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </GlassCard>
+                    ))}
+                </div>
+            )}
+
+            {filteredLeads.length === 0 && (
                 <div className="text-center py-20">
                     <p className="text-slate-500 mb-4">
                         No leads yet. Add your first lead to get started!

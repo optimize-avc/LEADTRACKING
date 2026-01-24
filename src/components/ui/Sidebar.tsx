@@ -52,6 +52,9 @@ export function Sidebar() {
                             Settings
                         </span>
                     </NavLink>
+                    <NavLink href="/settings/bot">
+                        <span className="flex items-center gap-2 pl-4 text-xs">🤖 Bot Studio</span>
+                    </NavLink>
                 </div>
             </nav>
 
@@ -67,6 +70,7 @@ export function Sidebar() {
                     </div>
                 ) : user ? (
                     <div className="space-y-3">
+                        {/* User Profile Display */}
                         <div className="flex items-center gap-3 pl-2">
                             {user.photoURL ? (
                                 <div className="relative w-10 h-10">
@@ -89,13 +93,35 @@ export function Sidebar() {
                                 <div className="text-slate-500 text-xs truncate">{user.email}</div>
                             </div>
                         </div>
-                        <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-red-500/20 rounded-lg transition-colors"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            Sign Out
-                        </button>
+
+                        {/* Quick Account Menu */}
+                        <div className="space-y-1 pl-2">
+                            <Link
+                                href="/settings"
+                                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                            >
+                                <Settings className="w-4 h-4" />
+                                Account Settings
+                            </Link>
+                            <Link
+                                href="/settings/bot"
+                                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-violet-300 hover:bg-violet-500/10 rounded-lg transition-colors"
+                            >
+                                <span className="text-base">🤖</span>
+                                Bot Studio
+                            </Link>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-slate-700/30 pt-2">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-red-500/20 rounded-lg transition-colors"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Sign Out
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <button

@@ -1,17 +1,11 @@
 import { getFirebaseDb } from './config';
-import {
-    collection,
-    doc,
-    setDoc,
-    getDocs,
-    query,
-    where,
-    orderBy,
-    limit,
-    Timestamp,
-} from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 
 export type AuditAction =
+    // Authentication actions
+    | 'user.login'
+    | 'user.logout'
+    | 'user.session_timeout'
     // Lead actions
     | 'lead.created'
     | 'lead.updated'
@@ -19,6 +13,9 @@ export type AuditAction =
     | 'lead.statusChanged'
     | 'lead.assigned'
     | 'lead.imported'
+    | 'lead.exported'
+    | 'lead.bulk_updated'
+    | 'lead.bulk_deleted'
     // Team actions
     | 'team.invited'
     | 'team.inviteAccepted'
@@ -32,7 +29,17 @@ export type AuditAction =
     // Settings actions
     | 'settings.updated'
     | 'settings.discordLinked'
-    | 'settings.discordUnlinked';
+    | 'settings.discordUnlinked'
+    | 'settings.emailConfigured'
+    // Billing actions
+    | 'billing.subscriptionCreated'
+    | 'billing.subscriptionUpdated'
+    | 'billing.subscriptionCancelled'
+    | 'billing.paymentFailed'
+    // Data actions
+    | 'data.exportRequested'
+    | 'data.exportCompleted'
+    | 'data.deletionRequested';
 
 export interface AuditLogEntry {
     id: string;

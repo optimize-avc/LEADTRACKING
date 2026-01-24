@@ -102,6 +102,16 @@ export default function Dashboard() {
                   count: metrics.pipelineStatusCounts['Negotiation'] || 0,
                   color: 'bg-green-500',
               },
+              {
+                  stage: 'Closed Won',
+                  count: metrics.pipelineStatusCounts['Closed'] || 0,
+                  color: 'bg-emerald-500',
+              },
+              {
+                  stage: 'Lost',
+                  count: metrics.pipelineStatusCounts['Lost'] || 0,
+                  color: 'bg-slate-500',
+              },
           ]
         : MOCK_PIPELINE_STAGES;
 

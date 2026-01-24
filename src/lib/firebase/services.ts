@@ -395,6 +395,8 @@ export interface UserProfile {
     email: string;
     onboarded: boolean;
     tier: 'free' | 'pro' | 'enterprise';
+    role?: 'admin' | 'manager' | 'rep'; // User role for permissions
+    companyId?: string; // Multi-tenant company association
     createdAt: number;
     updatedAt: number;
 }

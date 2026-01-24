@@ -51,7 +51,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
         phone: '',
         value: '',
         industry: '',
-        source: '' as LeadSource | '',
+        source: 'Other' as LeadSource,
         status: 'New' as LeadStatus,
         notes: '',
     });
@@ -80,8 +80,8 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
             email: formData.email,
             phone: formData.phone,
             value: parseFloat(formData.value) || 0,
-            industry: formData.industry,
-            source: formData.source || undefined,
+            industry: formData.industry || 'Other',
+            source: formData.source || 'Other',
             status: formData.status,
             notes: formData.notes,
         });
@@ -94,7 +94,7 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
             phone: '',
             value: '',
             industry: '',
-            source: '',
+            source: 'Other',
             status: 'New',
             notes: '',
         });
@@ -243,12 +243,11 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                                 onChange={(e) =>
                                     setFormData({
                                         ...formData,
-                                        source: e.target.value as LeadSource,
+                                        source: (e.target.value as LeadSource) || 'Other',
                                     })
                                 }
                                 className="glass-input w-full bg-slate-900"
                             >
-                                <option value="">Select source...</option>
                                 {SOURCES.map((source) => (
                                     <option key={source} value={source}>
                                         {source}

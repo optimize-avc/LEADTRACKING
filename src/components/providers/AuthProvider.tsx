@@ -49,10 +49,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 let p = await ProfileService.getProfile(currentUser.uid);
                 if (!p) {
                     const now = Date.now();
+                    // First-time users default to 'admin' - they will create their own company
+                    // Invited users will have their role set by the invite acceptance flow
                     const newProfile: Partial<UserProfile> = {
                         email: currentUser.email || '',
                         onboarded: false,
                         tier: 'free',
+                        role: 'admin', // Default to admin for new users (company creators)
                         createdAt: now,
                         updatedAt: now,
                     };

@@ -10,6 +10,7 @@ import { LogCallModal } from '@/components/leads/LogCallModal';
 import { LogMeetingModal } from '@/components/leads/LogMeetingModal';
 import { LogReplyModal } from '@/components/leads/LogReplyModal';
 import { KanbanView } from '@/components/leads/KanbanView';
+import { AILeadInsights } from '@/components/leads/AILeadInsights';
 import { AIEmailDraft } from '@/components/ai/AIEmailDraft';
 import { LeadsService, ActivitiesService } from '@/lib/firebase/services';
 import { formatCurrency } from '@/lib/utils/formatters';
@@ -687,36 +688,12 @@ export default function LeadsClient() {
                                         </p>
                                     )}
 
-                                    {/* AI Intelligence Signal */}
-                                    {leadIntel[lead.id] ? (
-                                        <div className="mt-3 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 relative group/intel animate-in fade-in zoom-in-95 duration-300">
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <Sparkles size={12} className="text-blue-400" />
-                                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">
-                                                    AI Intelligence
-                                                </span>
-                                                <Badge
-                                                    variant="info"
-                                                    className="ml-auto text-[8px] py-0 px-1 border-blue-500/20"
-                                                >
-                                                    {leadIntel[lead.id].signal}
-                                                </Badge>
-                                            </div>
-                                            <p className="text-[11px] text-slate-400 leading-tight italic line-clamp-2">
-                                                &ldquo;{leadIntel[lead.id].justification}&rdquo;
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleIntelRequest(lead);
-                                            }}
-                                            className="mt-3 w-full py-1 text-[10px] text-slate-500 hover:text-blue-400 border border-dashed border-slate-700 hover:border-blue-500/40 rounded transition-all italic flex items-center justify-center gap-1"
-                                        >
-                                            <Sparkles size={10} /> Analyze Deal Sentiment
-                                        </button>
-                                    )}
+                                    {/* AI Insights - Always visible */}
+                                    <AILeadInsights
+                                        lead={lead}
+                                        activities={activities[lead.id] || []}
+                                        compact
+                                    />
                                 </div>
 
                                 {/* Value & Date */}

@@ -5,8 +5,8 @@ import { Lead, LeadStatus, Activity } from '@/types';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrency } from '@/lib/utils/formatters';
-import { Gauge, Sparkles } from 'lucide-react';
-import { calculateLeadVelocity } from '@/lib/utils/scoring';
+import { Gauge, Sparkles, AlertTriangle } from 'lucide-react';
+import { calculateLeadVelocity, calculateAILeadScore, detectStaleLead } from '@/lib/utils/scoring';
 
 interface KanbanViewProps {
     leads: Lead[];
@@ -113,24 +113,42 @@ export function KanbanView({
                                                     : 'border-white/5'
                                             }`}
                                         >
-                                            {/* Velocity indicator */}
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-xs text-slate-500 truncate max-w-[120px]">
-                                                    {lead.industry || 'No industry'}
-                                                </span>
-                                                <div
-                                                    className={`text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-                                                        velocity.status === 'hot'
-                                                            ? 'bg-red-500/20 text-red-400'
-                                                            : velocity.status === 'warm'
-                                                              ? 'bg-amber-500/20 text-amber-400'
-                                                              : 'bg-slate-500/20 text-slate-400'
-                                                    }`}
-                                                >
-                                                    <Gauge size={8} />
-                                                    {velocity.score}%
-                                                </div>
-                                            </div>
+                                            {/* AI Score & Stale indicator */}
+                                            {(() => {
+                                                const aiScore = calculateAILeadScore(
+                                                    lead,
+                                                    activities[lead.id] || []
+                                                );
+                                                const staleInfo = detectStaleLead(lead);
+                                                const gradeColors: Record<string, string> = {
+                                                    A: 'bg-emerald-500/20 text-emerald-400',
+                                                    B: 'bg-blue-500/20 text-blue-400',
+                                                    C: 'bg-amber-500/20 text-amber-400',
+                                                    D: 'bg-orange-500/20 text-orange-400',
+                                                    F: 'bg-red-500/20 text-red-400',
+                                                };
+                                                return (
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-1">
+                                                            <span
+                                                                className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${gradeColors[aiScore.grade]}`}
+                                                            >
+                                                                {aiScore.grade} • {aiScore.score}
+                                                            </span>
+                                                            {staleInfo.isStale && (
+                                                                <span
+                                                                    className={`text-[8px] px-1 py-0.5 rounded-full flex items-center gap-0.5 ${staleInfo.riskLevel === 'critical' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}
+                                                                >
+                                                                    <AlertTriangle size={8} />
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[9px] text-slate-500 truncate max-w-[60px]">
+                                                            {lead.industry || ''}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })()}
 
                                             {/* Company Name */}
                                             <h4 className="text-white font-medium text-sm mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">

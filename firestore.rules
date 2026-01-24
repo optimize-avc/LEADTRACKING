@@ -1,65 +1,162 @@
 rules_version = '2';
 
+/**
+ * Multi-Tenant SaaS Security Rules
+ * 
+ * Prime Directive: "Strict Isolation"
+ * Data leaks between companies are fatal. companyId is the primary key.
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if the user is authenticated
+    // ==========================================================================
+    // HELPER FUNCTIONS
+    // ==========================================================================
+    
+    // Check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
-
-    // Helper function to check if the user owns the document (via path)
+    
+    // Get the user's company ID from their profile
+    function getUserCompanyId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
+    }
+    
+    // Check if user belongs to the specified company
+    function userBelongsToCompany(companyId) {
+      return isAuthenticated() && getUserCompanyId() == companyId;
+    }
+    
+    // Check if user is company admin
+    function isCompanyAdmin(companyId) {
+      return userBelongsToCompany(companyId) 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Check if user owns this document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-
-    // Global Leads Collection (Shared Team View)
-    // Global Leads Collection (Shared Team View)
-    match /leads/{leadId} {
-      allow read, write: if isAuthenticated();
+    
+    // ==========================================================================
+    // COMPANIES COLLECTION (Multi-Tenant Root)
+    // ==========================================================================
+    
+    match /companies/{companyId} {
+      // Only company members can read company data
+      allow read: if userBelongsToCompany(companyId);
       
-      // Shared Activities for this Lead
+      // Only company admins can update company settings
+      allow update: if isCompanyAdmin(companyId);
+      
+      // Company creation handled server-side only
+      allow create, delete: if false;
+      
+      // --------------------------------------------------------------------------
+      // LEADS SUBCOLLECTION
+      // --------------------------------------------------------------------------
+      match /leads/{leadId} {
+        allow read, create: if userBelongsToCompany(companyId);
+        allow update: if userBelongsToCompany(companyId);
+        allow delete: if isCompanyAdmin(companyId);
+      }
+      
+      // --------------------------------------------------------------------------
+      // ACTIVITIES SUBCOLLECTION  
+      // --------------------------------------------------------------------------
       match /activities/{activityId} {
-        allow read, write: if isAuthenticated();
+        allow read, create: if userBelongsToCompany(companyId);
+        // Activities are immutable (audit trail)
+        allow update, delete: if false;
+      }
+      
+      // --------------------------------------------------------------------------
+      // REMINDERS SUBCOLLECTION
+      // --------------------------------------------------------------------------
+      match /reminders/{reminderId} {
+        allow read, create, update: if userBelongsToCompany(companyId);
+        allow delete: if userBelongsToCompany(companyId) 
+          && (resource.data.userId == request.auth.uid || isCompanyAdmin(companyId));
+      }
+      
+      // --------------------------------------------------------------------------
+      // TEAM SUBCOLLECTION
+      // --------------------------------------------------------------------------
+      match /team/{userId} {
+        allow read: if userBelongsToCompany(companyId);
+        allow create, update, delete: if isCompanyAdmin(companyId);
+      }
+      
+      // --------------------------------------------------------------------------
+      // INVITES SUBCOLLECTION
+      // --------------------------------------------------------------------------
+      match /invites/{inviteId} {
+        // Anyone can read invites (for accept flow)
+        allow read: if true;
+        // Only admins can create/manage invites
+        allow create, update, delete: if isCompanyAdmin(companyId);
+      }
+      
+      // --------------------------------------------------------------------------
+      // AUDIT LOG SUBCOLLECTION
+      // --------------------------------------------------------------------------
+      match /auditLog/{logId} {
+        // Company members can read audit log
+        allow read: if userBelongsToCompany(companyId);
+        // Audit logs are created server-side or by any member, never deleted
+        allow create: if userBelongsToCompany(companyId);
+        allow update, delete: if false;
       }
     }
-
-    // Users collection: Users can only read/write their own profile
+    
+    // ==========================================================================
+    // USERS COLLECTION
+    // ==========================================================================
+    
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      // Users can read their own profile
+      allow read: if isOwner(userId);
       
-      // Leads subcollection: Users can only access their own leads
-      match /leads/{leadId} {
+      // Users can update their own profile (but not companyId or role)
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['companyId', 'role']);
+      
+      // User creation during signup
+      allow create: if isOwner(userId);
+      
+      // Users cannot delete their own profile
+      allow delete: if false;
+      
+      // User subcollections
+      match /integrations/{integrationId} {
         allow read, write: if isOwner(userId);
       }
       
-      // Activities subcollection: Users can only access their own activities
-      match /activities/{activityId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Email threads subcollection
       match /emailThreads/{threadId} {
         allow read, write: if isOwner(userId);
       }
       
-      // Email messages subcollection
       match /emailMessages/{messageId} {
         allow read, write: if isOwner(userId);
       }
-      
-      // Integrations subcollection (Gmail, Twilio tokens)
-      match /integrations/{integrationId} {
-        allow read, write: if isOwner(userId);
-      }
-    }
-
-    // Company Resources (Shared)
-    match /resources/{resourceId} {
-      allow read, write: if isAuthenticated();
     }
     
-    // Default deny for any unmatched paths
+    // ==========================================================================
+    // LEGACY COLLECTIONS (Transitional - Read Only)
+    // ==========================================================================
+    
+    match /leads/{leadId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Use companies/{companyId}/leads instead
+    }
+    
+    match /resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Default deny
     match /{document=**} {
       allow read, write: if false;
     }

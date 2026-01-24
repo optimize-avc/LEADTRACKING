@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { TeamService, type TeamMember, type TeamRole } from '@/lib/firebase/team';
+import { CompanyService } from '@/lib/firebase/company';
 import {
     Users,
     UserPlus,
@@ -13,21 +15,13 @@ import {
     User,
     ChevronLeft,
     Trash2,
-    MoreVertical,
+    Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface TeamMember {
-    id: string;
-    email: string;
-    name: string;
-    role: 'admin' | 'manager' | 'rep';
-    avatar?: string;
-    status: 'active' | 'pending';
-    joinedAt?: Date;
-}
+// TeamMember type is now imported from TeamService
 
 const ROLE_CONFIG = {
     admin: {
@@ -56,42 +50,56 @@ const ROLE_CONFIG = {
     },
 };
 
-// Sample team members - in production from Firebase
-const SAMPLE_TEAM: TeamMember[] = [
-    {
-        id: '1',
-        email: 'admin@company.com',
-        name: 'Alex Johnson',
-        role: 'admin',
-        status: 'active',
-        joinedAt: new Date('2024-01-15'),
-    },
-    {
-        id: '2',
-        email: 'sarah@company.com',
-        name: 'Sarah Chen',
-        role: 'manager',
-        status: 'active',
-        joinedAt: new Date('2024-02-01'),
-    },
-    {
-        id: '3',
-        email: 'mike@company.com',
-        name: 'Mike Wilson',
-        role: 'rep',
-        status: 'pending',
-    },
-];
+// Team members are now fetched from Firebase
 
 export default function TeamManagementClient() {
     const { user, profile } = useAuth();
-    const [team, setTeam] = useState<TeamMember[]>(SAMPLE_TEAM);
+    const [team, setTeam] = useState<TeamMember[]>([]);
     const [showInviteForm, setShowInviteForm] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteRole, setInviteRole] = useState<'admin' | 'manager' | 'rep'>('rep');
+    const [inviteRole, setInviteRole] = useState<TeamRole>('rep');
     const [isSending, setIsSending] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [companyId, setCompanyId] = useState<string | null>(null);
+    const [companyName, setCompanyName] = useState<string>('');
 
     const isEnterprise = profile?.tier === 'enterprise' || profile?.tier === 'pro';
+
+    // Fetch company and team data from Firebase
+    const fetchTeamData = useCallback(async () => {
+        if (!user) return;
+        setIsLoading(true);
+        try {
+            const company = await CompanyService.getCompanyByUser(user.uid);
+            if (company) {
+                setCompanyId(company.id);
+                setCompanyName(company.name);
+                const members = await TeamService.getTeamMembers(company.id);
+                setTeam(members);
+            } else {
+                // If no company, show current user as admin (solo user)
+                setTeam([
+                    {
+                        id: user.uid,
+                        email: user.email || '',
+                        name: user.email?.split('@')[0] || 'You',
+                        role: 'admin',
+                        status: 'active',
+                        joinedAt: Date.now(),
+                    },
+                ]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch team:', error);
+            toast.error('Failed to load team members');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [user, profile]);
+
+    useEffect(() => {
+        fetchTeamData();
+    }, [fetchTeamData]);
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -100,18 +108,40 @@ export default function TeamManagementClient() {
             return;
         }
 
-        if (team.find((m) => m.email === inviteEmail)) {
+        if (!companyId) {
+            toast.error('No company found. Please set up your company first.');
+            return;
+        }
+
+        if (team.find((m) => m.email.toLowerCase() === inviteEmail.toLowerCase())) {
             toast.error('This email is already on the team');
             return;
         }
 
         setIsSending(true);
         try {
-            // In production, send invite via API
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const response = await fetch('/api/team/invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    companyId,
+                    companyName,
+                    email: inviteEmail,
+                    role: inviteRole,
+                    invitedBy: user?.uid,
+                    invitedByName: user?.email?.split('@')[0] || 'Team Admin',
+                }),
+            });
 
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to send invitation');
+            }
+
+            // Add pending member to local state
             const newMember: TeamMember = {
-                id: Date.now().toString(),
+                id: data.inviteId,
                 email: inviteEmail,
                 name: inviteEmail.split('@')[0],
                 role: inviteRole,
@@ -121,23 +151,43 @@ export default function TeamManagementClient() {
             setTeam([...team, newMember]);
             setInviteEmail('');
             setShowInviteForm(false);
-            toast.success(`Invitation sent to ${inviteEmail}`);
+            toast.success(
+                data.emailSent
+                    ? `Invitation sent to ${inviteEmail}`
+                    : `Invitation created (email delivery pending)`
+            );
         } catch (error) {
             console.error('Failed to send invite:', error);
-            toast.error('Failed to send invitation');
+            toast.error(error instanceof Error ? error.message : 'Failed to send invitation');
         } finally {
             setIsSending(false);
         }
     };
 
-    const handleRemoveMember = (id: string) => {
-        setTeam(team.filter((m) => m.id !== id));
-        toast.success('Team member removed');
+    const handleRemoveMember = async (memberId: string) => {
+        if (!companyId) return;
+
+        try {
+            await TeamService.removeMember(companyId, memberId);
+            setTeam(team.filter((m) => m.id !== memberId));
+            toast.success('Team member removed');
+        } catch (error) {
+            console.error('Failed to remove member:', error);
+            toast.error('Failed to remove team member');
+        }
     };
 
-    const handleChangeRole = (id: string, newRole: 'admin' | 'manager' | 'rep') => {
-        setTeam(team.map((m) => (m.id === id ? { ...m, role: newRole } : m)));
-        toast.success('Role updated');
+    const handleChangeRole = async (memberId: string, newRole: TeamRole) => {
+        if (!companyId) return;
+
+        try {
+            await TeamService.updateMemberRole(companyId, memberId, newRole);
+            setTeam(team.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)));
+            toast.success('Role updated');
+        } catch (error) {
+            console.error('Failed to update role:', error);
+            toast.error('Failed to update role');
+        }
     };
 
     if (!isEnterprise) {

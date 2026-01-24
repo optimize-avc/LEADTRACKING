@@ -28,6 +28,7 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
     const [outcome, setOutcome] = useState<ActivityOutcome>('connected');
     const [notes, setNotes] = useState('');
     const [nextStep, setNextStep] = useState('');
+    const [shareWithTeam, setShareWithTeam] = useState(false); // Default private
     const [isSaving, setIsSaving] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -54,6 +55,7 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
             setOutcome('connected');
             setNotes('');
             setNextStep('');
+            setShareWithTeam(false);
         }
     }, [isOpen]);
 
@@ -67,15 +69,14 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
         setIsSaving(true);
         try {
             // Log the call activity
-            await ActivitiesService.logActivity(userId, {
-                type: 'call',
+            await ActivitiesService.logCall(
+                userId,
+                lead.id,
                 outcome,
-                leadId: lead.id,
-                duration: elapsedSeconds,
-                notes: notes || undefined,
-                timestamp: Date.now(),
-                repId: userId,
-            });
+                elapsedSeconds,
+                notes || undefined,
+                shareWithTeam
+            );
 
             // Update lead if outcome warrants it
             const selectedOutcome = OUTCOMES.find((o) => o.value === outcome);
@@ -210,6 +211,23 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                             className="glass-input w-full"
                             placeholder="e.g., Send proposal, Schedule demo"
                         />
+                    </div>
+
+                    {/* Visibility Toggle */}
+                    <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <input
+                            type="checkbox"
+                            id="shareWithTeam"
+                            checked={shareWithTeam}
+                            onChange={(e) => setShareWithTeam(e.target.checked)}
+                            className="w-4 h-4 rounded border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                        />
+                        <label
+                            htmlFor="shareWithTeam"
+                            className="text-sm text-slate-300 cursor-pointer select-none"
+                        >
+                            <strong>Share with Team?</strong> (Post to Global Activity Feed)
+                        </label>
                     </div>
                 </div>
 

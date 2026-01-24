@@ -34,6 +34,8 @@ export interface Lead {
     lastContact?: number; // Timestamp of last contact
     nextStep?: string; // Next action to take
     probability?: number; // Win probability percentage
+    discordChannelId?: string; // Discord Channel ID
+    aiGenerated?: boolean; // If created by Bot
     createdAt: number;
     updatedAt: number;
 }
@@ -60,6 +62,7 @@ export interface Activity {
     repId: string;
     leadId?: string;
     notes?: string;
+    visibility?: 'public' | 'private'; // default: private (legacy) or specified
 }
 
 // Aggregated Metrics for Reporting

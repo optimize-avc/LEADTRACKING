@@ -179,7 +179,7 @@ export function PitchRecorder({ onClose }: PitchRecorderProps) {
             "Hi, I'm calling from OmniStream to see if you have time to discuss your social media automation needs. Our tool is 20 percent cheaper than Hootsuite and has better analytics.";
 
         const token = await user?.getIdToken();
-        const result = await GeminiService.analyzePitch(textToAnalyze, undefined, token);
+        const result = await GeminiService.analyzePitch(textToAnalyze, token);
         setAnalysis(result);
         setState('complete');
     };

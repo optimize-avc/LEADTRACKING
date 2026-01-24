@@ -98,6 +98,7 @@ INSTRUCTION: The user is selling the product described above.
         contextMaterials?: string,
         token?: string
     ): Promise<string> {
+        // ... (existing implementation unchanged) ...
         let contextPrompt = '';
         if (contextMaterials) {
             contextPrompt = `
@@ -141,67 +142,62 @@ INSTRUCTION: The user is selling the product described above.
     },
 
     async generateCoachingTips(
-        history: { sender: 'user' | 'ai'; text: string }[],
+        history: { sender: string; text: string }[],
         persona: AIPersona,
         token?: string
     ): Promise<{ tone: string; tips: string[] } | null> {
-        const lastFew = history
-            .slice(-4)
-            .map((h) => `${h.sender.toUpperCase()}: ${h.text}`)
+        const conversation = history
+            .map((h) => `${h.sender === 'user' ? 'Salesperson' : 'Prospect'}: ${h.text}`)
             .join('\n');
 
         const prompt = `
-            You are a Sales Coach monitoring a roleplay.
+            Review this sales conversation context:
+            ${conversation}
+
+            The prospect is ${persona.name} (${persona.role}).
+            Personality: ${persona.personality}.
+            Pain Points: ${persona.painPoints.join(', ')}.
+
+            Analyze the SALESPERSON'S performance so far.
             
-            SCENARIO:
-            Prospect: ${persona.name} (${persona.role} at ${persona.company})
-            Personality: ${persona.personality}
-            
-            RECENT CONVERSATION:
-            ${lastFew}
-            
-            INSTRUCTION:
-            Analyze the USER'S performance.
-            1. Identify their Tone (1-2 words, e.g. "Too Aggressive", "Empathetic", "Hesitant").
-            2. Provide 2 specific, short suggestions for what they should say or do next to handle this prospect.
-            
-            Return JSON:
+            Return ONLY a JSON object with:
             {
-                "tone": "Target Tone",
-                "tips": ["Tip 1", "Tip 2"]
+                "tone": "One/Two words describing Prospect's current mood (e.g. Skeptical, Intrigued)",
+                "tips": [
+                    "Tip 1: A specific thing the salesperson should say next",
+                    "Tip 2: A psychological tactic to use (e.g. 'Label their hesitation')",
+                    "Tip 3: A question to ask to uncover their pain point"
+                ]
             }
         `;
 
+        const text = await this.generateText(prompt, token);
+        if (!text || text.startsWith('Error')) return null;
+
         try {
-            const response = await this.generateText(prompt, token);
-            const jsonStr = response
-                .replace(/^```json/, '')
-                .replace(/```$/, '')
+            const cleanText = text
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
                 .trim();
-            return JSON.parse(jsonStr);
+            return JSON.parse(cleanText);
         } catch (e) {
-            console.error('Coaching generation failed', e);
-            return null;
+            console.error('Failed to parse coaching tips', e);
+            // Fallback
+            return {
+                tone: 'Neutral',
+                tips: [
+                    'Ask open-ended questions',
+                    'Focus on their pain points',
+                    'Summarize what you heard',
+                ],
+            };
         }
     },
 
-    async analyzePitch(
-        transcript: string,
-        context: { industry: string; customerType: string } = {
-            industry: 'General',
-            customerType: 'General',
-        },
-        token?: string
-    ): Promise<AIPitchAnalysis | null> {
+    async analyzePitch(transcript: string, token?: string): Promise<AIPitchAnalysis | null> {
         const prompt = `
             Analyze this sales pitch transcript: "${transcript}"
             
-            Target Audience Context:
-            - Industry: ${context.industry}
-            - Customer Type: ${context.customerType}
-
-            INSTRUCTION: Evaluate not just delivery, but RELEVANCE to this specific audience. Is the tone appropriate? (e.g. Formal for Finance, Empathetic for Healthcare).
-
             Return ONLY a JSON object with this structure:
             {
                 "score": 85, // 0-100 based on clarity, persuasion, and confidence
@@ -408,19 +404,11 @@ INSTRUCTION: The user is selling the product described above.
         }
     },
 
-    async generateBoardroomScenario(
-        industry: string = 'Tech',
-        companyType: string = 'Enterprise',
-        token?: string
-    ): Promise<AIBoardroomScenario | null> {
+    async generateBoardroomScenario(token?: string): Promise<AIBoardroomScenario | null> {
         const prompt = `
             Generate a 3-agent B2B buying committee for a "Boardroom" simulation.
             They must have CONFLICTING goals.
             
-            Target Context:
-            Industry: ${industry}
-            Company Type: ${companyType}
-
             Roles needed:
             1. The Blocker (e.g. CFO, Legal) - Skeptical, budget-conscious.
             2. The Champion (e.g. Head of Sales, VP) - Enthusiastic but needs help.
@@ -428,22 +416,22 @@ INSTRUCTION: The user is selling the product described above.
 
             Return ONLY a JSON object:
             {
-                "company": "Generated Company Name",
+                "company": "TechCorp Inc.",
                 "stakeholders": [
                     {
-                        "id": "s1", "name": "Full Name", "role": "Relevant Job Title", "archetype": "Blocker",
+                        "id": "s1", "name": "Marcus Grip", "role": "CFO", "archetype": "Blocker",
                         "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus",
-                        "dominance": 90, "patience": 30, "hiddenAgenda": "Specific hidden agenda related to ${industry}."
+                        "dominance": 90, "patience": 30, "hiddenAgenda": "Wants to cut budget by 20%."
                     },
                     {
-                        "id": "s2", "name": "Full Name", "role": "Relevant Job Title", "archetype": "Champion",
+                        "id": "s2", "name": "Sarah Chen", "role": "VP of Sales", "archetype": "Champion",
                         "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-                        "dominance": 60, "patience": 80, "hiddenAgenda": "Needs a win."
+                        "dominance": 60, "patience": 80, "hiddenAgenda": "Needs a win to get promoted."
                     },
                     {
-                        "id": "s3", "name": "Full Name", "role": "Relevant Job Title", "archetype": "Neutral",
+                        "id": "s3", "name": "David Okonjo", "role": "CTO", "archetype": "Neutral",
                         "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
-                        "dominance": 80, "patience": 60, "hiddenAgenda": "Cares only about ROI/Compliance."
+                        "dominance": 80, "patience": 60, "hiddenAgenda": "Cares only about security compliance."
                     }
                 ]
             }

@@ -30,17 +30,17 @@ function safeLeadValue(value: number | undefined | null): number {
 // ============================================
 
 export const LeadsService = {
-    // Get all leads for a user
+    // Get all leads (Global Team View)
     async getLeads(userId: string): Promise<Lead[]> {
-        const leadsRef = collection(getFirebaseDb(), 'users', userId, 'leads');
-        const q = query(leadsRef, orderBy('updatedAt', 'desc'));
+        // NOTE: We switched to global 'leads' to allow Bot integration
+        const leadsRef = collection(getFirebaseDb(), 'leads');
+        const q = query(leadsRef, orderBy('createdAt', 'desc')); // Show newest first
         const snapshot = await getDocs(q);
         return snapshot.docs.map((doc) => {
             const data = doc.data();
             return {
                 id: doc.id,
                 ...data,
-                // Clamp value to prevent overflow
                 value: safeLeadValue(data.value),
             };
         }) as Lead[];
@@ -48,7 +48,7 @@ export const LeadsService = {
 
     // Get single lead
     async getLead(userId: string, leadId: string): Promise<Lead | null> {
-        const leadRef = doc(getFirebaseDb(), 'users', userId, 'leads', leadId);
+        const leadRef = doc(getFirebaseDb(), 'leads', leadId);
         const snapshot = await getDoc(leadRef);
         if (!snapshot.exists()) return null;
         return { id: snapshot.id, ...snapshot.data() } as Lead;
@@ -59,7 +59,7 @@ export const LeadsService = {
         userId: string,
         lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
     ): Promise<string> {
-        const leadsRef = collection(getFirebaseDb(), 'users', userId, 'leads');
+        const leadsRef = collection(getFirebaseDb(), 'leads');
         const now = Date.now();
         const docRef = await addDoc(leadsRef, {
             ...lead,
@@ -72,7 +72,7 @@ export const LeadsService = {
 
     // Update lead
     async updateLead(userId: string, leadId: string, updates: Partial<Lead>): Promise<void> {
-        const leadRef = doc(getFirebaseDb(), 'users', userId, 'leads', leadId);
+        const leadRef = doc(getFirebaseDb(), 'leads', leadId);
         await updateDoc(leadRef, {
             ...updates,
             updatedAt: Date.now(),
@@ -81,7 +81,7 @@ export const LeadsService = {
 
     // Delete lead
     async deleteLead(userId: string, leadId: string): Promise<void> {
-        const leadRef = doc(getFirebaseDb(), 'users', userId, 'leads', leadId);
+        const leadRef = doc(getFirebaseDb(), 'leads', leadId);
         await deleteDoc(leadRef);
     },
 };
@@ -91,7 +91,7 @@ export const LeadsService = {
 // ============================================
 
 export const ActivitiesService = {
-    // Get all activities for a user
+    // Get all activities for a user (My Work View)
     async getActivities(userId: string, limit: number = 50): Promise<Activity[]> {
         const activitiesRef = collection(getFirebaseDb(), 'users', userId, 'activities');
         const q = query(activitiesRef, orderBy('timestamp', 'desc'));
@@ -102,23 +102,58 @@ export const ActivitiesService = {
         })) as Activity[];
     },
 
-    // Get activities for a specific lead
+    // Get activities for a specific lead (Hybrid View: Private + Public)
     async getLeadActivities(userId: string, leadId: string): Promise<Activity[]> {
-        const activitiesRef = collection(getFirebaseDb(), 'users', userId, 'activities');
-        const q = query(activitiesRef, where('leadId', '==', leadId), orderBy('timestamp', 'desc'));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map((doc) => ({
+        // 1. Fetch My Private Activities
+        const userActivitiesRef = collection(getFirebaseDb(), 'users', userId, 'activities');
+        const privateQ = query(
+            userActivitiesRef,
+            where('leadId', '==', leadId),
+            orderBy('timestamp', 'desc')
+        );
+        const privateSnapshot = await getDocs(privateQ);
+        const privateActivities = privateSnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
+            visibility: 'private',
         })) as Activity[];
+
+        // 2. Fetch Public Team Activities
+        const publicActivitiesRef = collection(getFirebaseDb(), 'leads', leadId, 'activities');
+        const publicQ = query(publicActivitiesRef, orderBy('timestamp', 'desc'));
+        const publicSnapshot = await getDocs(publicQ);
+        const publicActivities = publicSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            visibility: 'public',
+        })) as Activity[];
+
+        // 3. Merge & Sort by Timestamp (Newest First)
+        // Deduplicate? Generally unlikely to have ID collision between collections, but safe to just concat
+        const allActivities = [...privateActivities, ...publicActivities].sort(
+            (a, b) => b.timestamp - a.timestamp
+        );
+
+        return allActivities;
     },
 
     // Log new activity
     async logActivity(userId: string, activity: Omit<Activity, 'id'>): Promise<string> {
-        const activitiesRef = collection(getFirebaseDb(), 'users', userId, 'activities');
-        const docRef = await addDoc(activitiesRef, {
+        let collectionRef;
+
+        // Determine destination based on visibility
+        if (activity.visibility === 'public' && activity.leadId) {
+            // Public Team Log
+            collectionRef = collection(getFirebaseDb(), 'leads', activity.leadId, 'activities');
+        } else {
+            // Private User Log (Default)
+            collectionRef = collection(getFirebaseDb(), 'users', userId, 'activities');
+        }
+
+        const docRef = await addDoc(collectionRef, {
             ...activity,
             repId: userId,
+            visibility: activity.visibility || 'private',
         });
 
         // Update lead's lastContact if associated with a lead
@@ -141,7 +176,8 @@ export const ActivitiesService = {
         leadId: string,
         outcome: ActivityOutcome,
         duration?: number,
-        notes?: string
+        notes?: string,
+        isPublic: boolean = false
     ): Promise<string> {
         return this.logActivity(userId, {
             type: 'call',
@@ -151,6 +187,7 @@ export const ActivitiesService = {
             notes,
             timestamp: Date.now(),
             repId: userId,
+            visibility: isPublic ? 'public' : 'private',
         });
     },
 
@@ -158,7 +195,8 @@ export const ActivitiesService = {
         userId: string,
         leadId: string,
         subject: string,
-        notes?: string
+        notes?: string,
+        isPublic: boolean = false
     ): Promise<string> {
         return this.logActivity(userId, {
             type: 'email',
@@ -167,6 +205,7 @@ export const ActivitiesService = {
             notes: notes || `Email sent: ${subject}`,
             timestamp: Date.now(),
             repId: userId,
+            visibility: isPublic ? 'public' : 'private',
         });
     },
 
@@ -174,7 +213,8 @@ export const ActivitiesService = {
         userId: string,
         leadId: string,
         outcome: ActivityOutcome,
-        notes?: string
+        notes?: string,
+        isPublic: boolean = false
     ): Promise<string> {
         return this.logActivity(userId, {
             type: 'meeting',
@@ -183,6 +223,7 @@ export const ActivitiesService = {
             notes,
             timestamp: Date.now(),
             repId: userId,
+            visibility: isPublic ? 'public' : 'private',
         });
     },
 
@@ -194,6 +235,7 @@ export const ActivitiesService = {
             notes: `Reply received: ${replyContent.substring(0, 200)}...`,
             timestamp: Date.now(),
             repId: userId,
+            visibility: 'private', // Email replies usually private by default unless manually shared
         });
     },
 };

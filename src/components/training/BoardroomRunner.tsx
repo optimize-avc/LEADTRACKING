@@ -47,11 +47,7 @@ export function BoardroomRunner({ onClose, config }: BoardroomRunnerProps) {
             try {
                 const token = await user?.getIdToken();
                 // Use config from props or default
-                const scenario = await GeminiService.generateBoardroomScenario(
-                    config?.industry || 'Tech',
-                    config?.customerType || 'Enterprise',
-                    token
-                );
+                const scenario = await GeminiService.generateBoardroomScenario(token);
                 if (scenario && scenario.stakeholders) {
                     setAgents(scenario.stakeholders);
                     setStatus('playing');

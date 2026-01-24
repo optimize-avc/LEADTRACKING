@@ -42,6 +42,7 @@ export function LogMeetingModal({
     const [notes, setNotes] = useState('');
     const [meetingDate, setMeetingDate] = useState('');
     const [meetingTime, setMeetingTime] = useState('');
+    const [shareWithTeam, setShareWithTeam] = useState(false); // Default private
     const [isSaving, setIsSaving] = useState(false);
 
     // Set default date/time when modal opens
@@ -54,6 +55,7 @@ export function LogMeetingModal({
             setDuration(30);
             setOutcome('qualified');
             setNotes('');
+            setShareWithTeam(false);
         }
     }, [isOpen]);
 
@@ -65,15 +67,13 @@ export function LogMeetingModal({
             const timestamp = dateTime.getTime();
 
             // Log the meeting activity
-            await ActivitiesService.logActivity(userId, {
-                type: 'meeting',
+            await ActivitiesService.logMeeting(
+                userId,
+                lead.id,
                 outcome,
-                leadId: lead.id,
-                duration: duration * 60, // Convert to seconds
-                notes: `${meetingType.toUpperCase()} meeting. ${notes}`,
-                timestamp,
-                repId: userId,
-            });
+                `${meetingType.toUpperCase()} meeting. ${notes}`,
+                shareWithTeam
+            );
 
             // Update lead based on outcome
             const selectedOutcome = MEETING_OUTCOMES.find((o) => o.value === outcome);
@@ -212,6 +212,23 @@ export function LogMeetingModal({
                             className="glass-input w-full h-20 resize-none"
                             placeholder="Key discussion points, action items..."
                         />
+                    </div>
+
+                    {/* Visibility Toggle */}
+                    <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <input
+                            type="checkbox"
+                            id="shareMeeting"
+                            checked={shareWithTeam}
+                            onChange={(e) => setShareWithTeam(e.target.checked)}
+                            className="w-4 h-4 rounded border-slate-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                        />
+                        <label
+                            htmlFor="shareMeeting"
+                            className="text-sm text-slate-300 cursor-pointer select-none"
+                        >
+                            <strong>Share with Team?</strong> (Post to Global Activity Feed)
+                        </label>
                     </div>
                 </div>
 

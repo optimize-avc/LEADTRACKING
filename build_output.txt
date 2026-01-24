@@ -1,0 +1,81 @@
+
+> leadtracking@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\tryst\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\tryst\.gemini\antigravity\scratch\antigrav-tracking\package-lock.json
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 11.8s
+   Running TypeScript ...
+   Collecting page data using 11 workers ...
+   Generating static pages using 11 workers (0/35) ...
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+Firebase AI not initialized - will use fallback templates: Cannot read properties of null (reading 'container')
+Analytics loading: true
+The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+   Generating static pages using 11 workers (8/35) 
+   Generating static pages using 11 workers (17/35) 
+   Generating static pages using 11 workers (26/35) 
+ ✓ Generating static pages using 11 workers (35/35) in 2.5s
+   Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /activities
+├ ○ /analytics
+├ ƒ /api/ai/generate
+├ ƒ /api/auth/gmail
+├ ƒ /api/auth/gmail/callback
+├ ƒ /api/discord/callback
+├ ƒ /api/discord/oauth
+├ ƒ /api/email/send
+├ ƒ /api/resources/upload
+├ ƒ /api/stripe/checkout
+├ ƒ /api/stripe/portal
+├ ƒ /api/stripe/webhook
+├ ƒ /api/twilio/call
+├ ƒ /api/twilio/incoming-message
+├ ƒ /api/twilio/lookup
+├ ƒ /api/twilio/sms
+├ ƒ /api/twilio/sms-webhook
+├ ƒ /api/twilio/status
+├ ƒ /api/twilio/webhook
+├ ○ /leads
+├ ○ /login
+├ ○ /pricing
+├ ○ /privacy
+├ ○ /reality-link
+├ ○ /resources
+├ ○ /robots.txt
+├ ○ /settings
+├ ○ /settings/bot
+├ ○ /sitemap.xml
+├ ○ /terms
+└ ○ /training
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -4,7 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { LogIn, LogOut, Settings, User } from 'lucide-react';
+import { LogIn, LogOut, Settings, User, HelpCircle, Users } from 'lucide-react';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 export function Sidebar() {
     const { user, loading, signInWithGoogle, logout } = useAuth();
@@ -34,9 +35,14 @@ export function Sidebar() {
             className="w-64 glass-panel h-screen p-6 flex flex-col z-50 rounded-none border-l-0 border-t-0 border-b-0"
             style={{ position: 'fixed', left: 0, top: 0, width: '16rem', height: '100vh' }}
         >
-            <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 mb-10 pl-2">
-                SalesTracker
+            {/* Header with Notifications */}
+            <div className="flex items-center justify-between mb-10">
+                <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 pl-2">
+                    SalesTracker
+                </div>
+                {user && <NotificationCenter />}
             </div>
+
             <nav className="flex-1 space-y-2">
                 <NavLink href="/">Dashboard</NavLink>
                 <NavLink href="/leads">Leads Pipeline</NavLink>
@@ -54,6 +60,20 @@ export function Sidebar() {
                     </NavLink>
                     <NavLink href="/settings/bot">
                         <span className="flex items-center gap-2 pl-4 text-xs">🤖 Bot Studio</span>
+                    </NavLink>
+                    <NavLink href="/settings/team">
+                        <span className="flex items-center gap-2 pl-4 text-xs">
+                            <Users className="w-3 h-3" /> Team
+                        </span>
+                    </NavLink>
+                </div>
+
+                <div className="pt-4 mt-4 border-t border-slate-700/30">
+                    <NavLink href="/help">
+                        <span className="flex items-center gap-2">
+                            <HelpCircle className="w-4 h-4" />
+                            Help & Support
+                        </span>
                     </NavLink>
                 </div>
             </nav>

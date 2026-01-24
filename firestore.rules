@@ -13,6 +13,17 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Global Leads Collection (Shared Team View)
+    // Global Leads Collection (Shared Team View)
+    match /leads/{leadId} {
+      allow read, write: if isAuthenticated();
+      
+      // Shared Activities for this Lead
+      match /activities/{activityId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
     // Users collection: Users can only read/write their own profile
     match /users/{userId} {
       allow read, write: if isOwner(userId);

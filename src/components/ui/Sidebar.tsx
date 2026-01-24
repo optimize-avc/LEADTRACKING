@@ -50,12 +50,18 @@ export function Sidebar() {
                 <NavLink href="/resources">Enablement & Resources</NavLink>
                 <NavLink href="/analytics">Analytics</NavLink>
                 <NavLink href="/training">Training</NavLink>
+                <NavLink href="/reality-link">Reality Link HUD</NavLink>
 
                 <div className="pt-4 mt-4 border-t border-slate-700/30">
                     <NavLink href="/settings">
                         <span className="flex items-center gap-2">
                             <Settings className="w-4 h-4" />
                             Settings
+                        </span>
+                    </NavLink>
+                    <NavLink href="/settings/account">
+                        <span className="flex items-center gap-2 pl-4 text-xs">
+                            <User className="w-3 h-3" /> Account
                         </span>
                     </NavLink>
                     <NavLink href="/settings/bot">
@@ -69,6 +75,9 @@ export function Sidebar() {
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-slate-700/30">
+                    <NavLink href="/pricing">
+                        <span className="flex items-center gap-2">💎 Pricing</span>
+                    </NavLink>
                     <NavLink href="/help">
                         <span className="flex items-center gap-2">
                             <HelpCircle className="w-4 h-4" />
@@ -117,11 +126,11 @@ export function Sidebar() {
                         {/* Quick Account Menu */}
                         <div className="space-y-1 pl-2">
                             <Link
-                                href="/settings"
-                                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                href="/settings/account"
+                                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors"
                             >
-                                <Settings className="w-4 h-4" />
-                                Account Settings
+                                <User className="w-4 h-4" />
+                                Account Preferences
                             </Link>
                             <Link
                                 href="/settings/bot"
@@ -129,6 +138,13 @@ export function Sidebar() {
                             >
                                 <span className="text-base">🤖</span>
                                 Bot Studio
+                            </Link>
+                            <Link
+                                href="/settings/team"
+                                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                            >
+                                <Users className="w-4 h-4" />
+                                Team
                             </Link>
                         </div>
 

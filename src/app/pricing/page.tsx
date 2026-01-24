@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { Check, Zap, Shield, Crown } from 'lucide-react';
+import { Check, Zap, Shield, Crown, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { analytics } from '@/lib/analytics';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 interface PricingTier {
     name: string;
@@ -16,6 +17,7 @@ interface PricingTier {
     color: string;
     popular?: boolean;
     buttonText: string;
+    tier: 'Free' | 'Pro' | 'Venture';
 }
 
 const PRICING_TIERS: PricingTier[] = [
@@ -33,6 +35,7 @@ const PRICING_TIERS: PricingTier[] = [
         icon: <Zap className="w-6 h-6 text-blue-400" />,
         color: 'blue',
         buttonText: 'Start for Free',
+        tier: 'Free',
     },
     {
         name: 'Pro',
@@ -45,11 +48,14 @@ const PRICING_TIERS: PricingTier[] = [
             'Priority Support',
             'Analytics Dashboard Pro',
             'Custom Lead Fields',
+            'Team Management',
+            'Branded Email Integration',
         ],
         icon: <Crown className="w-6 h-6 text-amber-400" />,
         color: 'amber',
         popular: true,
         buttonText: 'Go Pro',
+        tier: 'Pro',
     },
     {
         name: 'Venture',
@@ -66,14 +72,102 @@ const PRICING_TIERS: PricingTier[] = [
         icon: <Shield className="w-6 h-6 text-purple-400" />,
         color: 'purple',
         buttonText: 'Contact Sales',
+        tier: 'Venture',
     },
 ];
 
 export default function PricingPage() {
-    const handlePurchase = (tier: string) => {
-        analytics.track('pricing_clicked', { tier });
-        // In prod: redirect to /api/stripe/checkout?tier=tier
-        alert(`Redirecting to ${tier} checkout... (Stripe Integration Shell Active)`);
+    const { user, profile } = useAuth();
+    const [loadingTier, setLoadingTier] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const handlePurchase = async (tier: PricingTier) => {
+        setError(null);
+        analytics.track('pricing_clicked', { tier: tier.name });
+
+        // Free tier - just close or redirect to signup
+        if (tier.tier === 'Free') {
+            if (!user) {
+                window.location.href = '/login';
+            }
+            return;
+        }
+
+        // Venture tier - contact sales
+        if (tier.tier === 'Venture') {
+            window.location.href =
+                'mailto:sales@salestracker-ai.com?subject=Venture%20Plan%20Inquiry';
+            return;
+        }
+
+        // Pro tier - need to be logged in
+        if (!user) {
+            // Redirect to login, then back to pricing
+            window.location.href = '/login?redirect=/pricing';
+            return;
+        }
+
+        // Check if already on this tier
+        if (profile?.tier === tier.tier.toLowerCase()) {
+            setError(`You're already on the ${tier.name} plan!`);
+            return;
+        }
+
+        try {
+            setLoadingTier(tier.name);
+
+            const response = await fetch('/api/stripe/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    tier: tier.tier,
+                    email: user.email,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to create checkout session');
+            }
+
+            const data = await response.json();
+
+            // Redirect to Stripe Checkout
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error('No checkout URL returned');
+            }
+        } catch (err) {
+            console.error('Checkout error:', err);
+            setError(err instanceof Error ? err.message : 'Failed to start checkout');
+            setLoadingTier(null);
+        }
+    };
+
+    const getButtonText = (tier: PricingTier) => {
+        if (loadingTier === tier.name) {
+            return (
+                <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                </span>
+            );
+        }
+
+        // Show "Current Plan" if user is on this tier
+        if (user && profile?.tier === tier.tier.toLowerCase()) {
+            return 'Current Plan';
+        }
+
+        return tier.buttonText;
+    };
+
+    const isButtonDisabled = (tier: PricingTier) => {
+        if (loadingTier) return true;
+        if (user && profile?.tier === tier.tier.toLowerCase()) return true;
+        return false;
     };
 
     return (
@@ -93,6 +187,12 @@ export default function PricingPage() {
                     Scale your sales intelligence with industrial-grade AI and advanced deal
                     wargaming.
                 </p>
+
+                {error && (
+                    <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
+                        {error}
+                    </div>
+                )}
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20">
@@ -151,14 +251,15 @@ export default function PricingPage() {
                             </ul>
 
                             <button
-                                onClick={() => handlePurchase(tier.name)}
-                                className={`w-full py-4 rounded-xl font-bold transition-all ${
+                                onClick={() => handlePurchase(tier)}
+                                disabled={isButtonDisabled(tier)}
+                                className={`w-full py-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                     tier.popular
                                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:opacity-90 shadow-lg active:scale-95'
                                         : 'bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95'
                                 }`}
                             >
-                                {tier.buttonText}
+                                {getButtonText(tier)}
                             </button>
                         </GlassCard>
                     </motion.div>

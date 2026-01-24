@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
-import { Bot, CreditCard, ExternalLink, ChevronRight, User, Users } from 'lucide-react';
+import { Bot, CreditCard, ExternalLink, ChevronRight, User, Users, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { isGmailConnected } from '@/lib/gmail/gmail-service';
 import { toast } from 'sonner';
@@ -183,6 +183,30 @@ export default function SettingsClient() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+                            </div>
+                        </div>
+                    </GlassCard>
+                </Link>
+
+                {/* Email Integration Card */}
+                <Link href="/settings/email" className="block group">
+                    <GlassCard className="border-l-4 border-l-rose-500 hover:bg-white/5 transition-all cursor-pointer">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                    <Mail size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white group-hover:text-rose-300 transition-colors">
+                                        Email Integration
+                                    </h3>
+                                    <p className="text-sm text-slate-400">
+                                        Connect your SendGrid for branded team invitations
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-rose-400 group-hover:translate-x-1 transition-all" />
                             </div>
                         </div>
                     </GlassCard>

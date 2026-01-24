@@ -3,6 +3,15 @@
  * Mirrors the bot's Company.ts types for cross-app consistency
  */
 
+/**
+ * Email configuration for tenant-specific SendGrid integration
+ */
+export interface EmailConfig {
+    sendgridApiKey?: string; // Tenant's own SendGrid API key
+    fromEmail?: string; // Tenant's verified sender email
+    fromName?: string; // Display name for sender (defaults to company name)
+}
+
 export interface Company {
     id: string;
     name: string;
@@ -20,6 +29,7 @@ export interface CompanySettings {
     qualificationRules: string[];
     prompts: Record<string, string>;
     channelMapping: ChannelMapping;
+    emailConfig?: EmailConfig; // Tenant-specific email configuration
 }
 
 export interface ChannelMapping {

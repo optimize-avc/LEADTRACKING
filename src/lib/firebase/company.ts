@@ -162,4 +162,42 @@ export const CompanyService = {
             updatedAt: Date.now(),
         });
     },
+
+    /**
+     * Update email configuration (SendGrid)
+     */
+    async updateEmailConfig(
+        companyId: string,
+        emailConfig: { sendgridApiKey?: string; fromEmail?: string; fromName?: string }
+    ): Promise<void> {
+        const db = getFirebaseDb();
+        const companyRef = doc(db, 'companies', companyId);
+
+        // Get current settings to merge
+        const current = await getDoc(companyRef);
+        if (!current.exists()) {
+            throw new Error('Company not found');
+        }
+
+        const currentSettings = current.data()?.settings || {};
+        const currentEmailConfig = currentSettings.emailConfig || {};
+
+        await updateDoc(companyRef, {
+            'settings.emailConfig': { ...currentEmailConfig, ...emailConfig },
+            updatedAt: Date.now(),
+        });
+    },
+
+    /**
+     * Clear email configuration (reverts to platform defaults)
+     */
+    async clearEmailConfig(companyId: string): Promise<void> {
+        const db = getFirebaseDb();
+        const companyRef = doc(db, 'companies', companyId);
+
+        await updateDoc(companyRef, {
+            'settings.emailConfig': {},
+            updatedAt: Date.now(),
+        });
+    },
 };

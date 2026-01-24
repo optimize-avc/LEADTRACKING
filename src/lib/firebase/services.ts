@@ -57,13 +57,15 @@ export const LeadsService = {
     // Create new lead
     async createLead(
         userId: string,
-        lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
+        lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>,
+        companyId?: string
     ): Promise<string> {
         const leadsRef = collection(getFirebaseDb(), 'leads');
         const now = Date.now();
         const docRef = await addDoc(leadsRef, {
             ...lead,
             assignedTo: userId,
+            companyId: companyId || null, // For multi-tenancy - filter by companyId in queries
             createdAt: now,
             updatedAt: now,
         });

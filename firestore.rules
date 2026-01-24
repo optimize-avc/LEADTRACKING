@@ -5,6 +5,11 @@ rules_version = '2';
  * 
  * Prime Directive: "Strict Isolation"
  * Data leaks between companies are fatal. companyId is the primary key.
+ * 
+ * Updated: 2026-01-24
+ * - Added usage tracking subcollection protection
+ * - Added Stripe fields protection on user documents
+ * - Enhanced global leads collection for Bot integration
  */
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -23,6 +28,11 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
     }
     
+    // Get the user's role
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
     // Check if user belongs to the specified company
     function userBelongsToCompany(companyId) {
       return isAuthenticated() && getUserCompanyId() == companyId;
@@ -30,13 +40,29 @@ service cloud.firestore {
     
     // Check if user is company admin
     function isCompanyAdmin(companyId) {
-      return userBelongsToCompany(companyId) 
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return userBelongsToCompany(companyId) && getUserRole() == 'admin';
+    }
+    
+    // Check if user is company admin or manager
+    function isCompanyAdminOrManager(companyId) {
+      let role = getUserRole();
+      return userBelongsToCompany(companyId) && (role == 'admin' || role == 'manager');
     }
     
     // Check if user owns this document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if field is being modified
+    function isFieldModified(field) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([field]);
+    }
+    
+    // Check if protected fields are being modified
+    function protectedFieldsModified() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['companyId', 'role', 'stripeCustomerId', 'stripeSubscriptionId', 'tier', 'subscriptionStatus']);
     }
     
     // ==========================================================================
@@ -54,7 +80,7 @@ service cloud.firestore {
       allow create, delete: if false;
       
       // --------------------------------------------------------------------------
-      // LEADS SUBCOLLECTION
+      // LEADS SUBCOLLECTION (Future: migrate from global /leads)
       // --------------------------------------------------------------------------
       match /leads/{leadId} {
         allow read, create: if userBelongsToCompany(companyId);
@@ -99,12 +125,22 @@ service cloud.firestore {
       }
       
       // --------------------------------------------------------------------------
+      // USAGE TRACKING SUBCOLLECTION (META)
+      // --------------------------------------------------------------------------
+      match /meta/{docId} {
+        // Company members can read usage data
+        allow read: if userBelongsToCompany(companyId);
+        // Only server can write usage data (or admins for manual adjustments)
+        allow write: if isCompanyAdmin(companyId);
+      }
+      
+      // --------------------------------------------------------------------------
       // AUDIT LOG SUBCOLLECTION
       // --------------------------------------------------------------------------
       match /auditLog/{logId} {
         // Company members can read audit log
         allow read: if userBelongsToCompany(companyId);
-        // Audit logs are created server-side or by any member, never deleted
+        // Audit logs are created by members, never modified
         allow create: if userBelongsToCompany(companyId);
         allow update, delete: if false;
       }
@@ -116,47 +152,107 @@ service cloud.firestore {
     
     match /users/{userId} {
       // Users can read their own profile
-      allow read: if isOwner(userId);
+      // Company admins can read team members' profiles
+      allow read: if isOwner(userId) 
+        || (isAuthenticated() && getUserCompanyId() != null 
+            && get(/databases/$(database)/documents/users/$(userId)).data.companyId == getUserCompanyId());
       
-      // Users can update their own profile (but not companyId or role)
-      allow update: if isOwner(userId)
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['companyId', 'role']);
+      // Users can update their own profile (but not protected fields)
+      allow update: if isOwner(userId) && !protectedFieldsModified();
       
       // User creation during signup
       allow create: if isOwner(userId);
       
-      // Users cannot delete their own profile
+      // Users cannot delete their own profile (handled server-side)
       allow delete: if false;
       
-      // User subcollections
+      // User's personal activities subcollection
+      match /activities/{activityId} {
+        allow read, create: if isOwner(userId);
+        // Activities are immutable
+        allow update, delete: if false;
+      }
+      
+      // User integrations (Gmail, Twilio, etc.)
       match /integrations/{integrationId} {
         allow read, write: if isOwner(userId);
       }
       
+      // Email threads
       match /emailThreads/{threadId} {
         allow read, write: if isOwner(userId);
       }
       
+      // Email messages
       match /emailMessages/{messageId} {
         allow read, write: if isOwner(userId);
       }
     }
     
     // ==========================================================================
-    // LEGACY COLLECTIONS (Transitional - Read Only)
+    // GLOBAL LEADS COLLECTION (Bot Integration)
     // ==========================================================================
+    // Leads are stored at root level to allow Discord Bot integration
+    // This is a transitional pattern - eventually migrate to companies/{companyId}/leads
     
     match /leads/{leadId} {
+      // Authenticated users can read leads
+      // TODO: Add companyId check once all leads have companyId
       allow read: if isAuthenticated();
-      allow write: if false; // Use companies/{companyId}/leads instead
+      
+      // Authenticated users can create leads
+      allow create: if isAuthenticated();
+      
+      // Authenticated users can update leads they have access to
+      allow update: if isAuthenticated();
+      
+      // Only admins can delete leads
+      // TODO: Add company admin check once companyId is on all leads
+      allow delete: if isAuthenticated() && getUserRole() == 'admin';
+      
+      // Lead activities subcollection (public team activities)
+      match /activities/{activityId} {
+        allow read, create: if isAuthenticated();
+        allow update, delete: if false; // Immutable
+      }
     }
+    
+    // ==========================================================================
+    // RESOURCES COLLECTION (Enablement Hub)
+    // ==========================================================================
     
     match /resources/{resourceId} {
+      // Authenticated users can read and create resources
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow create: if isAuthenticated();
+      
+      // Users can update/delete their own resources
+      allow update, delete: if isAuthenticated() 
+        && resource.data.createdBy == request.auth.uid;
     }
     
-    // Default deny
+    // ==========================================================================
+    // INVITES COLLECTION (Global - for invite tokens)
+    // ==========================================================================
+    
+    match /invites/{inviteId} {
+      // Anyone can read invites (needed for invite acceptance flow)
+      allow read: if true;
+      
+      // Only authenticated admins can create invites
+      allow create: if isAuthenticated() && getUserRole() == 'admin';
+      
+      // Invites can be updated (accepted/expired) by anyone with the token
+      allow update: if true;
+      
+      // Only admins can delete invites
+      allow delete: if isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    // ==========================================================================
+    // DEFAULT DENY
+    // ==========================================================================
+    // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;
     }

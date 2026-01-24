@@ -30,6 +30,7 @@ export type LeadSource =
 
 export interface Lead {
     id: string;
+    companyId?: string; // Multi-tenant company association
     companyName: string;
     contactName: string;
     email: string;

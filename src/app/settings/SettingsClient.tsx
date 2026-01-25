@@ -101,7 +101,50 @@ export default function SettingsClient() {
         );
     }
 
-    if (!user) return null;
+    if (!user) {
+        return (
+            <div className="p-8 min-h-screen flex items-center justify-center">
+                <div className="text-center max-w-md">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <User className="w-10 h-10 text-blue-400" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">Sign In Required</h1>
+                    <p className="text-slate-400 mb-6">
+                        Please sign in to access your workspace settings, integrations, and billing
+                        preferences.
+                    </p>
+                    <Link
+                        href="/login"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                        Sign In to Continue
+                        <ChevronRight className="w-4 h-4" />
+                    </Link>
+                    <div className="mt-8 pt-6 border-t border-slate-700">
+                        <p className="text-slate-500 text-sm mb-3">What you can configure:</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-slate-400">
+                            <div className="flex items-center gap-2">
+                                <Bot className="w-4 h-4 text-violet-400" />
+                                <span>Bot Studio</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Mail className="w-4 h-4 text-rose-400" />
+                                <span>Email Integration</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-emerald-400" />
+                                <span>Team Management</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-indigo-400" />
+                                <span>Billing & Plans</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-8 min-h-screen">

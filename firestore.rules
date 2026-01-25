@@ -43,21 +43,14 @@ service cloud.firestore {
       return userBelongsToCompany(companyId) && getUserRole() == 'admin';
     }
     
-    // Check if user is company admin or manager
-    function isCompanyAdminOrManager(companyId) {
-      let role = getUserRole();
-      return userBelongsToCompany(companyId) && (role == 'admin' || role == 'manager');
-    }
+    // Note: isCompanyAdminOrManager removed - use isCompanyAdmin or explicit role checks
     
     // Check if user owns this document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Check if field is being modified
-    function isFieldModified(field) {
-      return request.resource.data.diff(resource.data).affectedKeys().hasAny([field]);
-    }
+    // Note: Individual field modification checks done inline in protectedFieldsModified
     
     // Check if protected fields are being modified
     function protectedFieldsModified() {

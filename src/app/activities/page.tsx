@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import ActivitiesClient from './ActivitiesClient';
 
+// Prevent static prerendering - this page needs authentication
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: 'Activity Center | Log & Track Performance',
     description:

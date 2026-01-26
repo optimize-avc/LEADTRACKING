@@ -195,8 +195,9 @@ service cloud.firestore {
       // Authenticated users can update leads they have access to
       allow update: if isAuthenticated();
       
-      // Only admins can delete leads
-      allow delete: if isAuthenticated() && getUserRole() == 'admin';
+      // Users can delete leads they created, OR admins can delete any lead
+      allow delete: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid || getUserRole() == 'admin');
       
       // Lead activities subcollection (public team activities)
       match /activities/{activityId} {

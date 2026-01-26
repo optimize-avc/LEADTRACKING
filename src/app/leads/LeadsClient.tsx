@@ -383,9 +383,14 @@ export default function LeadsClient() {
             toast.success('Leads deleted successfully');
             setSelectedLeadIds(new Set());
             loadLeads();
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Bulk delete failed', error);
-            toast.error('Failed to delete some leads');
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            if (errorMessage.includes('permission') || errorMessage.includes('PERMISSION_DENIED')) {
+                toast.error('Permission denied. You can only delete leads you created.');
+            } else {
+                toast.error('Failed to delete some leads. Check console for details.');
+            }
         }
     };
 

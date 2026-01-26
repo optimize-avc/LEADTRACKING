@@ -7,7 +7,7 @@
         "rules": "storage.rules"
     },
     "hosting": {
-        "public": "out",
+        "public": "public-redirect",
         "cleanUrls": true,
         "trailingSlash": false,
         "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],

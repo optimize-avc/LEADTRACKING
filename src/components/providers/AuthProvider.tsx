@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import {
     User,
     onAuthStateChanged,
@@ -36,54 +36,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const loadingRef = useRef(true);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const refreshProfile = async () => {
+    // Keep ref in sync with state
+    useEffect(() => {
+        loadingRef.current = loading;
+    }, [loading]);
+
+    const finishLoading = useCallback(() => {
+        if (loadingRef.current) {
+            setLoading(false);
+        }
+    }, []);
+
+    const refreshProfile = useCallback(async () => {
         if (user) {
             const p = await ProfileService.getProfile(user.uid);
             setProfile(p);
         }
-    };
+    }, [user]);
 
     useEffect(() => {
+        // Timeout fallback - if auth takes too long, assume not logged in
+        timeoutRef.current = setTimeout(() => {
+            console.warn('Auth timeout - assuming not logged in');
+            finishLoading();
+        }, 5000);
+
         const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (currentUser) => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+
             setUser(currentUser);
+
             if (currentUser) {
                 // Fetch or initialize profile
-                let p = await ProfileService.getProfile(currentUser.uid);
-                const isPermanentAdmin = PERMANENT_ADMINS.includes(
-                    currentUser.email?.toLowerCase() || ''
-                );
+                try {
+                    let p = await ProfileService.getProfile(currentUser.uid);
+                    const isPermanentAdmin = PERMANENT_ADMINS.includes(
+                        currentUser.email?.toLowerCase() || ''
+                    );
 
-                if (!p) {
-                    const now = Date.now();
-                    // First-time users default to 'admin' - they will create their own company
-                    // Invited users will have their role set by the invite acceptance flow
-                    const newProfile: Partial<UserProfile> = {
-                        email: currentUser.email || '',
-                        onboarded: false,
-                        tier: 'free',
-                        role: 'admin', // Default to admin for new users (company creators)
-                        createdAt: now,
-                        updatedAt: now,
-                    };
-                    await ProfileService.updateProfile(currentUser.uid, newProfile);
-                    p = await ProfileService.getProfile(currentUser.uid);
-                } else if (isPermanentAdmin && p.role !== 'admin') {
-                    // Ensure permanent admins always have admin role
-                    await ProfileService.updateProfile(currentUser.uid, { role: 'admin' });
-                    p = { ...p, role: 'admin' };
+                    if (!p) {
+                        const now = Date.now();
+                        // First-time users default to 'admin' - they will create their own company
+                        // Invited users will have their role set by the invite acceptance flow
+                        const newProfile: Partial<UserProfile> = {
+                            email: currentUser.email || '',
+                            onboarded: false,
+                            tier: 'free',
+                            role: 'admin', // Default to admin for new users (company creators)
+                            createdAt: now,
+                            updatedAt: now,
+                        };
+                        await ProfileService.updateProfile(currentUser.uid, newProfile);
+                        p = await ProfileService.getProfile(currentUser.uid);
+                    } else if (isPermanentAdmin && p.role !== 'admin') {
+                        // Ensure permanent admins always have admin role
+                        await ProfileService.updateProfile(currentUser.uid, { role: 'admin' });
+                        p = { ...p, role: 'admin' };
+                    }
+                    setProfile(p);
+                } catch (profileError) {
+                    console.error('Error loading profile:', profileError);
+                    // Continue without profile - user is still authenticated
                 }
-                setProfile(p);
             } else {
                 setProfile(null);
             }
-            setLoading(false);
+
+            finishLoading();
         });
 
-        return () => unsubscribe();
-    }, []);
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+            unsubscribe();
+        };
+    }, [finishLoading]);
 
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = useCallback(async () => {
         try {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(getFirebaseAuth(), provider);
@@ -91,16 +127,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error signing in with Google', error);
             throw error;
         }
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
             await signOut(getFirebaseAuth());
         } catch (error) {
             console.error('Error signing out', error);
             throw error;
         }
-    };
+    }, []);
 
     return (
         <AuthContext.Provider

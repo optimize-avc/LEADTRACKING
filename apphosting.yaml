@@ -92,3 +92,15 @@ env:
       secret: GOOGLE_AI_API_KEY
       availability:
           - RUNTIME
+
+    # Brave Search API (for web search in business audits)
+    - variable: BRAVE_API_KEY
+      secret: BRAVE_API_KEY
+      availability:
+          - RUNTIME
+
+    # Google Places API (for business location data)
+    - variable: GOOGLE_PLACES_API_KEY
+      secret: GOOGLE_PLACES_API_KEY
+      availability:
+          - RUNTIME

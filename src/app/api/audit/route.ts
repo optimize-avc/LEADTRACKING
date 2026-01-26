@@ -11,6 +11,35 @@ const GEMINI_API_KEY =
     '';
 
 const BRAVE_API_KEY = process.env.BRAVE_API_KEY || '';
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || '';
+
+// Google Places API (New) types
+interface PlaceResult {
+    id: string;
+    displayName?: { text: string };
+    formattedAddress?: string;
+    nationalPhoneNumber?: string;
+    internationalPhoneNumber?: string;
+    websiteUri?: string;
+    rating?: number;
+    userRatingCount?: number;
+    currentOpeningHours?: {
+        openNow?: boolean;
+        weekdayDescriptions?: string[];
+    };
+    businessStatus?: string;
+    types?: string[];
+    primaryType?: string;
+    primaryTypeDisplayName?: { text: string };
+    reviews?: Array<{
+        rating?: number;
+        text?: { text: string };
+        authorAttribution?: { displayName: string };
+        relativePublishTimeDescription?: string;
+    }>;
+    photos?: Array<{ name: string }>;
+    editorialSummary?: { text: string };
+}
 
 // Vertex AI client (lazy initialized)
 let vertexAIClient: unknown = null;
@@ -116,6 +145,132 @@ async function searchBrave(query: string): Promise<string> {
     }
 }
 
+async function searchGooglePlaces(query: string): Promise<PlaceResult | null> {
+    if (!GOOGLE_PLACES_API_KEY) {
+        console.warn('[Audit API] No Google Places API key, skipping places search');
+        return null;
+    }
+
+    try {
+        // Step 1: Text Search to find the place
+        const searchResponse = await fetch('https://places.googleapis.com/v1/places:searchText', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+                'X-Goog-FieldMask':
+                    'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.businessStatus,places.types,places.primaryType,places.primaryTypeDisplayName',
+            },
+            body: JSON.stringify({
+                textQuery: query,
+                maxResultCount: 1,
+            }),
+        });
+
+        if (!searchResponse.ok) {
+            const errText = await searchResponse.text();
+            console.error('[Audit API] Places search failed:', searchResponse.status, errText);
+            return null;
+        }
+
+        const searchData = await searchResponse.json();
+        const place = searchData.places?.[0];
+
+        if (!place) {
+            console.log('[Audit API] No places found for query:', query);
+            return null;
+        }
+
+        // Step 2: Get Place Details (reviews, hours, photos)
+        const detailsResponse = await fetch(`https://places.googleapis.com/v1/places/${place.id}`, {
+            method: 'GET',
+            headers: {
+                'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+                'X-Goog-FieldMask':
+                    'id,displayName,formattedAddress,nationalPhoneNumber,internationalPhoneNumber,websiteUri,rating,userRatingCount,currentOpeningHours,businessStatus,types,primaryType,primaryTypeDisplayName,reviews,photos,editorialSummary',
+            },
+        });
+
+        if (!detailsResponse.ok) {
+            console.warn('[Audit API] Places details failed, using search result');
+            return place;
+        }
+
+        const detailsData = await detailsResponse.json();
+        return detailsData;
+    } catch (error) {
+        console.error('[Audit API] Google Places error:', error);
+        return null;
+    }
+}
+
+function formatPlaceData(place: PlaceResult): string {
+    const lines: string[] = ['=== GOOGLE PLACES DATA (Official Business Info) ==='];
+
+    if (place.displayName?.text) {
+        lines.push(`Business Name: ${place.displayName.text}`);
+    }
+
+    if (place.primaryTypeDisplayName?.text) {
+        lines.push(`Category: ${place.primaryTypeDisplayName.text}`);
+    } else if (place.primaryType) {
+        lines.push(`Category: ${place.primaryType.replace(/_/g, ' ')}`);
+    }
+
+    if (place.formattedAddress) {
+        lines.push(`Address: ${place.formattedAddress}`);
+    }
+
+    if (place.nationalPhoneNumber || place.internationalPhoneNumber) {
+        lines.push(`Phone: ${place.nationalPhoneNumber || place.internationalPhoneNumber}`);
+    }
+
+    if (place.websiteUri) {
+        lines.push(`Website: ${place.websiteUri}`);
+    }
+
+    if (place.rating !== undefined) {
+        lines.push(`Google Rating: ${place.rating}/5 (${place.userRatingCount || 0} reviews)`);
+    }
+
+    if (place.businessStatus) {
+        lines.push(`Status: ${place.businessStatus}`);
+    }
+
+    if (place.currentOpeningHours) {
+        if (place.currentOpeningHours.openNow !== undefined) {
+            lines.push(`Currently: ${place.currentOpeningHours.openNow ? 'OPEN' : 'CLOSED'}`);
+        }
+        if (place.currentOpeningHours.weekdayDescriptions?.length) {
+            lines.push('Hours:');
+            place.currentOpeningHours.weekdayDescriptions.forEach((d) => {
+                lines.push(`  ${d}`);
+            });
+        }
+    }
+
+    if (place.editorialSummary?.text) {
+        lines.push(`Summary: ${place.editorialSummary.text}`);
+    }
+
+    if (place.reviews?.length) {
+        lines.push(`\n--- Recent Reviews (${place.reviews.length} shown) ---`);
+        place.reviews.slice(0, 5).forEach((review, i) => {
+            lines.push(
+                `[${i + 1}] ${review.rating || '?'}/5 by ${review.authorAttribution?.displayName || 'Anonymous'} (${review.relativePublishTimeDescription || 'unknown time'})`
+            );
+            if (review.text?.text) {
+                lines.push(
+                    `   "${review.text.text.slice(0, 300)}${review.text.text.length > 300 ? '...' : ''}"`
+                );
+            }
+        });
+    }
+
+    lines.push('=== END GOOGLE PLACES DATA ===\n');
+    return lines.join('\n');
+}
+
 async function fetchWebsiteContent(url: string): Promise<string | null> {
     try {
         // Normalize URL
@@ -178,34 +333,61 @@ export async function POST(req: NextRequest) {
 
         console.log('[Audit API] Starting audit for:', query);
 
-        // Step 1: Search the web for information about the company
+        // Step 1: Search Google Places for structured business data
+        const placeData = await searchGooglePlaces(query);
+        const formattedPlaceData = placeData ? formatPlaceData(placeData) : '';
+
+        // If we found a website from Places, use it
+        const businessWebsite = placeData?.websiteUri || null;
+
+        // Step 2: Search the web for information about the company
+        // Note: Free tier is limited to 1 req/sec, so we search sequentially with delay
         const searchQueries = [
             `${query} company information`,
             `${query} reviews ratings`,
             `${query} news recent`,
         ];
 
-        const searchPromises = searchQueries.map((q) => searchBrave(q));
-        const searchResults = await Promise.all(searchPromises);
+        const searchResults: string[] = [];
+        for (const q of searchQueries) {
+            const result = await searchBrave(q);
+            searchResults.push(result);
+            // Wait 1.1 seconds between requests to respect rate limit
+            if (searchQueries.indexOf(q) < searchQueries.length - 1) {
+                await new Promise((resolve) => setTimeout(resolve, 1100));
+            }
+        }
         const combinedSearchResults = searchResults.join('\n\n---\n\n');
 
-        // Step 2: Try to fetch their website directly
+        // Step 3: Try to fetch their website directly
         let websiteContent: string | null = null;
 
-        // Check if query looks like a domain
-        const domainMatch = query.match(/(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.[a-zA-Z]{2,})/);
-        if (domainMatch) {
-            websiteContent = await fetchWebsiteContent(domainMatch[0]);
+        // Use website from Places if available, otherwise check query
+        if (businessWebsite) {
+            websiteContent = await fetchWebsiteContent(businessWebsite);
         } else {
-            // Try to find website in search results and fetch it
-            const urlMatch = combinedSearchResults.match(/https?:\/\/[^\s]+/);
-            if (urlMatch) {
-                websiteContent = await fetchWebsiteContent(urlMatch[0]);
+            // Check if query looks like a domain
+            const domainMatch = query.match(
+                /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.[a-zA-Z]{2,})/
+            );
+            if (domainMatch) {
+                websiteContent = await fetchWebsiteContent(domainMatch[0]);
+            } else {
+                // Try to find website in search results and fetch it
+                const urlMatch = combinedSearchResults.match(/https?:\/\/[^\s]+/);
+                if (urlMatch) {
+                    websiteContent = await fetchWebsiteContent(urlMatch[0]);
+                }
             }
         }
 
-        // Step 3: Build the prompt and generate audit
-        const prompt = buildAuditPrompt(query, combinedSearchResults, websiteContent, resources);
+        // Step 4: Build the prompt and generate audit
+        // Combine Places data with web search results
+        const enrichedSearchResults = formattedPlaceData
+            ? `${formattedPlaceData}\n\n=== WEB SEARCH RESULTS ===\n${combinedSearchResults}`
+            : combinedSearchResults;
+
+        const prompt = buildAuditPrompt(query, enrichedSearchResults, websiteContent, resources);
 
         const aiResponse = await generateWithGemini(prompt);
         const auditResult = parseAuditResponse(aiResponse);
@@ -215,7 +397,20 @@ export async function POST(req: NextRequest) {
         }
 
         // Include raw search data for transparency
-        auditResult.rawSearchData = combinedSearchResults.slice(0, 5000);
+        auditResult.rawSearchData = enrichedSearchResults.slice(0, 5000);
+
+        // Add Google Places metadata if available
+        if (placeData) {
+            auditResult.googlePlaces = {
+                placeId: placeData.id,
+                rating: placeData.rating,
+                reviewCount: placeData.userRatingCount,
+                website: placeData.websiteUri,
+                phone: placeData.nationalPhoneNumber || placeData.internationalPhoneNumber,
+                address: placeData.formattedAddress,
+                businessStatus: placeData.businessStatus,
+            };
+        }
 
         return NextResponse.json({ audit: auditResult });
     } catch (error) {

@@ -35,7 +35,7 @@ const CATEGORIES: ResourceCategory[] = [
 ];
 
 export default function ResourcesClient() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState<'mine' | 'company'>('mine');
     const [activeCategory, setActiveCategory] = useState<ResourceCategory | 'All'>('All');
     const [searchQuery, setSearchQuery] = useState('');
@@ -55,14 +55,18 @@ export default function ResourcesClient() {
     // Fetch Resources
     useEffect(() => {
         async function fetchResources() {
+            // Don't fetch until auth is resolved
+            if (authLoading) return;
+
             setLoading(true);
             try {
-                // Always fetch company resources
-                const companyData = await ResourcesService.getCompanyResources();
-                setCompanyResources(companyData);
-
-                // Fetch user resources if logged in
+                // Only fetch if authenticated (Firestore rules require auth)
                 if (user?.uid) {
+                    // Fetch company resources
+                    const companyData = await ResourcesService.getCompanyResources();
+                    setCompanyResources(companyData);
+
+                    // Fetch user resources
                     const userData = await ResourcesService.getUserResources(user.uid);
                     setUserResources(userData);
                 }
@@ -75,7 +79,7 @@ export default function ResourcesClient() {
         }
 
         fetchResources();
-    }, [user?.uid]);
+    }, [user, authLoading]);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -263,8 +267,57 @@ export default function ResourcesClient() {
                 </div>
 
                 {filteredResources.length === 0 && (
-                    <div className="text-center py-20 text-slate-500">
-                        <p>No resources found matching your search.</p>
+                    <div className="flex flex-col items-center justify-center py-16 px-8">
+                        <div className="relative mb-6">
+                            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30">
+                                <FileText className="w-12 h-12 text-indigo-400" />
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/30 to-orange-500/30 flex items-center justify-center border border-pink-500/30">
+                                <Plus className="w-5 h-5 text-pink-400" />
+                            </div>
+                        </div>
+
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                            {searchQuery ? 'No matches found' : 'Your knowledge hub awaits'}
+                        </h3>
+                        <p className="text-slate-400 text-center max-w-md mb-6">
+                            {searchQuery
+                                ? `No resources match "${searchQuery}". Try a different search or upload new content.`
+                                : 'Upload battle cards, scripts, pitch decks, and training materials. Your team will thank you.'}
+                        </p>
+
+                        {!searchQuery && (
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button
+                                    onClick={() => setIsUploadOpen(true)}
+                                    className="glass-button flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3"
+                                >
+                                    <UploadCloud className="w-5 h-5" />
+                                    Upload Your First Resource
+                                </button>
+                            </div>
+                        )}
+
+                        {!searchQuery && (
+                            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                    <FileText className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                                    <span className="text-xs text-slate-400">Scripts</span>
+                                </div>
+                                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                    <Presentation className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+                                    <span className="text-xs text-slate-400">Pitch Decks</span>
+                                </div>
+                                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                    <Video className="w-6 h-6 text-pink-400 mx-auto mb-2" />
+                                    <span className="text-xs text-slate-400">Training Videos</span>
+                                </div>
+                                <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                    <FileSpreadsheet className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                                    <span className="text-xs text-slate-400">Battle Cards</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </main>

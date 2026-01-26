@@ -1,5 +1,15 @@
 import { Resource } from '@/types';
 
+export interface GooglePlacesMetadata {
+    placeId: string;
+    rating?: number;
+    reviewCount?: number;
+    website?: string;
+    phone?: string;
+    address?: string;
+    businessStatus?: string;
+}
+
 export interface BusinessAuditResult {
     companyName: string;
     website?: string;
@@ -38,6 +48,7 @@ export interface BusinessAuditResult {
         relevance: string;
     }[];
     rawSearchData?: string;
+    googlePlaces?: GooglePlacesMetadata;
     auditedAt: number;
 }
 

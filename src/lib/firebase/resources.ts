@@ -56,13 +56,21 @@ export const ResourcesService = {
     // Get company-wide resources
     async getCompanyResources(): Promise<Resource[]> {
         const resourcesRef = collection(getFirebaseDb(), 'resources'); // Top-level collection
-        const q = query(resourcesRef, orderBy('createdAt', 'desc'));
+        // Note: Single-field orderBy on createdAt should work without composite index
+        const q = query(resourcesRef);
 
         const snapshot = await getDocs(q);
-        return snapshot.docs.map((doc) => ({
+        const resources = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
         })) as Resource[];
+
+        // Sort client-side to avoid index requirements
+        return resources.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+        });
     },
 
     // Get all resources for a user

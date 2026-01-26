@@ -310,19 +310,17 @@ async function fetchWebsiteContent(url: string): Promise<string | null> {
 
 export async function POST(req: NextRequest) {
     try {
-        // Authentication
+        // Authentication - optional for Discover page (public access for lead generation)
+        // If token is provided, validate it; otherwise allow anonymous access
         const authHeader = req.headers.get('Authorization');
-        if (!authHeader?.startsWith('Bearer ')) {
-            if (process.env.NODE_ENV !== 'development') {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
-        } else {
+        if (authHeader?.startsWith('Bearer ')) {
             const token = authHeader.split('Bearer ')[1]?.trim();
             const decodedToken = await verifyIdToken(token);
             if (!decodedToken) {
                 return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
             }
         }
+        // Anonymous access allowed - the Discover feature is publicly accessible
 
         const body = await req.json();
         const { query, resources = [] } = body as { query: string; resources: Resource[] };

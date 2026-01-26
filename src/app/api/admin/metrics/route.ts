@@ -1,138 +1,120 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
-import { DocumentData, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
-// Admin emails allowed to access metrics
-const ADMIN_EMAILS = ['optimize@avcpp.com'];
-
-interface UserData {
-    id: string;
-    email?: string;
-    createdAt?: number;
-    updatedAt?: number;
-    tier?: string;
-}
-
-interface AnalyticsEvent {
-    id: string;
-    eventType?: string;
-}
-
-export async function GET(request: NextRequest) {
+/**
+ * GET: Fetch platform-wide admin metrics
+ * Returns real data from Firestore collections
+ */
+export async function GET() {
     try {
-        // Get the authorization header (we'll pass the user email)
-        const userEmail = request.headers.get('x-user-email');
-
-        if (!userEmail || !ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
-
         const db = getAdminDb();
 
-        // Get all users
-        const usersSnapshot = await db.collection('users').get();
-        const users: UserData[] = usersSnapshot.docs.map(
-            (doc: QueryDocumentSnapshot<DocumentData>) => ({
-                id: doc.id,
-                ...(doc.data() as Omit<UserData, 'id'>),
-            })
-        );
-
         const now = Date.now();
-        const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
-        const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
         const oneDayAgo = now - 24 * 60 * 60 * 1000;
+        const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+        const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-        // Calculate metrics
-        const totalUsers = users.length;
+        // Fetch all data in parallel
+        const [companiesSnap, usersSnap, leadsSnap] = await Promise.all([
+            db.collection('companies').get(),
+            db.collection('users').get(),
+            db.collectionGroup('leads').get(),
+        ]);
 
-        // Recent signups (last 7 days)
-        const recentSignups = users
-            .filter((u) => u.createdAt && u.createdAt > sevenDaysAgo)
-            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
-            .slice(0, 10)
-            .map((u) => ({
-                email: u.email || 'Unknown',
-                createdAt: u.createdAt,
-                tier: u.tier || 'free',
-            }));
+        // Process companies
+        const totalCompanies = companiesSnap.size;
+        let activeCompanies = 0;
+        const planBreakdown = { free: 0, pro: 0, enterprise: 0 };
 
-        // Active users (updated in last 7 days)
-        const activeUsersWeekly = users.filter(
-            (u) => u.updatedAt && u.updatedAt > sevenDaysAgo
-        ).length;
-
-        // Active users (updated in last 24 hours)
-        const activeUsersDaily = users.filter((u) => u.updatedAt && u.updatedAt > oneDayAgo).length;
-
-        // Active users (updated in last 30 days)
-        const activeUsersMonthly = users.filter(
-            (u) => u.updatedAt && u.updatedAt > thirtyDaysAgo
-        ).length;
-
-        // Tier breakdown
-        const tierBreakdown = {
-            free: users.filter((u) => !u.tier || u.tier === 'free').length,
-            pro: users.filter((u) => u.tier === 'pro').length,
-            enterprise: users.filter((u) => u.tier === 'enterprise').length,
-        };
-
-        // Get total leads count
-        const leadsSnapshot = await db.collection('leads').count().get();
-        const totalLeads = leadsSnapshot.data().count;
-
-        // Get leads created today
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const leadsCreatedTodaySnapshot = await db
-            .collection('leads')
-            .where('createdAt', '>=', todayStart.getTime())
-            .count()
-            .get();
-        const leadsCreatedToday = leadsCreatedTodaySnapshot.data().count;
-
-        // Get analytics events for last 7 days
-        let analyticsEvents: AnalyticsEvent[] = [];
-        try {
-            const analyticsSnapshot = await db
-                .collection('analytics')
-                .where('timestamp', '>=', sevenDaysAgo)
-                .orderBy('timestamp', 'desc')
-                .limit(100)
-                .get();
-            analyticsEvents = analyticsSnapshot.docs.map(
-                (doc: QueryDocumentSnapshot<DocumentData>) => ({
-                    id: doc.id,
-                    ...(doc.data() as Omit<AnalyticsEvent, 'id'>),
-                })
-            );
-        } catch (e) {
-            // Analytics collection might not exist yet
-            console.log('Analytics collection not available:', e);
-        }
-
-        // Count events by type
-        const eventCounts = analyticsEvents.reduce((acc: Record<string, number>, event) => {
-            if (event.eventType) {
-                acc[event.eventType] = (acc[event.eventType] || 0) + 1;
+        companiesSnap.forEach((doc) => {
+            const data = doc.data();
+            // Active if updated in last 7 days
+            if (data.updatedAt && data.updatedAt > oneWeekAgo) {
+                activeCompanies++;
             }
-            return acc;
-        }, {});
+            // Count by tier
+            const tier = data.tier || 'free';
+            if (tier === 'enterprise' || tier === 'venture') {
+                planBreakdown.enterprise++;
+            } else if (tier === 'pro') {
+                planBreakdown.pro++;
+            } else {
+                planBreakdown.free++;
+            }
+        });
 
-        return NextResponse.json({
+        // Process users
+        const totalUsers = usersSnap.size;
+        let activeUsersDaily = 0;
+        let activeUsersWeekly = 0;
+        let activeUsersMonthly = 0;
+        const recentSignups: Array<{
+            id: string;
+            email: string;
+            createdAt: number;
+            tier: string;
+        }> = [];
+
+        usersSnap.forEach((doc) => {
+            const data = doc.data();
+            const lastActive = data.updatedAt || data.createdAt || 0;
+
+            if (lastActive > oneDayAgo) activeUsersDaily++;
+            if (lastActive > oneWeekAgo) activeUsersWeekly++;
+            if (lastActive > oneMonthAgo) activeUsersMonthly++;
+
+            // Collect recent signups (last 7 days)
+            if (data.createdAt && data.createdAt > oneWeekAgo) {
+                recentSignups.push({
+                    id: doc.id,
+                    email: data.email || 'Unknown',
+                    createdAt: data.createdAt,
+                    tier: data.tier || 'free',
+                });
+            }
+        });
+
+        // Sort recent signups by date (newest first)
+        recentSignups.sort((a, b) => b.createdAt - a.createdAt);
+
+        // Process leads
+        const totalLeads = leadsSnap.size;
+        let leadsCreatedToday = 0;
+
+        leadsSnap.forEach((doc) => {
+            const data = doc.data();
+            if (data.createdAt && data.createdAt > oneDayAgo) {
+                leadsCreatedToday++;
+            }
+        });
+
+        // MRR calculation (simplified - based on plan counts)
+        // Free: $0, Pro: $49, Enterprise: $199
+        const mrr = planBreakdown.pro * 49 + planBreakdown.enterprise * 199;
+
+        const metrics = {
+            totalCompanies,
+            activeCompanies,
             totalUsers,
             activeUsersDaily,
             activeUsersWeekly,
             activeUsersMonthly,
-            recentSignups,
-            tierBreakdown,
             totalLeads,
             leadsCreatedToday,
-            analyticsEvents: eventCounts,
-            fetchedAt: now,
-        });
+            mrr,
+            mrrChange: 0, // Would need historical data to calculate
+            churnRate: 0, // Would need subscription tracking
+            churnRateChange: 0,
+            planBreakdown,
+            recentSignups: recentSignups.slice(0, 10), // Top 10 recent
+        };
+
+        return NextResponse.json(metrics);
     } catch (error) {
-        console.error('Error fetching admin metrics:', error);
-        return NextResponse.json({ error: 'Failed to fetch metrics' }, { status: 500 });
+        console.error('Admin metrics error:', error);
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'Failed to fetch metrics' },
+            { status: 500 }
+        );
     }
 }

@@ -9,7 +9,7 @@
  * Best practice 2026: Real-time metrics with aggregations
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/AuthProvider';
 import {
@@ -23,9 +23,11 @@ import {
     ArrowDownRight,
     ShieldAlert,
     Loader2,
+    RefreshCw,
+    Mail,
+    Clock,
 } from 'lucide-react';
 
-// This would be fetched from an admin API in production
 interface AdminMetrics {
     totalCompanies: number;
     activeCompanies: number;
@@ -44,27 +46,30 @@ interface AdminMetrics {
         pro: number;
         enterprise: number;
     };
+    recentSignups?: Array<{
+        id: string;
+        email: string;
+        createdAt: number;
+        tier: string;
+    }>;
 }
 
-// Mock data for demo - replace with actual API call
-const mockMetrics: AdminMetrics = {
-    totalCompanies: 127,
-    activeCompanies: 98,
-    totalUsers: 384,
-    activeUsersDaily: 89,
-    activeUsersWeekly: 156,
-    activeUsersMonthly: 312,
-    totalLeads: 12847,
-    leadsCreatedToday: 234,
-    mrr: 12450,
-    mrrChange: 8.5,
-    churnRate: 2.3,
-    churnRateChange: -0.4,
-    planBreakdown: {
-        free: 78,
-        pro: 42,
-        enterprise: 7,
-    },
+// Default empty metrics for loading state
+const emptyMetrics: AdminMetrics = {
+    totalCompanies: 0,
+    activeCompanies: 0,
+    totalUsers: 0,
+    activeUsersDaily: 0,
+    activeUsersWeekly: 0,
+    activeUsersMonthly: 0,
+    totalLeads: 0,
+    leadsCreatedToday: 0,
+    mrr: 0,
+    mrrChange: 0,
+    churnRate: 0,
+    churnRateChange: 0,
+    planBreakdown: { free: 0, pro: 0, enterprise: 0 },
+    recentSignups: [],
 };
 
 function MetricCard({
@@ -178,10 +183,44 @@ function PlanBreakdownChart({ breakdown }: { breakdown: AdminMetrics['planBreakd
 export default function AdminDashboard() {
     const { user, profile, loading } = useAuth();
     const router = useRouter();
-    const metrics = mockMetrics;
+    const [metrics, setMetrics] = useState<AdminMetrics>(emptyMetrics);
+    const [metricsLoading, setMetricsLoading] = useState(true);
+    const [metricsError, setMetricsError] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     // Check if user is a super admin (check profile role or user email)
     const isSuperAdmin = profile?.role === 'superAdmin' || user?.email === 'optimize@avcpp.com';
+
+    // Fetch metrics from API
+    const fetchMetrics = async () => {
+        try {
+            setMetricsError(null);
+            const response = await fetch('/api/admin/metrics');
+            if (!response.ok) {
+                throw new Error('Failed to fetch metrics');
+            }
+            const data = await response.json();
+            setMetrics(data);
+        } catch (err) {
+            console.error('Error fetching metrics:', err);
+            setMetricsError(err instanceof Error ? err.message : 'Failed to load metrics');
+        } finally {
+            setMetricsLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    // Load metrics on mount
+    useEffect(() => {
+        if (isSuperAdmin && !loading) {
+            fetchMetrics();
+        }
+    }, [isSuperAdmin, loading]);
+
+    const handleRefresh = () => {
+        setRefreshing(true);
+        fetchMetrics();
+    };
 
     // Handle redirect in useEffect to avoid render-time navigation
     React.useEffect(() => {
@@ -242,10 +281,35 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-slate-900 text-white p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-                    <p className="text-slate-400">Platform-wide metrics and analytics</p>
+                <div className="mb-8 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+                        <p className="text-slate-400">Platform-wide metrics and analytics</p>
+                    </div>
+                    <button
+                        onClick={handleRefresh}
+                        disabled={refreshing || metricsLoading}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
                 </div>
+
+                {/* Error state */}
+                {metricsError && (
+                    <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
+                        {metricsError}
+                    </div>
+                )}
+
+                {/* Loading overlay for metrics */}
+                {metricsLoading && (
+                    <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-400 flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading metrics...
+                    </div>
+                )}
 
                 {/* Primary Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -362,6 +426,52 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
+
+                {/* Recent Signups */}
+                {metrics.recentSignups && metrics.recentSignups.length > 0 && (
+                    <div className="mb-8 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <Mail className="w-5 h-5 text-violet-400" />
+                            Recent Signups (Last 7 Days)
+                        </h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="text-left text-slate-400 text-sm">
+                                        <th className="pb-3 font-medium">Email</th>
+                                        <th className="pb-3 font-medium">Plan</th>
+                                        <th className="pb-3 font-medium">Signed Up</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-700">
+                                    {metrics.recentSignups.map((signup) => (
+                                        <tr key={signup.id} className="text-sm">
+                                            <td className="py-3 text-white">{signup.email}</td>
+                                            <td className="py-3">
+                                                <span
+                                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                        signup.tier === 'pro'
+                                                            ? 'bg-blue-500/20 text-blue-400'
+                                                            : signup.tier === 'enterprise' ||
+                                                                signup.tier === 'venture'
+                                                              ? 'bg-violet-500/20 text-violet-400'
+                                                              : 'bg-slate-500/20 text-slate-400'
+                                                    }`}
+                                                >
+                                                    {signup.tier}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 text-slate-400 flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {new Date(signup.createdAt).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer */}
                 <div className="text-center text-slate-500 text-sm">

@@ -11,6 +11,9 @@ import {
 import { getFirebaseAuth } from '@/lib/firebase/config';
 import { ProfileService, UserProfile } from '@/lib/firebase/services';
 
+// Permanent admin emails - these always get admin role
+const PERMANENT_ADMINS = ['optimize@avcpp.com'];
+
 interface AuthContextType {
     user: User | null;
     profile: UserProfile | null;
@@ -47,6 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (currentUser) {
                 // Fetch or initialize profile
                 let p = await ProfileService.getProfile(currentUser.uid);
+                const isPermanentAdmin = PERMANENT_ADMINS.includes(
+                    currentUser.email?.toLowerCase() || ''
+                );
+
                 if (!p) {
                     const now = Date.now();
                     // First-time users default to 'admin' - they will create their own company
@@ -61,6 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     };
                     await ProfileService.updateProfile(currentUser.uid, newProfile);
                     p = await ProfileService.getProfile(currentUser.uid);
+                } else if (isPermanentAdmin && p.role !== 'admin') {
+                    // Ensure permanent admins always have admin role
+                    await ProfileService.updateProfile(currentUser.uid, { role: 'admin' });
+                    p = { ...p, role: 'admin' };
                 }
                 setProfile(p);
             } else {

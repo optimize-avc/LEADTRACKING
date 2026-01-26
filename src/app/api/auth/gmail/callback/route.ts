@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeCodeForTokens, getGmailUserEmail } from '@/lib/gmail/gmail-auth';
-import { saveGmailTokens } from '@/lib/gmail/gmail-service';
+import { saveGmailTokens } from '@/lib/gmail/gmail-service-server';
 
 // GET: Handle OAuth callback from Google
 export async function GET(request: NextRequest) {

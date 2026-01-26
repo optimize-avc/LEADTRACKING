@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/gmail/gmail-service';
+import { sendEmailServer } from '@/lib/gmail/gmail-service-server';
 
 // POST: Send an email via Gmail API
 export async function POST(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
         }
 
-        const messageId = await sendEmail(userId, to, subject, emailBody, leadId);
+        const messageId = await sendEmailServer(userId, to, subject, emailBody, leadId);
 
         return NextResponse.json({
             success: true,

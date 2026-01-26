@@ -47,9 +47,16 @@ env:
           - BUILD
           - RUNTIME
 
+    # Google Gemini AI (public for client-side AI features)
+    - variable: NEXT_PUBLIC_GEMINI_API_KEY
+      value: AIzaSyB4GlMpKCG8xX58nzlinEwSM_UAc8jP_vk
+      availability:
+          - BUILD
+          - RUNTIME
+
     # Google OAuth (client ID is public)
     - variable: GOOGLE_CLIENT_ID
-      value: 343608443426-qd6f4kkvvkfbeb71ncuug9ldse4ob7cn.apps.googleusercontent.com
+      value: 813307578320-nkr5mk00vr226v31rcu8rn6kda5ja8uf.apps.googleusercontent.com
       availability:
           - RUNTIME
 
@@ -59,7 +66,7 @@ env:
       availability:
           - RUNTIME
     - variable: TWILIO_TWIML_APP_SID
-      value: APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      value: AP1971502d97917080009a700538bd847b
       availability:
           - RUNTIME
 

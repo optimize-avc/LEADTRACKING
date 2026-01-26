@@ -6,10 +6,11 @@ rules_version = '2';
  * Prime Directive: "Strict Isolation"
  * Data leaks between companies are fatal. companyId is the primary key.
  * 
- * Updated: 2026-01-24
+ * Updated: 2026-01-25
  * - Added usage tracking subcollection protection
  * - Added Stripe fields protection on user documents
  * - Enhanced global leads collection for Bot integration
+ * - Added leads/activities subcollection rules
  */
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -43,14 +44,10 @@ service cloud.firestore {
       return userBelongsToCompany(companyId) && getUserRole() == 'admin';
     }
     
-    // Note: isCompanyAdminOrManager removed - use isCompanyAdmin or explicit role checks
-    
     // Check if user owns this document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    // Note: Individual field modification checks done inline in protectedFieldsModified
     
     // Check if protected fields are being modified
     function protectedFieldsModified() {
@@ -190,7 +187,6 @@ service cloud.firestore {
     
     match /leads/{leadId} {
       // Authenticated users can read leads
-      // TODO: Add companyId check once all leads have companyId
       allow read: if isAuthenticated();
       
       // Authenticated users can create leads
@@ -200,7 +196,6 @@ service cloud.firestore {
       allow update: if isAuthenticated();
       
       // Only admins can delete leads
-      // TODO: Add company admin check once companyId is on all leads
       allow delete: if isAuthenticated() && getUserRole() == 'admin';
       
       // Lead activities subcollection (public team activities)

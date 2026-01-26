@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTwilioStatus, isTwilioConnected } from '@/lib/twilio/twilio-service';
+import { isTwilioConfigured, TWILIO_CONFIG } from '@/lib/twilio/twilio-config';
 
 // GET: Check Twilio connection status for a user
 export async function GET(request: NextRequest) {
@@ -11,13 +12,33 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'userId required' }, { status: 400 });
         }
 
-        const connected = await isTwilioConnected(userId);
-        const status = await getTwilioStatus(userId);
+        try {
+            // Try to get user-specific Twilio credentials via Admin SDK
+            const connected = await isTwilioConnected(userId);
+            const status = await getTwilioStatus(userId);
 
-        return NextResponse.json({
-            connected,
-            phoneNumber: status?.phoneNumber || null,
-        });
+            return NextResponse.json({
+                connected,
+                phoneNumber: status?.phoneNumber || null,
+            });
+        } catch (adminError) {
+            // Admin SDK failed (likely missing credentials in dev)
+            // Fall back to environment-based config check
+            console.warn('Twilio status: Admin SDK unavailable, checking env config:', adminError);
+
+            if (isTwilioConfigured()) {
+                return NextResponse.json({
+                    connected: true,
+                    phoneNumber: TWILIO_CONFIG.phoneNumber,
+                    source: 'environment',
+                });
+            }
+
+            return NextResponse.json({
+                connected: false,
+                phoneNumber: null,
+            });
+        }
     } catch (error: unknown) {
         console.error('Twilio status error:', error);
         return NextResponse.json(

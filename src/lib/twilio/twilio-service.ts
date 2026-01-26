@@ -7,8 +7,7 @@ import {
     TwilioCredentials,
     getTwilioClient,
 } from './twilio-config';
-import { getFirebaseDb } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { getAdminDb } from '@/lib/firebase/admin';
 
 // Twilio Client is now managed via twilio-config.ts helper
 
@@ -43,7 +42,7 @@ export async function sendSMS(message: SMSMessage): Promise<SMSResult> {
 }
 
 /**
- * Send SMS and log activity to Firebase
+ * Send SMS and log activity to Firebase (Server-side with Admin SDK)
  */
 export async function sendSMSWithLogging(
     userId: string,
@@ -53,19 +52,24 @@ export async function sendSMSWithLogging(
 ): Promise<SMSResult> {
     const result = await sendSMS({ to, body, leadId });
 
-    // Log activity regardless of success
-    await addDoc(collection(getFirebaseDb(), 'users', userId, 'activities'), {
-        type: 'social', // Using 'social' as SMS type since it's close
-        outcome: result.success ? 'connected' : 'no_answer',
-        timestamp: Date.now(),
-        repId: userId,
-        leadId,
-        notes: result.success
-            ? `SMS sent: ${body.substring(0, 100)}...`
-            : `SMS failed: ${result.error}`,
-        channel: 'sms',
-        messageSid: result.messageSid,
-    });
+    // Log activity regardless of success using Admin SDK
+    const db = getAdminDb();
+    await db
+        .collection('users')
+        .doc(userId)
+        .collection('activities')
+        .add({
+            type: 'social', // Using 'social' as SMS type since it's close
+            outcome: result.success ? 'connected' : 'no_answer',
+            timestamp: Date.now(),
+            repId: userId,
+            leadId,
+            notes: result.success
+                ? `SMS sent: ${body.substring(0, 100)}...`
+                : `SMS failed: ${result.error}`,
+            channel: 'sms',
+            messageSid: result.messageSid,
+        });
 
     return result;
 }
@@ -104,7 +108,7 @@ export async function initiateCall(to: string): Promise<CallResult> {
 }
 
 /**
- * Initiate call and log activity to Firebase
+ * Initiate call and log activity to Firebase (Server-side with Admin SDK)
  */
 export async function initiateCallWithLogging(
     userId: string,
@@ -113,16 +117,21 @@ export async function initiateCallWithLogging(
 ): Promise<CallResult> {
     const result = await initiateCall(to);
 
-    // Log activity
-    await addDoc(collection(getFirebaseDb(), 'users', userId, 'activities'), {
-        type: 'call',
-        outcome: result.success ? 'connected' : 'no_answer',
-        timestamp: Date.now(),
-        repId: userId,
-        leadId,
-        notes: result.success ? `Call initiated to ${to}` : `Call failed: ${result.error}`,
-        callSid: result.callSid,
-    });
+    // Log activity using Admin SDK
+    const db = getAdminDb();
+    await db
+        .collection('users')
+        .doc(userId)
+        .collection('activities')
+        .add({
+            type: 'call',
+            outcome: result.success ? 'connected' : 'no_answer',
+            timestamp: Date.now(),
+            repId: userId,
+            leadId,
+            notes: result.success ? `Call initiated to ${to}` : `Call failed: ${result.error}`,
+            callSid: result.callSid,
+        });
 
     return result;
 }
@@ -133,26 +142,40 @@ export async function initiateCallWithLogging(
 
 /**
  * Save Twilio credentials for a user (for per-user Twilio accounts)
+ * Uses Admin SDK for server-side operations
  */
 export async function saveTwilioCredentials(
     userId: string,
     credentials: Omit<TwilioCredentials, 'connected' | 'connectedAt'>
 ): Promise<void> {
-    await setDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'twilio'), {
-        ...credentials,
-        connected: true,
-        connectedAt: Date.now(),
-    });
+    const db = getAdminDb();
+    await db
+        .collection('users')
+        .doc(userId)
+        .collection('integrations')
+        .doc('twilio')
+        .set({
+            ...credentials,
+            connected: true,
+            connectedAt: Date.now(),
+        });
 }
 
 /**
  * Get Twilio connection status for a user
+ * Uses Admin SDK for server-side operations
  */
 export async function getTwilioStatus(userId: string): Promise<TwilioCredentials | null> {
     // First check if user has their own Twilio credentials
-    const userDoc = await getDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'twilio'));
+    const db = getAdminDb();
+    const userDoc = await db
+        .collection('users')
+        .doc(userId)
+        .collection('integrations')
+        .doc('twilio')
+        .get();
 
-    if (userDoc.exists()) {
+    if (userDoc.exists) {
         return userDoc.data() as TwilioCredentials;
     }
 
@@ -179,9 +202,11 @@ export async function isTwilioConnected(userId: string): Promise<boolean> {
 
 /**
  * Disconnect Twilio for a user
+ * Uses Admin SDK for server-side operations
  */
 export async function disconnectTwilio(userId: string): Promise<void> {
-    await setDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'twilio'), {
+    const db = getAdminDb();
+    await db.collection('users').doc(userId).collection('integrations').doc('twilio').set({
         connected: false,
         disconnectedAt: Date.now(),
     });

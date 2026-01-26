@@ -17,6 +17,7 @@ import {
     LogOut,
     Settings,
     LogIn,
+    Compass,
 } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
@@ -86,6 +87,14 @@ function SidebarContent({
                     href="/"
                     icon={<LayoutDashboard size={20} />}
                     label="Dashboard"
+                    collapsed={collapsed}
+                    mobile={mobileMenuOpen}
+                    onClick={onNavClick}
+                />
+                <NavLink
+                    href="/discover"
+                    icon={<Compass size={20} />}
+                    label="Discover"
                     collapsed={collapsed}
                     mobile={mobileMenuOpen}
                     onClick={onNavClick}

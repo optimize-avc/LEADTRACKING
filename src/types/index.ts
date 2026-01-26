@@ -47,6 +47,43 @@ export interface Lead {
     probability?: number; // Win probability percentage
     discordChannelId?: string; // Discord Channel ID
     aiGenerated?: boolean; // If created by Bot
+    enrichmentData?: {
+        overview?: {
+            description: string;
+            industry: string;
+            estimatedSize: string;
+            keyPeople: string[];
+            founded?: string;
+            headquarters?: string;
+        };
+        digitalPresence?: {
+            score: number;
+            websiteQuality: string;
+            mobileOptimized: boolean;
+            seoStrength: string;
+            socialProfiles: string[];
+        };
+        aiReadiness?: {
+            score: number;
+            currentAIUsage: string;
+            opportunities: string[];
+        };
+        reviews?: {
+            sentiment: string;
+            averageRating?: number;
+            keyThemes: string[];
+            sources: string[];
+        };
+        painPoints?: string[];
+        opportunities?: string[];
+        talkingPoints?: string[];
+        relevantResources?: {
+            id: string;
+            title: string;
+            relevance: string;
+        }[];
+    };
+    enrichedAt?: number; // Timestamp when AI enrichment was done
     createdAt: number;
     updatedAt: number;
 }

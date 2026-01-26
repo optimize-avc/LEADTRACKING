@@ -107,10 +107,12 @@ export default function AdminDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const isAdmin = profile?.email && ADMIN_EMAILS.includes(profile.email.toLowerCase());
+    // Check both profile.email and user.email (fallback when Firestore permissions fail)
+    const userEmail = profile?.email || user?.email;
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
     const fetchMetrics = async () => {
-        if (!profile?.email) return;
+        if (!userEmail) return;
 
         setLoading(true);
         setError(null);
@@ -118,7 +120,7 @@ export default function AdminDashboardPage() {
         try {
             const response = await fetch('/api/admin/metrics', {
                 headers: {
-                    'x-user-email': profile.email,
+                    'x-user-email': userEmail,
                 },
             });
 
@@ -144,11 +146,11 @@ export default function AdminDashboardPage() {
     }, [authLoading, user, router]);
 
     useEffect(() => {
-        if (profile?.email && isAdmin) {
+        if (userEmail && isAdmin) {
             fetchMetrics();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [profile?.email, isAdmin]);
+    }, [userEmail, isAdmin]);
 
     // Auth loading
     if (authLoading) {

@@ -33,15 +33,38 @@ export default function TwilioSettingsClient() {
     // Load existing config from company
     useEffect(() => {
         const loadConfig = async () => {
-            if (!profile?.companyId) {
+            if (!user) {
+                setLoading(false);
+                return;
+            }
+
+            // If no companyId in profile, try fetching from server (in case rules blocked the read)
+            let effectiveCompanyId = profile?.companyId;
+
+            if (!effectiveCompanyId) {
+                // Try to get company info from server
+                try {
+                    const resp = await fetch(`/api/admin/bootstrap-company?userId=${user.uid}`);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.companyId) {
+                            effectiveCompanyId = data.companyId;
+                        }
+                    }
+                } catch {
+                    // Ignore errors
+                }
+            }
+
+            if (!effectiveCompanyId) {
                 setLoading(false);
                 return;
             }
 
             try {
-                setCompanyId(profile.companyId);
+                setCompanyId(effectiveCompanyId);
                 const db = getFirebaseDb();
-                const companyDoc = await getDoc(doc(db, 'companies', profile.companyId));
+                const companyDoc = await getDoc(doc(db, 'companies', effectiveCompanyId));
 
                 if (companyDoc.exists()) {
                     const data = companyDoc.data();
@@ -61,7 +84,7 @@ export default function TwilioSettingsClient() {
         };
 
         loadConfig();
-    }, [profile?.companyId]);
+    }, [user, profile?.companyId]);
 
     const handleSave = async () => {
         if (!user || !companyId) return;
@@ -158,15 +181,53 @@ export default function TwilioSettingsClient() {
         );
     }
 
+    const handleCreateCompany = async () => {
+        if (!user) return;
+        setSaving(true);
+        setError('');
+
+        try {
+            const response = await fetch('/api/admin/bootstrap-company', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    email: user.email,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create company');
+            }
+
+            // Reload the page to pick up the new companyId
+            window.location.reload();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create company');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     if (!companyId) {
         return (
             <div className="p-8 max-w-3xl mx-auto">
                 <GlassCard className="text-center py-12">
                     <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold mb-2">No Company Found</h2>
-                    <p className="text-gray-400">
+                    <p className="text-gray-400 mb-6">
                         You need to be part of a company to configure Twilio settings.
                     </p>
+                    {error && <p className="text-red-400 mb-4">{error}</p>}
+                    <button
+                        onClick={handleCreateCompany}
+                        disabled={saving}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                        {saving ? 'Creating...' : 'Create Company'}
+                    </button>
                 </GlassCard>
             </div>
         );

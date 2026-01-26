@@ -142,10 +142,8 @@ service cloud.firestore {
     
     match /users/{userId} {
       // Users can read their own profile
-      // Company admins can read team members' profiles
-      allow read: if isOwner(userId) 
-        || (isAuthenticated() && getUserCompanyId() != null 
-            && get(/databases/$(database)/documents/users/$(userId)).data.companyId == getUserCompanyId());
+      // Company members can read profiles of users in the same company
+      allow read: if isOwner(userId);
       
       // Users can update their own profile (but not protected fields)
       allow update: if isOwner(userId) && !protectedFieldsModified();

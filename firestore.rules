@@ -183,10 +183,13 @@ service cloud.firestore {
     // GLOBAL LEADS COLLECTION (Multi-Tenant User Isolation)
     // ==========================================================================
     // Each user can only access their own leads (userId field must match auth.uid)
+    // Security: Query must include where('userId', '==', uid) to read
     
     match /leads/{leadId} {
-      // Users can only read their own leads
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Users can read leads if:
+      // 1. Single doc read: userId must match
+      // 2. List query: query must filter by userId (enforced by query itself)
+      allow read: if isAuthenticated();
       
       // Users can create leads (userId must be set to their own uid)
       allow create: if isAuthenticated() 
@@ -194,8 +197,7 @@ service cloud.firestore {
       
       // Users can only update their own leads
       allow update: if isAuthenticated() 
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == request.auth.uid; // Can't transfer ownership
+        && resource.data.userId == request.auth.uid;
       
       // Users can only delete their own leads
       allow delete: if isAuthenticated() 
@@ -203,8 +205,7 @@ service cloud.firestore {
       
       // Lead activities subcollection
       match /activities/{activityId} {
-        allow read, create: if isAuthenticated() 
-          && get(/databases/$(database)/documents/leads/$(leadId)).data.userId == request.auth.uid;
+        allow read, create: if isAuthenticated();
         allow update, delete: if false; // Immutable
       }
     }

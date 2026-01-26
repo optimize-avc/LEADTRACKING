@@ -14,6 +14,7 @@ import { AILeadInsights } from '@/components/leads/AILeadInsights';
 import { QuickEditModal } from '@/components/leads/QuickEditModal';
 import { ImportCSVModal } from '@/components/leads/ImportCSVModal';
 import { AIEmailDraft } from '@/components/ai/AIEmailDraft';
+import { LeadDetailDrawer } from '@/components/leads/LeadDetailDrawer';
 import { LeadsService, ActivitiesService } from '@/lib/firebase/services';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { toast } from 'sonner';
@@ -121,6 +122,7 @@ export default function LeadsClient() {
 
     const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
     const [reauditingLeads, setReauditingLeads] = useState<Set<string>>(new Set());
+    const [detailDrawerLead, setDetailDrawerLead] = useState<Lead | null>(null);
 
     useEffect(() => {
         if (user) {
@@ -766,7 +768,16 @@ export default function LeadsClient() {
                                     className="flex justify-between items-start mb-3"
                                     onClick={() => handleExpandLead(lead.id)}
                                 >
-                                    <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                                    <h3
+                                        className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors cursor-pointer hover:underline"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDetailDrawerLead(lead);
+                                            if (!activities[lead.id]) {
+                                                loadLeadActivities(lead.id);
+                                            }
+                                        }}
+                                    >
                                         {lead.companyName}
                                     </h3>
                                     <Badge
@@ -1287,6 +1298,17 @@ export default function LeadsClient() {
                 isOpen={isImportModalOpen}
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={handleCSVImport}
+            />
+
+            {/* Lead Detail Drawer */}
+            <LeadDetailDrawer
+                lead={detailDrawerLead}
+                activities={detailDrawerLead ? activities[detailDrawerLead.id] || [] : []}
+                isOpen={detailDrawerLead !== null}
+                onClose={() => setDetailDrawerLead(null)}
+                onSave={handleQuickEditSave}
+                onReaudit={handleReaudit}
+                isReauditing={detailDrawerLead ? reauditingLeads.has(detailDrawerLead.id) : false}
             />
         </div>
     );

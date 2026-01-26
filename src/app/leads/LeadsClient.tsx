@@ -413,6 +413,91 @@ export default function LeadsClient() {
         }
     };
 
+    // Bulk enrich selected leads
+    const [bulkEnriching, setBulkEnriching] = useState(false);
+    const handleBulkEnrich = async () => {
+        if (!user) {
+            toast.info('Log in to enrich leads');
+            return;
+        }
+
+        const selectedLeads = leads.filter((l) => selectedLeadIds.has(l.id));
+        if (selectedLeads.length === 0) return;
+
+        setBulkEnriching(true);
+        toast.info(`Starting enrichment for ${selectedLeads.length} leads...`);
+
+        let enriched = 0;
+        let failed = 0;
+
+        for (const lead of selectedLeads) {
+            try {
+                setReauditingLeads((prev) => new Set(prev).add(lead.id));
+
+                const token = await user.getIdToken();
+                const response = await fetch('/api/audit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ query: lead.companyName }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Audit failed');
+                }
+
+                const data = await response.json();
+                const auditResult = data.audit;
+
+                const enrichmentData = {
+                    overview: {
+                        description: auditResult.overview?.description || '',
+                        industry: auditResult.overview?.industry || lead.industry || '',
+                        estimatedSize: auditResult.overview?.estimatedSize || '',
+                        keyPeople: auditResult.overview?.keyPeople || [],
+                        founded: auditResult.overview?.founded,
+                        headquarters: auditResult.overview?.headquarters,
+                    },
+                    digitalPresence: auditResult.digitalPresence,
+                    aiReadiness: auditResult.aiReadiness,
+                    painPoints: auditResult.painPoints || [],
+                    opportunities: auditResult.opportunities || [],
+                    talkingPoints: auditResult.talkingPoints || [],
+                    competitorAnalysis: auditResult.competitorAnalysis,
+                };
+
+                await LeadsService.updateLead(user.uid, lead.id, {
+                    enrichmentData,
+                    enrichedAt: Date.now(),
+                });
+
+                enriched++;
+                toast.success(`Enriched ${lead.companyName} (${enriched}/${selectedLeads.length})`);
+            } catch (error) {
+                console.error(`Failed to enrich ${lead.companyName}:`, error);
+                failed++;
+            } finally {
+                setReauditingLeads((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.delete(lead.id);
+                    return newSet;
+                });
+            }
+
+            // Small delay between requests to avoid rate limiting
+            if (selectedLeads.indexOf(lead) < selectedLeads.length - 1) {
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
+        }
+
+        setBulkEnriching(false);
+        setSelectedLeadIds(new Set());
+        loadLeads();
+        toast.success(`Bulk enrichment complete: ${enriched} enriched, ${failed} failed`);
+    };
+
     // Re-audit a lead to refresh enrichment data
     const handleReaudit = async (lead: Lead) => {
         if (!user) {
@@ -1205,6 +1290,23 @@ export default function LeadsClient() {
                                     )}
                                 </div>
                             </div>
+
+                            <button
+                                onClick={handleBulkEnrich}
+                                disabled={bulkEnriching}
+                                className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-2 transition-all ${
+                                    bulkEnriching
+                                        ? 'bg-purple-500/30 text-purple-300 cursor-wait'
+                                        : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30'
+                                }`}
+                                title="Enrich selected leads with AI"
+                            >
+                                <Sparkles
+                                    size={14}
+                                    className={bulkEnriching ? 'animate-pulse' : ''}
+                                />
+                                {bulkEnriching ? 'Enriching...' : 'Enrich'}
+                            </button>
 
                             <button
                                 onClick={handleBulkDelete}

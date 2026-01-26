@@ -34,9 +34,10 @@ export const LeadsService = {
     async getLeads(userId: string): Promise<Lead[]> {
         const leadsRef = collection(getFirebaseDb(), 'leads');
         // MULTI-TENANT: Only fetch leads owned by this user
-        const q = query(leadsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
+        // Note: Using simple query first, then sorting client-side while index builds
+        const q = query(leadsRef, where('userId', '==', userId));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map((doc) => {
+        const leads = snapshot.docs.map((doc) => {
             const data = doc.data();
             return {
                 id: doc.id,
@@ -44,6 +45,8 @@ export const LeadsService = {
                 value: safeLeadValue(data.value),
             };
         }) as Lead[];
+        // Sort client-side (newest first) until composite index is built
+        return leads.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     },
 
     // Get single lead (with ownership check)

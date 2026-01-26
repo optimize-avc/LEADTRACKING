@@ -180,8 +180,8 @@ export default function AdminDashboard() {
     const router = useRouter();
     const metrics = mockMetrics;
 
-    // Check if user is a super admin (check profile role or email)
-    const isSuperAdmin = profile?.role === 'superAdmin' || profile?.email === 'optimize@avcpp.com';
+    // Check if user is a super admin (check profile role or user email)
+    const isSuperAdmin = profile?.role === 'superAdmin' || user?.email === 'optimize@avcpp.com';
 
     // Handle redirect in useEffect to avoid render-time navigation
     React.useEffect(() => {

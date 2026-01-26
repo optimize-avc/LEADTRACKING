@@ -816,6 +816,135 @@ export default function LeadsClient() {
                                 {/* Expanded Activity Timeline */}
                                 {expandedLeadId === lead.id && (
                                     <div className="mt-4 pt-4 border-t border-slate-700/50">
+                                        {/* Enrichment Data Section */}
+                                        {lead.enrichmentData && (
+                                            <div className="mb-6">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <Sparkles
+                                                        size={14}
+                                                        className="text-purple-400"
+                                                    />
+                                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                        AI Business Intelligence
+                                                    </h4>
+                                                    {lead.enrichedAt && (
+                                                        <span className="text-[9px] text-slate-600 ml-auto">
+                                                            Enriched{' '}
+                                                            {new Date(
+                                                                lead.enrichedAt
+                                                            ).toLocaleDateString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Scores */}
+                                                <div className="flex gap-4 mb-4">
+                                                    {lead.enrichmentData.digitalPresence && (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                                                                <span className="text-xs font-bold text-blue-400">
+                                                                    {
+                                                                        lead.enrichmentData
+                                                                            .digitalPresence.score
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                Digital
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {lead.enrichmentData.aiReadiness && (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                                                                <span className="text-xs font-bold text-purple-400">
+                                                                    {
+                                                                        lead.enrichmentData
+                                                                            .aiReadiness.score
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                AI Ready
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Pain Points */}
+                                                {lead.enrichmentData.painPoints &&
+                                                    lead.enrichmentData.painPoints.length > 0 && (
+                                                        <div className="mb-3">
+                                                            <h5 className="text-[10px] font-semibold text-amber-400 mb-2">
+                                                                Pain Points
+                                                            </h5>
+                                                            <ul className="space-y-1">
+                                                                {lead.enrichmentData.painPoints
+                                                                    .slice(0, 2)
+                                                                    .map((point, i) => (
+                                                                        <li
+                                                                            key={i}
+                                                                            className="text-[10px] text-slate-400 flex gap-2"
+                                                                        >
+                                                                            <span className="text-amber-500">
+                                                                                •
+                                                                            </span>
+                                                                            <span className="line-clamp-2">
+                                                                                {point}
+                                                                            </span>
+                                                                        </li>
+                                                                    ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+
+                                                {/* Opportunities */}
+                                                {lead.enrichmentData.opportunities &&
+                                                    lead.enrichmentData.opportunities.length >
+                                                        0 && (
+                                                        <div className="mb-3">
+                                                            <h5 className="text-[10px] font-semibold text-green-400 mb-2">
+                                                                Opportunities
+                                                            </h5>
+                                                            <ul className="space-y-1">
+                                                                {lead.enrichmentData.opportunities
+                                                                    .slice(0, 2)
+                                                                    .map((opp, i) => (
+                                                                        <li
+                                                                            key={i}
+                                                                            className="text-[10px] text-slate-400 flex gap-2"
+                                                                        >
+                                                                            <span className="text-green-500">
+                                                                                •
+                                                                            </span>
+                                                                            <span className="line-clamp-2">
+                                                                                {opp}
+                                                                            </span>
+                                                                        </li>
+                                                                    ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+
+                                                {/* Talking Points */}
+                                                {lead.enrichmentData.talkingPoints &&
+                                                    lead.enrichmentData.talkingPoints.length >
+                                                        0 && (
+                                                        <div className="p-2 bg-indigo-500/5 border border-indigo-500/10 rounded-lg">
+                                                            <h5 className="text-[10px] font-semibold text-indigo-400 mb-1">
+                                                                💬 Talking Point
+                                                            </h5>
+                                                            <p className="text-[10px] text-slate-400 italic line-clamp-2">
+                                                                {
+                                                                    lead.enrichmentData
+                                                                        .talkingPoints[0]
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                            </div>
+                                        )}
+
                                         <div className="flex items-center gap-2 mb-4">
                                             <PulseIcon size={14} className="text-blue-400" />
                                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">

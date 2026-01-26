@@ -4,24 +4,22 @@ import React, { useState, useEffect } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
-import { Bot, CreditCard, ExternalLink, ChevronRight, User, Users, Mail } from 'lucide-react';
+import {
+    Bot,
+    CreditCard,
+    ExternalLink,
+    ChevronRight,
+    User,
+    Users,
+    Mail,
+    Phone,
+} from 'lucide-react';
 import Link from 'next/link';
 import { isGmailConnected } from '@/lib/gmail/gmail-service';
 import { toast } from 'sonner';
-
-async function checkTwilioStatusViaAPI(
-    userId: string
-): Promise<{ connected: boolean; phoneNumber: string | null }> {
-    try {
-        const response = await fetch(`/api/twilio/status?userId=${userId}`);
-        if (!response.ok) {
-            return { connected: false, phoneNumber: null };
-        }
-        return await response.json();
-    } catch {
-        return { connected: false, phoneNumber: null };
-    }
-}
+import { doc, getDoc } from 'firebase/firestore';
+import { getFirebaseDb } from '@/lib/firebase/config';
+import type { TwilioConfig } from '@/types/company';
 
 export default function SettingsClient() {
     const { user, profile, loading: authLoading } = useAuth();
@@ -38,20 +36,29 @@ export default function SettingsClient() {
             return;
         }
         checkConnections();
-    }, [user, authLoading]);
+    }, [user, authLoading, profile?.companyId]);
 
     const checkConnections = async () => {
         if (!user) return;
         try {
-            const [gmailStatus, twilioStatus] = await Promise.all([
-                isGmailConnected(user.uid),
-                checkTwilioStatusViaAPI(user.uid),
-            ]);
+            // Check Gmail
+            const gmailStatus = await isGmailConnected(user.uid);
             setGmailConnected(gmailStatus);
-            setTwilioConnected(twilioStatus?.connected ?? false);
-            setTwilioPhone(twilioStatus?.phoneNumber ?? null);
+
+            // Check Twilio from company settings
+            if (profile?.companyId) {
+                const db = getFirebaseDb();
+                const companyDoc = await getDoc(doc(db, 'companies', profile.companyId));
+                if (companyDoc.exists()) {
+                    const twilioConfig = companyDoc.data()?.settings?.twilioConfig as
+                        | TwilioConfig
+                        | undefined;
+                    setTwilioConnected(twilioConfig?.connected || false);
+                    setTwilioPhone(twilioConfig?.phoneNumber || null);
+                }
+            }
         } catch (error: unknown) {
-            toast.error(error instanceof Error ? error.message : 'Cleanup failed');
+            toast.error(error instanceof Error ? error.message : 'Failed to check connections');
         } finally {
             setIsLoading(false);
         }
@@ -317,30 +324,34 @@ export default function SettingsClient() {
                     </div>
                 </GlassCard>
 
-                <GlassCard>
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-2xl">
-                                📱
+                {/* Twilio Integration Card */}
+                <Link href="/settings/twilio" className="block group">
+                    <GlassCard className="border-l-4 border-l-green-500 hover:bg-white/5 transition-all cursor-pointer">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                    <Phone size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white group-hover:text-green-300 transition-colors">
+                                        Twilio Telephony
+                                    </h3>
+                                    <p className="text-sm text-slate-400">
+                                        Connect your Twilio account for calling and SMS features
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">
-                                    Twilio Telephony
-                                </h3>
-                                <p className="text-sm text-slate-400">
-                                    Omnichannel communication hub for professional outreach
-                                </p>
+                            <div className="flex items-center gap-3">
+                                {twilioConnected ? (
+                                    <Badge variant="success">Active: {twilioPhone}</Badge>
+                                ) : (
+                                    <Badge variant="warning">Setup Required</Badge>
+                                )}
+                                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            {twilioConnected ? (
-                                <Badge variant="success">Active: {twilioPhone}</Badge>
-                            ) : (
-                                <Badge variant="warning">Setup Required</Badge>
-                            )}
-                        </div>
-                    </div>
-                </GlassCard>
+                    </GlassCard>
+                </Link>
             </div>
         </div>
     );

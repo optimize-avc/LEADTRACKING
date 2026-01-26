@@ -1,6 +1,11 @@
-import { getTwilioClient, TWILIO_CONFIG } from './twilio-config';
+import {
+    getTwilioClientForTenant,
+    getTwilioPhoneNumber,
+    getEffectiveTwilioConfig,
+} from './twilio-config';
 import { getFirebaseDb } from '@/lib/firebase/config';
 import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import type { TwilioConfig } from '@/types/company';
 
 export interface CallRecord {
     callSid: string;
@@ -25,15 +30,17 @@ export interface CallRecord {
 }
 
 /**
- * Initiate an outbound call to a lead
+ * Initiate an outbound call to a lead (tenant-aware)
  */
 export async function initiateCall(
     leadPhone: string,
     userId: string,
     leadId: string,
-    leadName: string
+    leadName: string,
+    twilioConfig?: TwilioConfig
 ): Promise<{ callSid: string; status: string }> {
-    const client = getTwilioClient();
+    const client = getTwilioClientForTenant(twilioConfig);
+    const fromNumber = getTwilioPhoneNumber(twilioConfig);
 
     // Clean phone number (ensure it has country code)
     const toNumber = formatPhoneNumber(leadPhone);
@@ -41,11 +48,10 @@ export async function initiateCall(
     try {
         const call = await client.calls.create({
             to: toNumber,
-            from: TWILIO_CONFIG.phoneNumber,
+            from: fromNumber,
             // TwiML for the call - can be customized
             twiml: `<Response><Say>Connecting you to ${leadName}</Say><Dial>${toNumber}</Dial></Response>`,
             // Status callback for tracking call progress
-            // statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/webhook`,
             statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/webhook?userId=${userId}&leadId=${leadId}`,
             statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
             statusCallbackMethod: 'POST',
@@ -58,7 +64,7 @@ export async function initiateCall(
                 userId,
                 leadId,
                 leadPhone: toNumber,
-                fromNumber: TWILIO_CONFIG.phoneNumber,
+                fromNumber: fromNumber,
                 status: 'queued',
                 direction: 'outbound',
                 startTime: new Date().toISOString(),
@@ -78,13 +84,16 @@ export async function initiateCall(
 }
 
 /**
- * Get call status from Twilio
+ * Get call status from Twilio (tenant-aware)
  */
-export async function getCallStatus(callSid: string): Promise<{
+export async function getCallStatus(
+    callSid: string,
+    twilioConfig?: TwilioConfig
+): Promise<{
     status: string;
     duration: number | null;
 }> {
-    const client = getTwilioClient();
+    const client = getTwilioClientForTenant(twilioConfig);
 
     try {
         const call = await client.calls(callSid).fetch();
@@ -96,6 +105,14 @@ export async function getCallStatus(callSid: string): Promise<{
         console.error('Error fetching call status:', error);
         throw error;
     }
+}
+
+/**
+ * Check if calling is available for a tenant
+ */
+export function isCallingAvailable(twilioConfig?: TwilioConfig): boolean {
+    const config = getEffectiveTwilioConfig(twilioConfig);
+    return config.source !== 'none';
 }
 
 /**

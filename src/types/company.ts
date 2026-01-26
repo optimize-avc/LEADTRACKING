@@ -12,6 +12,17 @@ export interface EmailConfig {
     fromName?: string; // Display name for sender (defaults to company name)
 }
 
+/**
+ * Twilio configuration for tenant-specific telephony integration
+ */
+export interface TwilioConfig {
+    accountSid?: string; // Tenant's Twilio Account SID
+    authToken?: string; // Tenant's Twilio Auth Token
+    phoneNumber?: string; // Tenant's Twilio phone number
+    connected?: boolean; // Whether Twilio is configured
+    connectedAt?: number; // When Twilio was connected
+}
+
 export interface Company {
     id: string;
     name: string;
@@ -30,6 +41,7 @@ export interface CompanySettings {
     prompts: Record<string, string>;
     channelMapping: ChannelMapping;
     emailConfig?: EmailConfig; // Tenant-specific email configuration
+    twilioConfig?: TwilioConfig; // Tenant-specific Twilio configuration
 }
 
 export interface ChannelMapping {

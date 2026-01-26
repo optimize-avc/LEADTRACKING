@@ -1,6 +1,11 @@
-import { getTwilioClient, TWILIO_CONFIG } from './twilio-config';
+import {
+    getTwilioClientForTenant,
+    getTwilioPhoneNumber,
+    getEffectiveTwilioConfig,
+} from './twilio-config';
 import { getFirebaseDb } from '@/lib/firebase/config';
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import type { TwilioConfig } from '@/types/company';
 
 export interface SMSRecord {
     messageSid: string;
@@ -15,15 +20,17 @@ export interface SMSRecord {
 }
 
 /**
- * Send an SMS to a lead
+ * Send an SMS to a lead (tenant-aware)
  */
 export async function sendSMS(
     toNumber: string,
     message: string,
     userId: string,
-    leadId: string
+    leadId: string,
+    twilioConfig?: TwilioConfig
 ): Promise<{ messageSid: string; status: string }> {
-    const client = getTwilioClient();
+    const client = getTwilioClientForTenant(twilioConfig);
+    const fromNumber = getTwilioPhoneNumber(twilioConfig);
 
     // Clean phone number
     const formattedNumber = formatPhoneNumber(toNumber);
@@ -31,7 +38,7 @@ export async function sendSMS(
     try {
         const sms = await client.messages.create({
             to: formattedNumber,
-            from: TWILIO_CONFIG.phoneNumber,
+            from: fromNumber,
             body: message,
             statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/sms-webhook?userId=${userId}&leadId=${leadId}`,
         });
@@ -43,7 +50,7 @@ export async function sendSMS(
                 userId,
                 leadId,
                 toNumber: formattedNumber,
-                fromNumber: TWILIO_CONFIG.phoneNumber,
+                fromNumber: fromNumber,
                 body: message,
                 status: 'queued',
                 direction: 'outbound',
@@ -70,6 +77,30 @@ export async function sendSMS(
         console.error('Error sending SMS:', error);
         throw error;
     }
+}
+
+/**
+ * Check if Twilio is available for a tenant
+ */
+export function isTwilioAvailable(twilioConfig?: TwilioConfig): boolean {
+    const config = getEffectiveTwilioConfig(twilioConfig);
+    return config.source !== 'none';
+}
+
+/**
+ * Get Twilio status for display
+ */
+export function getTwilioStatus(twilioConfig?: TwilioConfig): {
+    connected: boolean;
+    phoneNumber: string;
+    source: 'tenant' | 'platform' | 'none';
+} {
+    const config = getEffectiveTwilioConfig(twilioConfig);
+    return {
+        connected: config.source !== 'none',
+        phoneNumber: config.phoneNumber,
+        source: config.source,
+    };
 }
 
 /**

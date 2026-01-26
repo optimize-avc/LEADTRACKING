@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTwilioStatus, isTwilioConnected } from '@/lib/twilio/twilio-service';
-import { isTwilioConfigured, TWILIO_CONFIG } from '@/lib/twilio/twilio-config';
+import { isPlatformTwilioConfigured, PLATFORM_TWILIO_CONFIG } from '@/lib/twilio/twilio-config';
 
 // GET: Check Twilio connection status for a user
 export async function GET(request: NextRequest) {
@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
             // Fall back to environment-based config check
             console.warn('Twilio status: Admin SDK unavailable, checking env config:', adminError);
 
-            if (isTwilioConfigured()) {
+            if (isPlatformTwilioConfigured()) {
                 return NextResponse.json({
                     connected: true,
-                    phoneNumber: TWILIO_CONFIG.phoneNumber,
+                    phoneNumber: PLATFORM_TWILIO_CONFIG.phoneNumber,
                     source: 'environment',
                 });
             }

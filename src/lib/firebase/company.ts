@@ -200,4 +200,51 @@ export const CompanyService = {
             updatedAt: Date.now(),
         });
     },
+
+    /**
+     * Update Twilio configuration
+     */
+    async updateTwilioConfig(
+        companyId: string,
+        twilioConfig: { accountSid?: string; authToken?: string; phoneNumber?: string }
+    ): Promise<void> {
+        const db = getFirebaseDb();
+        const companyRef = doc(db, 'companies', companyId);
+
+        // Get current settings to merge
+        const current = await getDoc(companyRef);
+        if (!current.exists()) {
+            throw new Error('Company not found');
+        }
+
+        const currentSettings = current.data()?.settings || {};
+        const currentTwilioConfig = currentSettings.twilioConfig || {};
+
+        await updateDoc(companyRef, {
+            'settings.twilioConfig': {
+                ...currentTwilioConfig,
+                ...twilioConfig,
+                connected: !!(
+                    twilioConfig.accountSid &&
+                    twilioConfig.authToken &&
+                    twilioConfig.phoneNumber
+                ),
+                connectedAt: Date.now(),
+            },
+            updatedAt: Date.now(),
+        });
+    },
+
+    /**
+     * Clear Twilio configuration (reverts to platform defaults)
+     */
+    async clearTwilioConfig(companyId: string): Promise<void> {
+        const db = getFirebaseDb();
+        const companyRef = doc(db, 'companies', companyId);
+
+        await updateDoc(companyRef, {
+            'settings.twilioConfig': {},
+            updatedAt: Date.now(),
+        });
+    },
 };

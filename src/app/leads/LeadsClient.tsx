@@ -37,6 +37,7 @@ import {
     Columns,
     X,
     Upload,
+    RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateLeadVelocity } from '@/lib/utils/scoring';
@@ -119,6 +120,7 @@ export default function LeadsClient() {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+    const [reauditingLeads, setReauditingLeads] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (user) {
@@ -406,6 +408,71 @@ export default function LeadsClient() {
             loadLeads();
         } catch (error) {
             console.error('Bulk update failed', error);
+        }
+    };
+
+    // Re-audit a lead to refresh enrichment data
+    const handleReaudit = async (lead: Lead) => {
+        if (!user) {
+            toast.info('Log in to re-audit leads');
+            return;
+        }
+
+        setReauditingLeads((prev) => new Set(prev).add(lead.id));
+        toast.info(`Re-auditing ${lead.companyName}...`);
+
+        try {
+            const token = await user.getIdToken();
+            const response = await fetch('/api/audit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ query: lead.companyName }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Audit failed');
+            }
+
+            const data = await response.json();
+            const auditResult = data.audit;
+
+            // Update the lead with new enrichment data
+            const enrichmentData = {
+                overview: {
+                    description: auditResult.overview?.description || '',
+                    industry: auditResult.overview?.industry || lead.industry || '',
+                    estimatedSize: auditResult.overview?.estimatedSize || '',
+                    keyPeople: auditResult.overview?.keyPeople || [],
+                    founded: auditResult.overview?.founded,
+                    headquarters: auditResult.overview?.headquarters,
+                },
+                digitalPresence: auditResult.digitalPresence,
+                aiReadiness: auditResult.aiReadiness,
+                painPoints: auditResult.painPoints || [],
+                opportunities: auditResult.opportunities || [],
+                talkingPoints: auditResult.talkingPoints || [],
+                competitorAnalysis: auditResult.competitorAnalysis,
+            };
+
+            await LeadsService.updateLead(user.uid, lead.id, {
+                enrichmentData,
+                enrichedAt: Date.now(),
+            });
+
+            toast.success(`${lead.companyName} re-audited successfully!`);
+            loadLeads();
+        } catch (error) {
+            console.error('Re-audit failed:', error);
+            toast.error(`Failed to re-audit ${lead.companyName}`);
+        } finally {
+            setReauditingLeads((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(lead.id);
+                return newSet;
+            });
         }
     };
 
@@ -810,6 +877,31 @@ export default function LeadsClient() {
                                         title="Log Reply Received"
                                     >
                                         📩
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleReaudit(lead);
+                                        }}
+                                        disabled={reauditingLeads.has(lead.id)}
+                                        className={`px-3 py-2 text-xs border rounded-lg transition-all flex items-center gap-1 ${
+                                            reauditingLeads.has(lead.id)
+                                                ? 'bg-purple-500/30 border-purple-500/50 text-purple-300 cursor-wait'
+                                                : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-400'
+                                        }`}
+                                        title={
+                                            lead.enrichedAt
+                                                ? `Last audited ${new Date(lead.enrichedAt).toLocaleDateString()}`
+                                                : 'Run Deep Audit'
+                                        }
+                                    >
+                                        <RefreshCw
+                                            size={12}
+                                            className={
+                                                reauditingLeads.has(lead.id) ? 'animate-spin' : ''
+                                            }
+                                        />
+                                        {reauditingLeads.has(lead.id) ? '' : '🔍'}
                                     </button>
                                 </div>
 

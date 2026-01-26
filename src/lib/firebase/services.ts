@@ -26,15 +26,15 @@ function safeLeadValue(value: number | undefined | null): number {
 }
 
 // ============================================
-// LEADS SERVICE
+// LEADS SERVICE (Multi-Tenant: User-Isolated)
 // ============================================
 
 export const LeadsService = {
-    // Get all leads (Global Team View)
+    // Get all leads for this user only (isolated data)
     async getLeads(userId: string): Promise<Lead[]> {
-        // NOTE: We switched to global 'leads' to allow Bot integration
         const leadsRef = collection(getFirebaseDb(), 'leads');
-        const q = query(leadsRef, orderBy('createdAt', 'desc')); // Show newest first
+        // MULTI-TENANT: Only fetch leads owned by this user
+        const q = query(leadsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.map((doc) => {
             const data = doc.data();
@@ -46,33 +46,35 @@ export const LeadsService = {
         }) as Lead[];
     },
 
-    // Get single lead
+    // Get single lead (with ownership check)
     async getLead(userId: string, leadId: string): Promise<Lead | null> {
         const leadRef = doc(getFirebaseDb(), 'leads', leadId);
         const snapshot = await getDoc(leadRef);
         if (!snapshot.exists()) return null;
-        return { id: snapshot.id, ...snapshot.data() } as Lead;
+        const data = snapshot.data();
+        // MULTI-TENANT: Only return if user owns this lead
+        if (data.userId !== userId) return null;
+        return { id: snapshot.id, ...data } as Lead;
     },
 
-    // Create new lead
+    // Create new lead (automatically owned by creator)
     async createLead(
         userId: string,
-        lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>,
-        companyId?: string
+        lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo' | 'userId'>
     ): Promise<string> {
         const leadsRef = collection(getFirebaseDb(), 'leads');
         const now = Date.now();
         const docRef = await addDoc(leadsRef, {
             ...lead,
+            userId: userId, // MULTI-TENANT: Owner ID for isolation
             assignedTo: userId,
-            companyId: companyId || null, // For multi-tenancy - filter by companyId in queries
             createdAt: now,
             updatedAt: now,
         });
         return docRef.id;
     },
 
-    // Update lead
+    // Update lead (ownership enforced by Firestore rules)
     async updateLead(userId: string, leadId: string, updates: Partial<Lead>): Promise<void> {
         const leadRef = doc(getFirebaseDb(), 'leads', leadId);
         await updateDoc(leadRef, {
@@ -81,7 +83,7 @@ export const LeadsService = {
         });
     },
 
-    // Delete lead
+    // Delete lead (ownership enforced by Firestore rules)
     async deleteLead(userId: string, leadId: string): Promise<void> {
         const leadRef = doc(getFirebaseDb(), 'leads', leadId);
         await deleteDoc(leadRef);

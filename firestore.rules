@@ -180,28 +180,31 @@ service cloud.firestore {
     }
     
     // ==========================================================================
-    // GLOBAL LEADS COLLECTION (Bot Integration)
+    // GLOBAL LEADS COLLECTION (Multi-Tenant User Isolation)
     // ==========================================================================
-    // Leads are stored at root level to allow Discord Bot integration
-    // This is a transitional pattern - eventually migrate to companies/{companyId}/leads
+    // Each user can only access their own leads (userId field must match auth.uid)
     
     match /leads/{leadId} {
-      // Authenticated users can read leads
-      allow read: if isAuthenticated();
+      // Users can only read their own leads
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       
-      // Authenticated users can create leads
-      allow create: if isAuthenticated();
+      // Users can create leads (userId must be set to their own uid)
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
       
-      // Authenticated users can update leads they have access to
-      allow update: if isAuthenticated();
+      // Users can only update their own leads
+      allow update: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid; // Can't transfer ownership
       
-      // Users can delete leads they created, OR admins can delete any lead
+      // Users can only delete their own leads
       allow delete: if isAuthenticated() 
-        && (resource.data.userId == request.auth.uid || getUserRole() == 'admin');
+        && resource.data.userId == request.auth.uid;
       
-      // Lead activities subcollection (public team activities)
+      // Lead activities subcollection
       match /activities/{activityId} {
-        allow read, create: if isAuthenticated();
+        allow read, create: if isAuthenticated() 
+          && get(/databases/$(database)/documents/leads/$(leadId)).data.userId == request.auth.uid;
         allow update, delete: if false; // Immutable
       }
     }

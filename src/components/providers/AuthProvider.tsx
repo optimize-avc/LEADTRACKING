@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase/config';
 import { ProfileService, UserProfile } from '@/lib/firebase/services';
+import { AnalyticsService } from '@/lib/firebase/analytics';
 
 // Permanent admin emails - these always get admin role
 const PERMANENT_ADMINS = ['optimize@avcpp.com'];
@@ -94,6 +95,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         };
                         await ProfileService.updateProfile(currentUser.uid, newProfile);
                         p = await ProfileService.getProfile(currentUser.uid);
+
+                        // Track signup event for analytics
+                        await AnalyticsService.trackSignup(
+                            currentUser.uid,
+                            currentUser.email || ''
+                        );
+
+                        // Send welcome email (fire and forget - don't block auth)
+                        fetch('/api/email/welcome', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: currentUser.email,
+                                name: currentUser.displayName,
+                            }),
+                        }).catch((err) => console.warn('Failed to send welcome email:', err));
                     } else if (isPermanentAdmin && p.role !== 'admin') {
                         // Ensure permanent admins always have admin role
                         await ProfileService.updateProfile(currentUser.uid, { role: 'admin' });

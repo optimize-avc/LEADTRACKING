@@ -5,6 +5,7 @@
  *
  * Catches JavaScript errors anywhere in the child component tree,
  * logs those errors, and displays a fallback UI instead of crashing.
+ * Integrates with Sentry for production error tracking (when available).
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
@@ -21,6 +22,22 @@ interface ErrorBoundaryState {
     hasError: boolean;
     error: Error | null;
     errorInfo: ErrorInfo | null;
+    eventId: string | null;
+}
+
+// Log error to monitoring service if configured
+// Note: When Sentry is installed, this will be enhanced to use captureException
+function reportError(error: Error, componentStack?: string): void {
+    // For now, just log to console
+    // When @sentry/nextjs is installed, uncomment the captureException call
+    console.error('[ErrorBoundary] Error captured:', {
+        message: error.message,
+        stack: error.stack,
+        componentStack,
+    });
+
+    // Future: Send to error tracking service
+    // import('@sentry/nextjs').then(Sentry => Sentry.captureException(error, { extra: { componentStack } }));
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -30,6 +47,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             hasError: false,
             error: null,
             errorInfo: null,
+            eventId: null,
         };
     }
 
@@ -46,8 +64,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         // Call optional error handler
         this.props.onError?.(error, errorInfo);
 
-        // In production, you would send this to an error tracking service
-        // e.g., Sentry, LogRocket, etc.
+        // Send to error tracking service
+        reportError(error, errorInfo.componentStack || undefined);
     }
 
     handleReset = (): void => {

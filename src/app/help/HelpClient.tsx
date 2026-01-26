@@ -1,16 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import {
-    HelpCircle,
-    ChevronDown,
-    Mail,
-    MessageSquare,
-    Book,
-    ExternalLink,
-    Send,
-} from 'lucide-react';
+import { HelpCircle, ChevronDown, Mail, MessageSquare, Book, Send, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -19,44 +11,76 @@ const FAQ_ITEMS = [
     {
         question: 'How do I connect my Discord server?',
         answer: 'Navigate to Settings → Bot Studio and click "Connect Discord". You\'ll be redirected to Discord to authorize the bot for your server. The bot will then sync leads and notifications with your connected channel.',
+        keywords: ['discord', 'bot', 'notifications', 'connect', 'integration'],
     },
     {
         question: 'How do I import leads from a CSV file?',
         answer: 'Go to the Leads Pipeline page and click "Export CSV" button in the top right. For importing, you can use the same button which toggles to show import options when you have a CSV file ready.',
+        keywords: ['csv', 'import', 'export', 'leads', 'data'],
     },
     {
         question: 'What are the different subscription tiers?',
         answer: 'SalesTracker offers Free, Pro, and Enterprise tiers. Free includes basic lead tracking. Pro adds AI insights, integrations, and analytics. Enterprise includes team management, SSO, and priority support.',
+        keywords: ['pricing', 'plans', 'subscription', 'tier', 'free', 'pro', 'enterprise', 'cost'],
     },
     {
         question: 'How do I connect Gmail for email tracking?',
         answer: 'Go to Settings and click "Connect Gmail" on the Gmail Integration card. You\'ll authorize SalesTracker to read and send emails on your behalf. All emails to/from leads will be automatically synced.',
+        keywords: ['gmail', 'email', 'integration', 'connect', 'sync'],
     },
     {
         question: 'Can I use SalesTracker on mobile?',
         answer: 'Yes! SalesTracker is fully responsive and works on mobile browsers. You can also receive lead notifications via Discord mobile app if you have the bot connected.',
+        keywords: ['mobile', 'phone', 'responsive', 'app', 'ios', 'android'],
     },
     {
         question: 'How do I export my data?',
         answer: 'Go to Settings → Account Preferences and scroll to "Export Your Data". You can download your data in JSON, CSV, or PDF format for GDPR compliance.',
+        keywords: ['export', 'download', 'data', 'gdpr', 'json', 'csv', 'pdf'],
     },
     {
         question: 'How do I invite team members?',
         answer: 'Team management is available on Enterprise tier. Go to Settings → Team to invite members by email and assign roles (Admin, Manager, Rep).',
+        keywords: ['team', 'invite', 'members', 'roles', 'collaboration'],
     },
     {
         question: 'What AI features are included?',
         answer: 'SalesTracker uses AI for lead qualification scoring, email draft suggestions, objection handling tips, and sales training simulations. All AI features use Google Gemini.',
+        keywords: ['ai', 'artificial intelligence', 'gemini', 'scoring', 'suggestions', 'training'],
+    },
+    {
+        question: 'How does lead scoring work?',
+        answer: "Lead scoring uses AI to analyze factors like company size, engagement level, industry fit, and buying signals. Scores range from 1-100, with higher scores indicating better fit. You can view the score breakdown on each lead's detail page.",
+        keywords: ['scoring', 'lead', 'qualification', 'ai', 'priority'],
+    },
+    {
+        question: 'How do I track activities and calls?',
+        answer: 'Use the Activities page to log calls, emails, and meetings. You can also use the quick log buttons on the lead detail page. All activities are automatically linked to the relevant lead and shown in your activity timeline.',
+        keywords: ['activities', 'calls', 'meetings', 'log', 'track', 'history'],
     },
 ];
 
 export default function HelpClient() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const [contactForm, setContactForm] = useState({
         subject: '',
         message: '',
     });
     const [isSending, setIsSending] = useState(false);
+
+    // Filter FAQ items based on search query
+    const filteredFAQs = useMemo(() => {
+        if (!searchQuery.trim()) return FAQ_ITEMS;
+
+        const query = searchQuery.toLowerCase();
+        return FAQ_ITEMS.filter(
+            (item) =>
+                item.question.toLowerCase().includes(query) ||
+                item.answer.toLowerCase().includes(query) ||
+                item.keywords?.some((kw) => kw.toLowerCase().includes(query))
+        );
+    }, [searchQuery]);
 
     const handleToggleFAQ = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
@@ -123,38 +147,69 @@ export default function HelpClient() {
 
                 {/* FAQ Section */}
                 <GlassCard>
-                    <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                    <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                         <MessageSquare className="w-5 h-5 text-violet-400" />
                         Frequently Asked Questions
                     </h2>
 
-                    <div className="space-y-2">
-                        {FAQ_ITEMS.map((item, index) => (
-                            <div
-                                key={index}
-                                className="border border-white/5 rounded-lg overflow-hidden"
+                    {/* Search Bar */}
+                    <div className="relative mb-6">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search FAQ..."
+                            className="w-full bg-slate-800/50 border border-white/10 rounded-lg pl-10 pr-10 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
                             >
-                                <button
-                                    onClick={() => handleToggleFAQ(index)}
-                                    className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
-                                >
-                                    <span className="text-white font-medium text-sm">
-                                        {item.question}
-                                    </span>
-                                    <ChevronDown
-                                        className={`w-5 h-5 text-slate-400 transition-transform ${
-                                            openIndex === index ? 'rotate-180' : ''
-                                        }`}
-                                    />
-                                </button>
-                                {openIndex === index && (
-                                    <div className="px-4 pb-4 text-slate-400 text-sm leading-relaxed">
-                                        {item.answer}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
+
+                    {filteredFAQs.length === 0 ? (
+                        <div className="text-center py-8">
+                            <p className="text-slate-400">
+                                No results found for &quot;{searchQuery}&quot;
+                            </p>
+                            <p className="text-slate-500 text-sm mt-2">
+                                Try different keywords or contact support below
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {filteredFAQs.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className="border border-white/5 rounded-lg overflow-hidden"
+                                >
+                                    <button
+                                        onClick={() => handleToggleFAQ(index)}
+                                        className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
+                                    >
+                                        <span className="text-white font-medium text-sm">
+                                            {item.question}
+                                        </span>
+                                        <ChevronDown
+                                            className={`w-5 h-5 text-slate-400 transition-transform ${
+                                                openIndex === index ? 'rotate-180' : ''
+                                            }`}
+                                        />
+                                    </button>
+                                    {openIndex === index && (
+                                        <div className="px-4 pb-4 text-slate-400 text-sm leading-relaxed">
+                                            {item.answer}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </GlassCard>
 
                 {/* Contact Form */}

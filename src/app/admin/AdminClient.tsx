@@ -181,7 +181,7 @@ export default function AdminDashboard() {
     const metrics = mockMetrics;
 
     // Check if user is a super admin (check profile role or email)
-    const isSuperAdmin = profile?.role === 'superAdmin' || profile?.email === 'admin@avcpp.com';
+    const isSuperAdmin = profile?.role === 'superAdmin' || profile?.email === 'optimize@avcpp.com';
 
     // Handle redirect in useEffect to avoid render-time navigation
     React.useEffect(() => {

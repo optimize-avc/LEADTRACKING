@@ -181,6 +181,72 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                                 </div>
                             )}
 
+                            {/* Smart Templates using Enrichment Data */}
+                            {lead.enrichmentData && (
+                                <div className="mb-4 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="text-lg">🎯</span>
+                                        <span className="text-sm font-semibold text-purple-300">
+                                            Smart Templates (from Deep Audit)
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {lead.enrichmentData.painPoints?.[0] && (
+                                            <button
+                                                onClick={() =>
+                                                    handleGenerate(
+                                                        `Focus on addressing their pain point: "${lead.enrichmentData?.painPoints?.[0]?.slice(0, 100)}". Offer a specific solution.`
+                                                    )
+                                                }
+                                                className="px-3 py-1.5 text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-amber-300 transition-all"
+                                            >
+                                                🔥 Address Pain Point
+                                            </button>
+                                        )}
+                                        {lead.enrichmentData.opportunities?.[0] && (
+                                            <button
+                                                onClick={() =>
+                                                    handleGenerate(
+                                                        `Highlight this opportunity for them: "${lead.enrichmentData?.opportunities?.[0]?.slice(0, 100)}". Show how we can help capitalize on it.`
+                                                    )
+                                                }
+                                                className="px-3 py-1.5 text-xs bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg text-green-300 transition-all"
+                                            >
+                                                💡 Pitch Opportunity
+                                            </button>
+                                        )}
+                                        {lead.enrichmentData.talkingPoints?.[0] && (
+                                            <button
+                                                onClick={() =>
+                                                    handleGenerate(
+                                                        `Open with this personalized talking point: "${lead.enrichmentData?.talkingPoints?.[0]?.slice(0, 100)}". Use it as an icebreaker.`
+                                                    )
+                                                }
+                                                className="px-3 py-1.5 text-xs bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-lg text-indigo-300 transition-all"
+                                            >
+                                                💬 Use Talking Point
+                                            </button>
+                                        )}
+                                        {lead.enrichmentData.digitalPresence?.score !==
+                                            undefined && (
+                                            <button
+                                                onClick={() => {
+                                                    const score =
+                                                        lead.enrichmentData?.digitalPresence
+                                                            ?.score ?? 0;
+                                                    handleGenerate(
+                                                        `Their digital presence score is ${score}/100. ${score < 50 ? 'Emphasize how we can improve their online visibility.' : 'Acknowledge their strong online presence and suggest optimization.'}`
+                                                    );
+                                                }}
+                                                className="px-3 py-1.5 text-xs bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 transition-all"
+                                            >
+                                                📊 Digital Pitch
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Custom Prompt Input */}
                             {showCustomPrompt && (
                                 <div className="mb-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">

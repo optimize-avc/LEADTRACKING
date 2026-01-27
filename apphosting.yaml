@@ -104,3 +104,22 @@ env:
       secret: GOOGLE_PLACES_API_KEY
       availability:
           - RUNTIME
+
+    # Discord OAuth (for Discord bot integration)
+    - variable: DISCORD_CLIENT_ID
+      secret: DISCORD_CLIENT_ID
+      availability:
+          - RUNTIME
+    - variable: DISCORD_CLIENT_SECRET
+      secret: DISCORD_CLIENT_SECRET
+      availability:
+          - RUNTIME
+    - variable: DISCORD_BOT_TOKEN
+      secret: DISCORD_BOT_TOKEN
+      availability:
+          - RUNTIME
+    - variable: DISCORD_REDIRECT_URI
+      value: https://leadtracking-app--antigrav-tracking-final.us-central1.hosted.app/api/discord/callback
+      availability:
+          - BUILD
+          - RUNTIME

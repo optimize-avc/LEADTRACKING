@@ -9,38 +9,54 @@ import {
     where,
     getDocs,
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import type { Company, CompanySettings, DEFAULT_COMPANY_SETTINGS } from '@/types/company';
 
 /**
  * CompanyService - Manages company/tenant data for multi-tenant SaaS
+ * 
+ * Uses server-side API routes for operations that require admin privileges
+ * to bypass Firestore security rules properly.
  */
 export const CompanyService = {
     /**
-     * Get company by user ID (looks up via user's companyId)
+     * Get company by user ID - Uses server-side API for bootstrapping
+     * This bypasses the chicken-egg Firestore rules problem
      */
-    async getCompanyByUser(userId: string): Promise<Company | null> {
-        const db = getFirebaseDb();
+    async getCompanyByUser(userId: string, token?: string): Promise<Company | null> {
+        try {
+            // Get token if not provided
+            const authToken = token || await getAuth().currentUser?.getIdToken();
 
-        // First get user's companyId
-        const userRef = doc(db, 'users', userId);
-        const userSnap = await getDoc(userRef);
+            if (!authToken) {
+                console.warn('No auth token available');
+                return null;
+            }
 
-        if (!userSnap.exists()) return null;
+            const response = await fetch('/api/company/get', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
-        const companyId = userSnap.data()?.companyId;
-        if (!companyId) return null;
+            if (!response.ok) {
+                console.error('Failed to get company:', response.statusText);
+                return null;
+            }
 
-        // Then get the company
-        const companyRef = doc(db, 'companies', companyId);
-        const companySnap = await getDoc(companyRef);
-
-        if (!companySnap.exists()) return null;
-
-        return { id: companySnap.id, ...companySnap.data() } as Company;
+            const data = await response.json();
+            return data.company || null;
+        } catch (error) {
+            console.error('Error getting company by user:', error);
+            return null;
+        }
     },
 
     /**
-     * Get company by ID directly
+     * Get company by ID directly (uses client-side Firestore)
+     * Only works when user already belongs to the company
      */
     async getCompany(companyId: string): Promise<Company | null> {
         const db = getFirebaseDb();
@@ -53,48 +69,40 @@ export const CompanyService = {
     },
 
     /**
-     * Create a new company and link it to the user
+     * Create a new company and link it to the user - Uses server-side API
+     * This bypasses Firestore security rules that block client-side company creation
      */
     async createCompany(
         userId: string,
-        data: { name: string; settings?: Partial<CompanySettings> }
+        data: { name: string; settings?: Partial<CompanySettings> },
+        token?: string
     ): Promise<string> {
-        const db = getFirebaseDb();
-        const now = Date.now();
+        // Get token if not provided
+        const authToken = token || await getAuth().currentUser?.getIdToken();
 
-        // Generate company ID
-        const companyRef = doc(collection(db, 'companies'));
+        if (!authToken) {
+            throw new Error('No auth token available');
+        }
 
-        const defaultSettings: CompanySettings = {
-            industry: '',
-            persona: 'professional',
-            qualificationRules: [],
-            prompts: {
-                research: 'Research this business and identify their digital footprint defects.',
-                qualification: 'Analyze if this lead meets our qualification criteria.',
+        const response = await fetch('/api/company/create', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
             },
-            channelMapping: {},
-        };
-
-        const company: Omit<Company, 'id'> = {
-            name: data.name,
-            ownerId: userId,
-            settings: { ...defaultSettings, ...data.settings },
-            createdAt: now,
-            updatedAt: now,
-        };
-
-        await setDoc(companyRef, company);
-
-        // Link user to company
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, {
-            companyId: companyRef.id,
-            role: 'admin', // Creator is admin
-            updatedAt: now,
+            body: JSON.stringify({
+                name: data.name,
+                settings: data.settings,
+            }),
         });
 
-        return companyRef.id;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create company');
+        }
+
+        const result = await response.json();
+        return result.companyId;
     },
 
     /**

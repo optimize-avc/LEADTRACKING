@@ -3,6 +3,9 @@ import './globals.css';
 import { ClientLayout } from '@/components/layout/ClientLayout';
 
 export const metadata: Metadata = {
+    metadataBase: new URL(
+        'https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app'
+    ),
     title: {
         default: 'SalesTracker AI | Enterprise Sales Enablement',
         template: '%s | SalesTracker AI',
@@ -13,7 +16,6 @@ export const metadata: Metadata = {
     authors: [{ name: 'SalesTracker Team' }],
     creator: 'SalesTracker AI',
     publisher: 'SalesTracker AI',
-    metadataBase: new URL('https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app'),
     manifest: '/manifest.json',
     formatDetection: {
         email: false,
@@ -52,9 +54,7 @@ export const metadata: Metadata = {
             { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
             { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
         ],
-        apple: [
-            { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-        ],
+        apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     },
 };
 

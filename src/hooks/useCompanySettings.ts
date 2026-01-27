@@ -13,6 +13,7 @@ import useSWR from 'swr';
 import { doc, getDoc } from 'firebase/firestore';
 import { getFirebaseDb } from '@/lib/firebase/config';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { UsageService, CompanyUsage } from '@/lib/firebase/usage';
 
 export interface CompanySettings {
     id: string;
@@ -198,5 +199,29 @@ export function useWithinLimit(
         withinLimit: currentUsage < limit,
         limit,
         remaining,
+    };
+}
+
+/**
+ * Hook for company usage data with SWR caching
+ */
+export function useCompanyUsage() {
+    const { profile } = useAuth();
+
+    const { data, error, isLoading, mutate } = useSWR<CompanyUsage | null>(
+        profile?.companyId ? ['company-usage', profile.companyId] : null,
+        ([, companyId]: [string, string]) => UsageService.getUsage(companyId),
+        {
+            revalidateOnFocus: true,
+            dedupingInterval: 30000, // Cache for 30 seconds
+            refreshInterval: 60000, // Refresh every minute
+        }
+    );
+
+    return {
+        usage: data,
+        isLoading,
+        error,
+        refresh: mutate,
     };
 }

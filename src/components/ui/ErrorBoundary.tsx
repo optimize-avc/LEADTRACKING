@@ -2,142 +2,92 @@
 
 /**
  * Error Boundary Component
- *
- * Catches JavaScript errors anywhere in the child component tree,
- * logs those errors, and displays a fallback UI instead of crashing.
- * Integrates with Sentry for production error tracking (when available).
+ * 
+ * Catches React errors and displays a fallback UI.
+ * Logs errors to console (Sentry integration can be added via environment).
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import React, { Component, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
-interface ErrorBoundaryProps {
+interface Props {
     children: ReactNode;
     fallback?: ReactNode;
-    onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
-interface ErrorBoundaryState {
+interface State {
     hasError: boolean;
-    error: Error | null;
-    errorInfo: ErrorInfo | null;
-    eventId: string | null;
+    error?: Error;
 }
 
-// Log error to monitoring service if configured
-// Note: When Sentry is installed, this will be enhanced to use captureException
-function reportError(error: Error, componentStack?: string): void {
-    // For now, just log to console
-    // When @sentry/nextjs is installed, uncomment the captureException call
-    console.error('[ErrorBoundary] Error captured:', {
-        message: error.message,
-        stack: error.stack,
-        componentStack,
-    });
-
-    // Future: Send to error tracking service
-    // import('@sentry/nextjs').then(Sentry => Sentry.captureException(error, { extra: { componentStack } }));
-}
-
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-    constructor(props: ErrorBoundaryProps) {
+export class ErrorBoundary extends Component<Props, State> {
+    constructor(props: Props) {
         super(props);
-        this.state = {
-            hasError: false,
-            error: null,
-            errorInfo: null,
-            eventId: null,
-        };
+        this.state = { hasError: false };
     }
 
-    static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    static getDerivedStateFromError(error: Error): State {
         return { hasError: true, error };
     }
 
-    componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-        this.setState({ errorInfo });
-
-        // Log error to console in development
-        console.error('ErrorBoundary caught an error:', error, errorInfo);
-
-        // Call optional error handler
-        this.props.onError?.(error, errorInfo);
-
-        // Send to error tracking service
-        reportError(error, errorInfo.componentStack || undefined);
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+        // Log to console
+        console.error('Error caught by boundary:', error, errorInfo);
+        
+        // TODO: Integrate with error reporting service (e.g., Sentry)
+        // if (typeof window !== 'undefined' && window.Sentry) {
+        //     window.Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
+        // }
     }
 
-    handleReset = (): void => {
-        this.setState({
-            hasError: false,
-            error: null,
-            errorInfo: null,
-        });
+    handleRetry = () => {
+        this.setState({ hasError: false, error: undefined });
     };
 
-    handleRefresh = (): void => {
-        window.location.reload();
-    };
-
-    handleGoHome = (): void => {
-        window.location.href = '/';
-    };
-
-    render(): ReactNode {
+    render() {
         if (this.state.hasError) {
-            // Custom fallback provided
             if (this.props.fallback) {
                 return this.props.fallback;
             }
 
-            // Default error UI
             return (
                 <div className="min-h-[400px] flex items-center justify-center p-8">
-                    <GlassCard className="max-w-md w-full text-center">
-                        <div className="p-3 bg-red-500/20 rounded-full w-fit mx-auto mb-4">
+                    <div className="text-center max-w-md">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                             <AlertTriangle className="w-8 h-8 text-red-400" />
                         </div>
-
                         <h2 className="text-xl font-semibold text-white mb-2">
                             Something went wrong
                         </h2>
-
-                        <p className="text-slate-400 text-sm mb-6">
-                            An unexpected error occurred. You can try refreshing the page or go back
-                            to the dashboard.
+                        <p className="text-slate-400 mb-6">
+                            We encountered an unexpected error. Our team has been notified.
                         </p>
-
+                        <div className="flex gap-3 justify-center">
+                            <button
+                                onClick={this.handleRetry}
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                Try Again
+                            </button>
+                            <button
+                                onClick={() => window.location.href = '/'}
+                                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Go Home
+                            </button>
+                        </div>
                         {process.env.NODE_ENV === 'development' && this.state.error && (
-                            <details className="mb-6 text-left">
-                                <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-400">
-                                    Error Details (Development Only)
+                            <details className="mt-6 text-left">
+                                <summary className="text-slate-500 cursor-pointer hover:text-slate-400">
+                                    Error Details (dev only)
                                 </summary>
-                                <pre className="mt-2 p-3 bg-slate-800/50 rounded text-xs text-red-400 overflow-auto max-h-32">
-                                    {this.state.error.message}
-                                    {'\n\n'}
-                                    {this.state.errorInfo?.componentStack}
+                                <pre className="mt-2 p-4 bg-slate-900 rounded-lg text-xs text-red-400 overflow-auto max-h-40">
+                                    {this.state.error.stack || this.state.error.message}
                                 </pre>
                             </details>
                         )}
-
-                        <div className="flex gap-3 justify-center">
-                            <button
-                                onClick={this.handleRefresh}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm text-white transition-colors"
-                            >
-                                <RefreshCw className="w-4 h-4" />
-                                Refresh
-                            </button>
-                            <button
-                                onClick={this.handleGoHome}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm text-white transition-colors"
-                            >
-                                <Home className="w-4 h-4" />
-                                Dashboard
-                            </button>
-                        </div>
-                    </GlassCard>
+                    </div>
                 </div>
             );
         }
@@ -147,22 +97,56 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 
 /**
- * Hook-friendly error boundary wrapper
- * Use this for wrapping specific sections of your app
+ * Higher-order component to wrap any component with error boundary
  */
-interface ErrorBoundaryWrapperProps {
-    children: ReactNode;
-    fallbackMessage?: string;
+export function withErrorBoundary<P extends object>(
+    WrappedComponent: React.ComponentType<P>,
+    fallback?: ReactNode
+) {
+    return function WithErrorBoundaryWrapper(props: P) {
+        return (
+            <ErrorBoundary fallback={fallback}>
+                <WrappedComponent {...props} />
+            </ErrorBoundary>
+        );
+    };
 }
 
-export function SafeComponent({ children, fallbackMessage }: ErrorBoundaryWrapperProps) {
+/**
+ * Page-level error boundary with reset functionality
+ */
+export function PageErrorBoundary({ children }: { children: ReactNode }) {
     return (
         <ErrorBoundary
             fallback={
-                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <p className="text-red-400 text-sm">
-                        {fallbackMessage || 'This section encountered an error.'}
-                    </p>
+                <div className="min-h-screen bg-slate-900 flex items-center justify-center p-8">
+                    <div className="text-center max-w-lg">
+                        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                            <AlertTriangle className="w-10 h-10 text-red-400" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-3">
+                            Page Error
+                        </h1>
+                        <p className="text-slate-400 mb-8">
+                            This page encountered an error and couldn&apos;t load properly. 
+                            Please try refreshing the page or return to the dashboard.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                                <RefreshCw className="w-5 h-5" />
+                                Refresh Page
+                            </button>
+                            <button
+                                onClick={() => (window.location.href = '/')}
+                                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+                            >
+                                Back to Dashboard
+                            </button>
+                        </div>
+                    </div>
                 </div>
             }
         >

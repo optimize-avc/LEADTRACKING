@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseDb } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { getAdminDb } from '@/lib/firebase/admin';
 
 /**
  * Twilio Inbound Webhook (Dec 2025)
@@ -17,11 +16,13 @@ export async function POST(req: NextRequest) {
             return new Response('Invalid Request', { status: 400 });
         }
 
+        // Use Admin SDK for server-side Firestore access
+        const db = getAdminDb();
+
         // 1. Find the lead associated with this phone number
         // We search across all users since webhooks are global
         // In production, you'd use a more efficient lookup index
-        const leadsQuery = query(collection(getFirebaseDb(), 'leads'), where('phone', '==', from));
-        const leadsSnapshot = await getDocs(leadsQuery);
+        const leadsSnapshot = await db.collection('leads').where('phone', '==', from).get();
 
         if (leadsSnapshot.empty) {
             console.log(`No lead found for number: ${from}`);
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
             const userId = leadData.ownerId; // Assuming ownerId exists on lead
 
             if (userId) {
-                return addDoc(collection(getFirebaseDb(), 'users', userId, 'activities'), {
+                return db.collection('users').doc(userId).collection('activities').add({
                     type: 'social',
                     outcome: 'connected',
                     timestamp: Date.now(),

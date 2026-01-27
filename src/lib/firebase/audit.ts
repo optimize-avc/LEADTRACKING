@@ -241,4 +241,59 @@ export const AuditService = {
             { oldRole, newRole }
         );
     },
+
+    /**
+     * Log an admin action (for super admin operations)
+     */
+    async logAdminAction(
+        companyId: string,
+        adminId: string,
+        action: string,
+        metadata?: Record<string, unknown>
+    ): Promise<string> {
+        const db = getFirebaseDb();
+        const auditRef = doc(collection(db, 'companies', companyId, 'auditLog'));
+
+        const entry = {
+            action: `admin.${action}` as AuditAction,
+            userId: adminId,
+            userName: 'Super Admin',
+            targetType: 'company' as const,
+            targetId: companyId,
+            metadata,
+            timestamp: Date.now(),
+            isAdminAction: true,
+        };
+
+        await setDoc(auditRef, entry);
+        return auditRef.id;
+    },
+
+    /**
+     * Log an impersonation event
+     */
+    async logImpersonation(
+        companyId: string,
+        adminId: string,
+        targetUserId: string,
+        reason: string
+    ): Promise<string> {
+        const db = getFirebaseDb();
+        const auditRef = doc(collection(db, 'companies', companyId, 'auditLog'));
+
+        const entry = {
+            action: 'admin.impersonation' as AuditAction,
+            userId: adminId,
+            userName: 'Super Admin',
+            targetType: 'team' as const,
+            targetId: targetUserId,
+            metadata: { reason },
+            timestamp: Date.now(),
+            isAdminAction: true,
+            isSensitive: true,
+        };
+
+        await setDoc(auditRef, entry);
+        return auditRef.id;
+    },
 };

@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendEmailServer } from '@/lib/gmail/gmail-service-server';
+import { sendEmail } from '@/lib/gmail/gmail-service';
+import { rateLimit } from '@/lib/api-middleware';
+import { RATE_LIMITS } from '@/lib/rate-limit';
 
 // POST: Send an email via Gmail API
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting - prevent email spam
+        const rateLimitResult = rateLimit(request, undefined, RATE_LIMITS.heavy);
+        if (rateLimitResult) {
+            return rateLimitResult;
+        }
+
         const body = await request.json();
         const { userId, to, subject, emailBody, leadId } = body;
 
@@ -20,7 +28,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
         }
 
-        const messageId = await sendEmailServer(userId, to, subject, emailBody, leadId);
+        const messageId = await sendEmail(userId, to, subject, emailBody, leadId);
 
         return NextResponse.json({
             success: true,

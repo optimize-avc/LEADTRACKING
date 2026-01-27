@@ -189,7 +189,7 @@ export function BillingSettings() {
                         <div>
                             <p className="text-xs text-slate-500">Leads</p>
                             <p className="text-sm font-medium text-white">
-                                {formatLimit(limits.maxLeads)}
+                                {formatLimit(limits.leads)}
                             </p>
                         </div>
                     </div>
@@ -198,7 +198,7 @@ export function BillingSettings() {
                         <div>
                             <p className="text-xs text-slate-500">Team Members</p>
                             <p className="text-sm font-medium text-white">
-                                {formatLimit(limits.maxTeamMembers)}
+                                {formatLimit(limits.teamMembers)}
                             </p>
                         </div>
                     </div>
@@ -207,7 +207,7 @@ export function BillingSettings() {
                         <div>
                             <p className="text-xs text-slate-500">Email Integration</p>
                             <p className="text-sm font-medium text-white">
-                                {limits.canUseEmailIntegration ? 'Included' : 'Not available'}
+                                {limits.brandedEmails ? 'Included' : 'Not available'}
                             </p>
                         </div>
                     </div>
@@ -216,7 +216,7 @@ export function BillingSettings() {
                         <div>
                             <p className="text-xs text-slate-500">AI Features</p>
                             <p className="text-sm font-medium text-white">
-                                {limits.canUseAIInsights ? 'Full access' : 'Limited'}
+                                {limits.aiFeatures ? 'Full access' : 'Limited'}
                             </p>
                         </div>
                     </div>
@@ -236,17 +236,17 @@ export function BillingSettings() {
                         <UsageMeter
                             label="Leads"
                             current={usage.leadCount}
-                            limit={limits.maxLeads}
+                            limit={limits.leads}
                         />
                         <UsageMeter
                             label="Team Members"
                             current={usage.teamMemberCount}
-                            limit={limits.maxTeamMembers}
+                            limit={limits.teamMembers}
                         />
                         <UsageMeter
                             label="New Leads This Month"
                             current={usage.leadsThisMonth}
-                            limit={limits.maxLeadsPerMonth}
+                            limit={limits.leadsPerMonth}
                         />
 
                         <div className="pt-4 border-t border-slate-700/50">

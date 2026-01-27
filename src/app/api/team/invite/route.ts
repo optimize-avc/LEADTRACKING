@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTeamInviteEmail, generateInviteUrl } from '@/lib/sendgrid';
+import { rateLimit, handleValidationError } from '@/lib/api-middleware';
+import { inviteTeamMemberSchema } from '@/lib/validation';
+import { RATE_LIMITS } from '@/lib/rate-limit';
+import { ZodError } from 'zod';
+import { ServerAuditService } from '@/lib/firebase/server-audit';
 
 // Dynamically import Admin SDK to handle cases where it's not configured
 async function tryAdminOperation<T>(operation: () => Promise<T>): Promise<T | null> {
@@ -30,25 +35,31 @@ async function tryAdminOperation<T>(operation: () => Promise<T>): Promise<T | nu
  * POST /api/team/invite
  * Create a team invite and send email notification
  * Uses Firebase Admin SDK when available, with fallback for local development
+ * 
+ * Security: Rate limited to prevent invite spam
  */
 export async function POST(request: NextRequest) {
+    // Rate limiting - prevent invite spam (10 invites per minute per IP)
+    const rateLimitResult = rateLimit(request, undefined, RATE_LIMITS.auth);
+    if (rateLimitResult) {
+        return rateLimitResult;
+    }
+    
     try {
         const body = await request.json();
-        const { companyId, companyName, email, role, invitedBy, invitedByName } = body;
-
-        // Validate required fields
-        if (!companyId || !email || !role || !invitedBy) {
-            return NextResponse.json(
-                { error: 'Missing required fields: companyId, email, role, invitedBy' },
-                { status: 400 }
-            );
+        
+        // Validate input with Zod
+        let validatedData;
+        try {
+            validatedData = inviteTeamMemberSchema.parse(body);
+        } catch (error) {
+            if (error instanceof ZodError) {
+                return handleValidationError(error);
+            }
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
         }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
-        }
+        
+        const { companyId, companyName, email, role, invitedBy, invitedByName } = validatedData;
 
         let inviteId: string | null = null;
         let firestorePersisted = false;
@@ -99,6 +110,19 @@ export async function POST(request: NextRequest) {
         if (firestoreResult?.inviteId) {
             inviteId = firestoreResult.inviteId;
             firestorePersisted = true;
+            
+            // Audit log the invite
+            try {
+                await ServerAuditService.logTeamInvite(
+                    companyId,
+                    invitedBy,
+                    invitedByName || 'Unknown',
+                    email,
+                    role
+                );
+            } catch (auditError) {
+                console.warn('Audit logging failed:', auditError);
+            }
         } else {
             // Fallback: generate a temporary invite ID for local dev
             inviteId = `local-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -136,6 +160,22 @@ export async function POST(request: NextRequest) {
             },
             { emailConfig }
         );
+
+        // Log audit event for team invite
+        if (firestorePersisted) {
+            try {
+                await ServerAuditService.logTeamInvite(
+                    companyId,
+                    invitedBy,
+                    invitedByName || 'Unknown',
+                    email,
+                    role
+                );
+            } catch (auditError) {
+                console.warn('[Team Invite API] Audit logging failed:', auditError);
+                // Don't fail the request if audit logging fails
+            }
+        }
 
         return NextResponse.json({
             success: true,

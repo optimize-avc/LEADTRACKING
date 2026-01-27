@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { verifyIdToken } from '@/lib/firebase/admin';
+import { rateLimit, getUserIdFromToken } from '@/lib/api-middleware';
+import { RATE_LIMITS } from '@/lib/rate-limit';
 
 // API key - check multiple possible env var names for flexibility
 const GEMINI_API_KEY =
@@ -40,6 +42,14 @@ async function tryInitializeVertexAI(): Promise<unknown> {
 
 export async function POST(req: NextRequest) {
     try {
+        // Rate limiting - AI calls are expensive, use heavy limits
+        const authHeader = req.headers.get('Authorization');
+        const rateLimitKey = getUserIdFromToken(authHeader) || undefined;
+        const rateLimitResult = rateLimit(req, rateLimitKey, RATE_LIMITS.heavy);
+        if (rateLimitResult) {
+            return rateLimitResult;
+        }
+
         const body = await req.json();
         const { prompt, modelName = 'gemini-2.0-flash' } = body;
 
@@ -49,7 +59,7 @@ export async function POST(req: NextRequest) {
 
         // --- AUTHENTICATION CHECK ---
         // For production, we must verify the user is authenticated
-        const authHeader = req.headers.get('Authorization');
+        // (authHeader already retrieved above for rate limiting)
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             // Local dev exception (optional, but better to be strict)
             if (process.env.NODE_ENV !== 'development') {

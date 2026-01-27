@@ -147,4 +147,10 @@ export const RATE_LIMITS = {
 
     // Public endpoints
     public: { limit: 60, windowSeconds: 60 },
+
+    // API endpoints - standard authenticated API calls
+    api: { limit: 60, windowSeconds: 60 },
+
+    // Sensitive actions (impersonation, deletions, etc.)
+    sensitiveAction: { limit: 5, windowSeconds: 60 },
 } as const;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { DashboardService } from '@/lib/firebase/services';
@@ -37,9 +38,17 @@ interface DashboardMetrics {
 }
 
 export default function Dashboard() {
-    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+    const { user, profile, loading: authLoading } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+
+    // Redirect to onboarding if logged in but no company
+    useEffect(() => {
+        if (!authLoading && user && profile && !profile.companyId) {
+            router.push('/onboarding');
+        }
+    }, [user, profile, authLoading, router]);
 
     useEffect(() => {
         if (authLoading) return;

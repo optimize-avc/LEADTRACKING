@@ -47,17 +47,17 @@ env:
           - BUILD
           - RUNTIME
 
-    # Google Gemini AI (public for client-side AI features)
-    - variable: NEXT_PUBLIC_GEMINI_API_KEY
-      value: AIzaSyB4GlMpKCG8xX58nzlinEwSM_UAc8jP_vk
-      availability:
-          - BUILD
-          - RUNTIME
-
     # Google OAuth (client ID is public)
     - variable: GOOGLE_CLIENT_ID
-      value: 813307578320-nkr5mk00vr226v31rcu8rn6kda5ja8uf.apps.googleusercontent.com
+      value: 343608443426-qd6f4kkvvkfbeb71ncuug9ldse4ob7cn.apps.googleusercontent.com
       availability:
+          - RUNTIME
+
+    # Stripe (publishable key is public)
+    - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+      value: pk_test_your_publishable_key_here
+      availability:
+          - BUILD
           - RUNTIME
 
     # Twilio Config (public values)
@@ -66,11 +66,37 @@ env:
       availability:
           - RUNTIME
     - variable: TWILIO_TWIML_APP_SID
-      value: AP1971502d97917080009a700538bd847b
+      value: APxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       availability:
           - RUNTIME
 
-    # Secrets (stored in Cloud Secret Manager)
+    # ============================================
+    # SECRETS (stored in Cloud Secret Manager)
+    # ============================================
+    # To add secrets:
+    # firebase apphosting:secrets:set STRIPE_SECRET_KEY --data-file=-
+    # firebase apphosting:secrets:set STRIPE_WEBHOOK_SECRET --data-file=-
+    # etc.
+
+    # Stripe Secrets
+    - variable: STRIPE_SECRET_KEY
+      secret: STRIPE_SECRET_KEY
+      availability:
+          - RUNTIME
+    - variable: STRIPE_WEBHOOK_SECRET
+      secret: STRIPE_WEBHOOK_SECRET
+      availability:
+          - RUNTIME
+    - variable: STRIPE_PRICE_ID_PRO
+      secret: STRIPE_PRICE_ID_PRO
+      availability:
+          - RUNTIME
+    - variable: STRIPE_PRICE_ID_VENTURE
+      secret: STRIPE_PRICE_ID_VENTURE
+      availability:
+          - RUNTIME
+
+    # Twilio Secrets
     - variable: TWILIO_ACCOUNT_SID
       secret: TWILIO_ACCOUNT_SID
       availability:
@@ -79,6 +105,8 @@ env:
       secret: TWILIO_AUTH_TOKEN
       availability:
           - RUNTIME
+
+    # Google/Firebase Secrets
     - variable: GOOGLE_CLIENT_SECRET
       secret: GOOGLE_CLIENT_SECRET
       availability:
@@ -87,39 +115,14 @@ env:
       secret: GOOGLE_AI_API_KEY
       availability:
           - RUNTIME
-    # Alias for backward compatibility with code that uses GEMINI_API_KEY
+    # Alias for backward compatibility
     - variable: GEMINI_API_KEY
       secret: GOOGLE_AI_API_KEY
       availability:
           - RUNTIME
 
-    # Brave Search API (for web search in business audits)
-    - variable: BRAVE_API_KEY
-      secret: BRAVE_API_KEY
+    # SendGrid (platform default email service)
+    - variable: SENDGRID_API_KEY
+      secret: SENDGRID_API_KEY
       availability:
-          - RUNTIME
-
-    # Google Places API (for business location data)
-    - variable: GOOGLE_PLACES_API_KEY
-      secret: GOOGLE_PLACES_API_KEY
-      availability:
-          - RUNTIME
-
-    # Discord OAuth (for Discord bot integration)
-    - variable: DISCORD_CLIENT_ID
-      secret: DISCORD_CLIENT_ID
-      availability:
-          - RUNTIME
-    - variable: DISCORD_CLIENT_SECRET
-      secret: DISCORD_CLIENT_SECRET
-      availability:
-          - RUNTIME
-    - variable: DISCORD_BOT_TOKEN
-      secret: DISCORD_BOT_TOKEN
-      availability:
-          - RUNTIME
-    - variable: DISCORD_REDIRECT_URI
-      value: https://leadtracking-app--antigrav-tracking-final.us-central1.hosted.app/api/discord/callback
-      availability:
-          - BUILD
           - RUNTIME

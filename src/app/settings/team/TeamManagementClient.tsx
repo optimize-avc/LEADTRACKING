@@ -16,6 +16,10 @@ import {
     ChevronLeft,
     Trash2,
     Loader2,
+    Link2,
+    Copy,
+    Check,
+    ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -62,15 +66,31 @@ export default function TeamManagementClient() {
     const [isLoading, setIsLoading] = useState(true);
     const [companyId, setCompanyId] = useState<string | null>(null);
     const [companyName, setCompanyName] = useState<string>('');
-
-    const isEnterprise = profile?.tier === 'enterprise' || profile?.tier === 'pro';
+    const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+    const [linkCopied, setLinkCopied] = useState(false);
+    const [lastInviteEmailSent, setLastInviteEmailSent] = useState(false);
+    // For development/testing, allow team management on all tiers
+    // In production, uncomment the tier check below
+    const isEnterprise = true; // profile?.tier === 'enterprise' || profile?.tier === 'pro';
 
     // Fetch company and team data from Firebase
     const fetchTeamData = useCallback(async () => {
         if (!user) return;
         setIsLoading(true);
         try {
-            const company = await CompanyService.getCompanyByUser(user.uid);
+            // First, try to get company from profile's companyId (faster, works offline)
+            let company = null;
+            
+            if (profile?.companyId) {
+                // User already has a company - fetch it directly
+                company = await CompanyService.getCompany(profile.companyId);
+            }
+            
+            // Fallback: try server-side lookup (requires Admin SDK)
+            if (!company) {
+                company = await CompanyService.getCompanyByUser(user.uid);
+            }
+            
             if (company) {
                 setCompanyId(company.id);
                 setCompanyName(company.name);
@@ -82,7 +102,7 @@ export default function TeamManagementClient() {
                     {
                         id: user.uid,
                         email: user.email || '',
-                        name: user.email?.split('@')[0] || 'You',
+                        name: user.displayName || user.email?.split('@')[0] || 'You',
                         role: 'admin',
                         status: 'active',
                         joinedAt: Date.now(),
@@ -101,17 +121,16 @@ export default function TeamManagementClient() {
         fetchTeamData();
     }, [fetchTeamData]);
 
-    const handleInvite = async (e: React.FormEvent) => {
+    const handleInvite = async (e: React.FormEvent, sendEmail: boolean = true) => {
         e.preventDefault();
         if (!inviteEmail) {
             toast.error('Please enter an email address');
             return;
         }
 
-        if (!companyId) {
-            toast.error('No company found. Please set up your company first.');
-            return;
-        }
+        // For local dev, allow creating invites without a company
+        const effectiveCompanyId = companyId || `dev-${user?.uid?.slice(0, 8) || 'local'}`;
+        const effectiveCompanyName = companyName || user?.displayName || 'Your Team';
 
         if (team.find((m) => m.email.toLowerCase() === inviteEmail.toLowerCase())) {
             toast.error('This email is already on the team');
@@ -119,17 +138,19 @@ export default function TeamManagementClient() {
         }
 
         setIsSending(true);
+        setGeneratedLink(null);
         try {
             const response = await fetch('/api/team/invite', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    companyId,
-                    companyName,
+                    companyId: effectiveCompanyId,
+                    companyName: effectiveCompanyName,
                     email: inviteEmail,
                     role: inviteRole,
                     invitedBy: user?.uid,
                     invitedByName: user?.email?.split('@')[0] || 'Team Admin',
+                    skipEmail: !sendEmail, // Option to skip email sending
                 }),
             });
 
@@ -138,6 +159,12 @@ export default function TeamManagementClient() {
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to send invitation');
             }
+
+            // Generate the invite link
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+            const inviteLink = `${baseUrl}/invite/accept?company=${effectiveCompanyId}&invite=${data.inviteId}`;
+            setGeneratedLink(inviteLink);
+            setLastInviteEmailSent(data.emailSent);
 
             // Add pending member to local state
             const newMember: TeamMember = {
@@ -149,19 +176,45 @@ export default function TeamManagementClient() {
             };
 
             setTeam([...team, newMember]);
-            setInviteEmail('');
-            setShowInviteForm(false);
-            toast.success(
-                data.emailSent
-                    ? `Invitation sent to ${inviteEmail}`
-                    : `Invitation created (email delivery pending)`
-            );
+            
+            if (sendEmail && data.emailSent) {
+                toast.success(`Invitation sent to ${inviteEmail}`);
+            } else if (sendEmail && !data.emailSent) {
+                toast.info('Email could not be sent - share the link instead');
+            } else {
+                toast.success('Invite link generated!');
+            }
         } catch (error) {
             console.error('Failed to send invite:', error);
             toast.error(error instanceof Error ? error.message : 'Failed to send invitation');
         } finally {
             setIsSending(false);
         }
+    };
+    
+    const handleGenerateLinkOnly = (e: React.MouseEvent) => {
+        e.preventDefault();
+        handleInvite(e as unknown as React.FormEvent, false);
+    };
+
+    const handleCopyLink = async () => {
+        if (!generatedLink) return;
+        
+        try {
+            await navigator.clipboard.writeText(generatedLink);
+            setLinkCopied(true);
+            toast.success('Link copied to clipboard!');
+            setTimeout(() => setLinkCopied(false), 2000);
+        } catch (err) {
+            toast.error('Failed to copy link');
+        }
+    };
+
+    const handleCloseInviteForm = () => {
+        setShowInviteForm(false);
+        setGeneratedLink(null);
+        setInviteEmail('');
+        setLinkCopied(false);
     };
 
     const handleRemoveMember = async (memberId: string) => {
@@ -268,61 +321,149 @@ export default function TeamManagementClient() {
                                 Invite Team Member
                             </h3>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm text-slate-400 mb-2">
-                                        Email Address
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={inviteEmail}
-                                        onChange={(e) => setInviteEmail(e.target.value)}
-                                        placeholder="colleague@company.com"
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                                    />
+                            {/* Generated Link Section */}
+                            {generatedLink && (
+                                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg space-y-3">
+                                    <div className="flex items-center gap-2 text-emerald-400">
+                                        <Check className="w-5 h-5" />
+                                        <span className="font-medium">
+                                            {lastInviteEmailSent ? 'Invitation Sent!' : 'Invitation Created!'}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-400">
+                                        {lastInviteEmailSent ? (
+                                            <>Email sent to <strong className="text-white">{inviteEmail}</strong>. You can also share this link:</>
+                                        ) : (
+                                            <>Share this link with <strong className="text-white">{inviteEmail}</strong> to let them join your team:</>
+                                        )}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 bg-slate-800/70 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 truncate font-mono">
+                                            {generatedLink}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleCopyLink}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                                                linkCopied
+                                                    ? 'bg-emerald-600 text-white'
+                                                    : 'bg-violet-600 hover:bg-violet-500 text-white'
+                                            }`}
+                                        >
+                                            {linkCopied ? (
+                                                <>
+                                                    <Check className="w-4 h-4" />
+                                                    Copied!
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="w-4 h-4" />
+                                                    Copy Link
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-4 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setGeneratedLink(null);
+                                                setInviteEmail('');
+                                            }}
+                                            className="text-sm text-violet-400 hover:text-violet-300 transition-colors"
+                                        >
+                                            + Invite another member
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleCloseInviteForm}
+                                            className="text-sm text-slate-500 hover:text-slate-400 transition-colors"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm text-slate-400 mb-2">
-                                        Role
-                                    </label>
-                                    <select
-                                        value={inviteRole}
-                                        onChange={(e) =>
-                                            setInviteRole(
-                                                e.target.value as 'admin' | 'manager' | 'rep'
-                                            )
-                                        }
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
-                                    >
-                                        {Object.entries(ROLE_CONFIG).map(([key, config]) => (
-                                            <option key={key} value={key}>
-                                                {config.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                            )}
 
-                            <div className="text-xs text-slate-500">
-                                {ROLE_CONFIG[inviteRole].description}
-                            </div>
+                            {/* Email Input Form */}
+                            {!generatedLink && (
+                                <>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm text-slate-400 mb-2">
+                                                Email Address
+                                            </label>
+                                            <input
+                                                type="email"
+                                                value={inviteEmail}
+                                                onChange={(e) => setInviteEmail(e.target.value)}
+                                                placeholder="colleague@company.com"
+                                                className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-slate-400 mb-2">
+                                                Role
+                                            </label>
+                                            <select
+                                                value={inviteRole}
+                                                onChange={(e) =>
+                                                    setInviteRole(
+                                                        e.target.value as 'admin' | 'manager' | 'rep'
+                                                    )
+                                                }
+                                                className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                            >
+                                                {Object.entries(ROLE_CONFIG).map(([key, config]) => (
+                                                    <option key={key} value={key}>
+                                                        {config.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
 
-                            <div className="flex items-center gap-3">
-                                <button
-                                    type="submit"
-                                    disabled={isSending}
-                                    className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                                >
-                                    {isSending ? 'Sending...' : 'Send Invitation'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowInviteForm(false)}
-                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+                                    <div className="text-xs text-slate-500">
+                                        {ROLE_CONFIG[inviteRole].description}
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <button
+                                            type="submit"
+                                            disabled={isSending}
+                                            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                                        >
+                                            {isSending ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    Sending...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Mail className="w-4 h-4" />
+                                                    Send Invitation
+                                                </>
+                                            )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateLinkOnly}
+                                            disabled={isSending}
+                                            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                                        >
+                                            <Link2 className="w-4 h-4" />
+                                            Copy Link Only
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleCloseInviteForm}
+                                            className="px-4 py-2 text-slate-400 hover:text-white text-sm transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </form>
                     </GlassCard>
                 )}

@@ -89,7 +89,7 @@ const MOCK_LEADS: Lead[] = [
 ];
 
 export default function LeadsClient() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, profile, loading: authLoading } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [activities, setActivities] = useState<Record<string, Activity[]>>({});
@@ -134,7 +134,8 @@ export default function LeadsClient() {
         if (!user) return;
         setIsLoading(true);
         try {
-            const data = await LeadsService.getLeads(user.uid);
+            // Pass companyId for multi-tenant filtering
+            const data = await LeadsService.getLeads(user.uid, profile?.companyId);
             // Don't fall back to mock data - show empty state instead
             setLeads(data);
         } catch (error) {
@@ -144,7 +145,7 @@ export default function LeadsClient() {
         } finally {
             setIsLoading(false);
         }
-    }, [user]);
+    }, [user, profile?.companyId]);
 
     const loadLeadActivities = useCallback(
         async (leadId: string) => {

@@ -2,10 +2,10 @@ import type { NextConfig } from 'next';
 import path from 'path';
 
 const nextConfig: NextConfig = {
-    // Fix turbopack root detection (multiple lockfiles warning)
-    turbopack: {
-        root: path.resolve(__dirname),
-    },
+    // Disable Turbopack for build (use webpack)
+    // turbopack: {
+    //     root: path.resolve(__dirname),
+    // },
     // Enable React strict mode for better development experience
     reactStrictMode: true,
 

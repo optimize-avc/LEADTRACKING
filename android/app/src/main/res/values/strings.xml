@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SalesTracker</string>
+    <string name="title_activity_main">SalesTracker</string>
+    <string name="package_name">com.avcpp.salestracker</string>
+    <string name="custom_url_scheme">com.avcpp.salestracker</string>
+</resources>

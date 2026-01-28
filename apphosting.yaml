@@ -126,3 +126,22 @@ env:
       secret: SENDGRID_API_KEY
       availability:
           - RUNTIME
+
+    # Discord OAuth2 (Bot Studio)
+    - variable: NEXT_PUBLIC_DISCORD_CLIENT_ID
+      value: '1464013717522874419'
+      availability:
+          - BUILD
+          - RUNTIME
+    - variable: DISCORD_CLIENT_ID
+      value: '1464013717522874419'
+      availability:
+          - RUNTIME
+    - variable: DISCORD_CLIENT_SECRET
+      secret: DISCORD_CLIENT_SECRET
+      availability:
+          - RUNTIME
+    - variable: DISCORD_REDIRECT_URI
+      value: https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app/api/discord/callback
+      availability:
+          - RUNTIME

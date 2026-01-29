@@ -9,11 +9,12 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Zap, X, ArrowRight } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { PlanLimits } from '@/lib/plans';
 
 interface UpgradePromptProps {
@@ -55,14 +56,18 @@ export function UpgradePrompt({
   // Inline variant - subtle hint
   if (variant === 'inline') {
     return (
-      <div className={`flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg ${className}`}>
-        <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+      <div 
+        className={`flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg ${className}`}
+        role="alert"
+      >
+        <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" aria-hidden="true" />
         <span className="text-sm text-amber-300">{upgradeMessage}</span>
         <button
           onClick={handleUpgradeClick}
           className="ml-auto text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1"
+          aria-label="Upgrade your plan"
         >
-          Upgrade <ArrowRight className="w-3 h-3" />
+          Upgrade <ArrowRight className="w-3 h-3" aria-hidden="true" />
         </button>
       </div>
     );
@@ -77,10 +82,11 @@ export function UpgradePrompt({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
           className={`fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-600 to-orange-600 text-white py-2 px-4 ${className}`}
+          role="alert"
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5" />
+              <Zap className="w-5 h-5" aria-hidden="true" />
               <span className="text-sm font-medium">{upgradeMessage}</span>
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded">
                 Current limit: {currentLimit}
@@ -97,8 +103,9 @@ export function UpgradePrompt({
                 <button
                   onClick={onClose}
                   className="p-1 hover:bg-white/20 rounded"
+                  aria-label="Dismiss upgrade banner"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -109,6 +116,26 @@ export function UpgradePrompt({
   }
 
   // Modal variant - blocking dialog
+  const { containerRef } = useFocusTrap(variant === 'modal');
+  
+  // Handle Escape key for modal
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && onClose) {
+      onClose();
+    }
+  }, [onClose]);
+
+  useEffect(() => {
+    if (variant === 'modal') {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [variant, handleKeyDown]);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -116,23 +143,29 @@ export function UpgradePrompt({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upgrade-prompt-title"
+        aria-describedby="upgrade-prompt-desc"
       >
         <motion.div
+          ref={containerRef}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
+          onClick={(e) => e.stopPropagation()}
         >
           <GlassCard className={`max-w-md w-full p-6 ${className}`}>
             <div className="text-center">
-              <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                 <Zap className="w-8 h-8 text-amber-400" />
               </div>
               
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 id="upgrade-prompt-title" className="text-xl font-bold text-white mb-2">
                 You&apos;ve reached your limit
               </h3>
               
-              <p className="text-slate-400 mb-4">
+              <p id="upgrade-prompt-desc" className="text-slate-400 mb-4">
                 {upgradeMessage}
               </p>
               

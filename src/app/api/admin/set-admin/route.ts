@@ -5,7 +5,49 @@ import { getAdminDb, getAdminAuth } from '@/lib/firebase/admin';
 // These users will always have admin role regardless of DB state
 const PERMANENT_ADMINS = ['optimize@avcpp.com'];
 
+// Super admins who can call this endpoint
+const SUPER_ADMIN_EMAILS = [
+    'admin@avcpp.com',
+    'blazehaze4201980@gmail.com',
+    'optimize@avcpp.com',
+];
+
+/**
+ * Verify user is a super admin
+ */
+async function verifySuperAdmin(authHeader: string | null): Promise<{ uid: string; email: string } | null> {
+    if (!authHeader?.startsWith('Bearer ')) {
+        return null;
+    }
+
+    try {
+        const token = authHeader.substring(7);
+        const auth = getAdminAuth();
+        const decodedToken = await auth.verifyIdToken(token);
+
+        if (!decodedToken.email || !SUPER_ADMIN_EMAILS.includes(decodedToken.email)) {
+            return null;
+        }
+
+        return {
+            uid: decodedToken.uid,
+            email: decodedToken.email,
+        };
+    } catch {
+        return null;
+    }
+}
+
 export async function POST(request: NextRequest) {
+    // SECURITY: Require super admin authentication
+    const admin = await verifySuperAdmin(request.headers.get('authorization'));
+    if (!admin) {
+        return NextResponse.json(
+            { error: 'Unauthorized - Super admin access required' },
+            { status: 403 }
+        );
+    }
+
     try {
         const adminDb = getAdminDb();
         const adminAuth = getAdminAuth();
@@ -70,10 +112,5 @@ export async function POST(request: NextRequest) {
     }
 }
 
-export async function GET() {
-    // Return the list of permanent admins (for transparency)
-    return NextResponse.json({
-        permanentAdmins: PERMANENT_ADMINS,
-        note: 'These emails will always have admin access',
-    });
-}
+// GET endpoint removed - exposing admin emails is a security risk
+// If needed for admin UI, require super admin auth like POST does

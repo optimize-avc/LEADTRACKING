@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Lead } from '@/types';
 import { ActivitiesService, LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface LogReplyModalProps {
     lead: Lead;
@@ -18,6 +19,26 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
     const [sentiment, setSentiment] = useState<'positive' | 'neutral' | 'negative'>('positive');
     const [nextStep, setNextStep] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    
+    const { containerRef } = useFocusTrap(isOpen);
+
+    // Handle Escape key
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    }, [onClose]);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = '';
+        };
+    }, [isOpen, handleKeyDown]);
 
     const handleSave = async () => {
         if (!replyContent.trim()) {
@@ -81,20 +102,32 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="log-reply-title"
+        >
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+            <div 
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+                onClick={onClose}
+                aria-hidden="true"
+            />
 
             {/* Modal */}
-            <div className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl">
+            <div 
+                ref={containerRef}
+                className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-lg">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-lg" aria-hidden="true">
                             📩
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Log Email Reply</h2>
+                            <h2 id="log-reply-title" className="text-xl font-bold text-white">Log Email Reply</h2>
                             <p className="text-sm text-slate-400">
                                 {lead.companyName} • {lead.contactName}
                             </p>
@@ -105,9 +138,9 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
                 {/* Content */}
                 <div className="p-6 space-y-5">
                     {/* Sentiment */}
-                    <div>
-                        <label className="block text-sm text-slate-400 mb-2">Reply Sentiment</label>
-                        <div className="flex gap-2">
+                    <fieldset>
+                        <legend className="block text-sm text-slate-400 mb-2">Reply Sentiment</legend>
+                        <div className="flex gap-2" role="radiogroup" aria-label="Reply sentiment">
                             {[
                                 {
                                     value: 'positive',
@@ -146,34 +179,39 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
                                                       : 'rgba(100, 116, 139, 0.5)'
                                                 : undefined,
                                     }}
+                                    role="radio"
+                                    aria-checked={sentiment === s.value}
                                 >
-                                    <div className="text-xl mb-1">{s.icon}</div>
+                                    <div className="text-xl mb-1" aria-hidden="true">{s.icon}</div>
                                     <div className="text-xs">{s.label}</div>
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </fieldset>
 
                     {/* Reply Content */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label htmlFor="reply-content" className="block text-sm text-slate-400 mb-2">
                             Reply Content or Summary
                         </label>
                         <textarea
+                            id="reply-content"
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
                             className="glass-input w-full h-32 resize-none"
                             placeholder="Paste the reply or write a summary of what they said..."
+                            aria-required="true"
                         />
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-slate-500 mt-1" id="reply-content-hint">
                             Tip: Paste the email reply directly for full context
                         </p>
                     </div>
 
                     {/* Next Step */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Next Step</label>
+                        <label htmlFor="reply-next-step" className="block text-sm text-slate-400 mb-2">Next Step</label>
                         <input
+                            id="reply-next-step"
                             type="text"
                             value={nextStep}
                             onChange={(e) => setNextStep(e.target.value)}

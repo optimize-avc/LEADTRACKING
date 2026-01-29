@@ -127,11 +127,18 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
     };
 
     return (
-        <div className="flex flex-col h-[600px] w-full max-w-md bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+        <div 
+            className="flex flex-col h-[600px] w-full max-w-md bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden"
+            role="region"
+            aria-label={`SMS conversation with ${leadName}`}
+        >
             {/* Header - Smartphone style */}
             <div className="bg-slate-800/80 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/5 z-10">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                    <div 
+                        className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold"
+                        aria-hidden="true"
+                    >
                         {leadName.charAt(0)}
                     </div>
                     <div>
@@ -143,8 +150,9 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-white/5 rounded-full text-slate-400 transition-colors"
+                        aria-label="Close SMS chat"
                     >
-                        <X size={18} />
+                        <X size={18} aria-hidden="true" />
                     </button>
                 </div>
             </div>
@@ -153,10 +161,14 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
             <div
                 ref={scrollRef}
                 className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/50 scroll-smooth"
+                role="log"
+                aria-label="Message history"
+                aria-live="polite"
             >
                 {isLoading && (
                     <div className="flex justify-center py-8">
-                        <Loader2 className="animate-spin text-slate-500" />
+                        <Loader2 className="animate-spin text-slate-500" aria-hidden="true" />
+                        <span className="sr-only">Loading messages...</span>
                     </div>
                 )}
 
@@ -179,6 +191,8 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                                         ? 'bg-indigo-600 text-white rounded-br-none'
                                         : 'bg-slate-800 text-slate-200 rounded-bl-none'
                                 }`}
+                                role="article"
+                                aria-label={`${isOutbound ? 'You' : leadName} at ${formatTime(msg.createdAt)}: ${msg.body}`}
                             >
                                 <p>{msg.body}</p>
                                 <div
@@ -187,6 +201,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                                             ? 'text-indigo-200 justify-end'
                                             : 'text-slate-500'
                                     }`}
+                                    aria-hidden="true"
                                 >
                                     {formatTime(msg.createdAt)}
                                     {isOutbound && (
@@ -208,7 +223,9 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
             {/* Input Area */}
             <div className="p-4 bg-slate-800/50 border-t border-white/5">
                 <div className="flex items-end gap-2 bg-slate-900/50 p-2 rounded-xl border border-white/5 focus-within:border-indigo-500/50 transition-colors">
+                    <label htmlFor="sms-message-input" className="sr-only">Type a message</label>
                     <textarea
+                        id="sms-message-input"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -216,6 +233,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                         className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 text-sm resize-none max-h-32 p-2"
                         rows={1}
                         style={{ minHeight: '40px' }}
+                        aria-label="Message text"
                     />
                     <button
                         onClick={handleSend}
@@ -225,11 +243,12 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                                 ? 'bg-indigo-500 text-white hover:bg-indigo-600'
                                 : 'bg-slate-800 text-slate-500'
                         }`}
+                        aria-label={isSending ? 'Sending message...' : 'Send message'}
                     >
                         {isSending ? (
-                            <Loader2 size={18} className="animate-spin" />
+                            <Loader2 size={18} className="animate-spin" aria-hidden="true" />
                         ) : (
-                            <Send size={18} />
+                            <Send size={18} aria-hidden="true" />
                         )}
                     </button>
                 </div>

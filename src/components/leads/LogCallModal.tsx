@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Lead, ActivityOutcome } from '@/types';
 import { ActivitiesService, LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface LogCallModalProps {
     lead: Lead;
@@ -31,6 +32,26 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
     const [shareWithTeam, setShareWithTeam] = useState(false); // Default private
     const [isSaving, setIsSaving] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    
+    const { containerRef } = useFocusTrap(isOpen);
+
+    // Handle Escape key
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    }, [onClose]);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = '';
+        };
+    }, [isOpen, handleKeyDown]);
 
     // Timer logic
     useEffect(() => {
@@ -111,20 +132,32 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="log-call-title"
+        >
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+            <div 
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+                onClick={onClose}
+                aria-hidden="true"
+            />
 
             {/* Modal */}
-            <div className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl">
+            <div 
+                ref={containerRef}
+                className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-lg">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-lg" aria-hidden="true">
                             📞
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Log Call</h2>
+                            <h2 id="log-call-title" className="text-xl font-bold text-white">Log Call</h2>
                             <p className="text-sm text-slate-400">
                                 {lead.companyName} • {lead.contactName}
                             </p>
@@ -136,7 +169,12 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                 <div className="p-6 space-y-5">
                     {/* Timer */}
                     <div className="text-center">
-                        <div className="text-5xl font-mono font-bold text-white mb-3">
+                        <div 
+                            className="text-5xl font-mono font-bold text-white mb-3"
+                            role="timer"
+                            aria-live="polite"
+                            aria-label={`Call duration: ${formatTime(elapsedSeconds)}`}
+                        >
                             {formatTime(elapsedSeconds)}
                         </div>
                         <button
@@ -146,6 +184,7 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                                     ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
                                     : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
                             }`}
+                            aria-label={isTimerRunning ? 'Stop call timer' : 'Start call timer'}
                         >
                             {isTimerRunning ? '⏹ Stop Timer' : '▶️ Start Timer'}
                         </button>
@@ -156,10 +195,11 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
 
                     {/* Manual Duration Input */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label htmlFor="call-duration" className="block text-sm text-slate-400 mb-2">
                             Duration (minutes)
                         </label>
                         <input
+                            id="call-duration"
                             type="number"
                             min="0"
                             value={Math.floor(elapsedSeconds / 60)}
@@ -170,9 +210,9 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                     </div>
 
                     {/* Outcome */}
-                    <div>
-                        <label className="block text-sm text-slate-400 mb-2">Outcome</label>
-                        <div className="grid grid-cols-2 gap-2">
+                    <fieldset>
+                        <legend className="block text-sm text-slate-400 mb-2">Outcome</legend>
+                        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Call outcome">
                             {OUTCOMES.map((o) => (
                                 <button
                                     key={o.value}
@@ -182,18 +222,21 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                                             ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
                                             : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'
                                     }`}
+                                    role="radio"
+                                    aria-checked={outcome === o.value}
                                 >
-                                    <span className="mr-2">{o.icon}</span>
+                                    <span className="mr-2" aria-hidden="true">{o.icon}</span>
                                     <span className="text-sm">{o.label}</span>
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </fieldset>
 
                     {/* Notes */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Notes</label>
+                        <label htmlFor="call-notes" className="block text-sm text-slate-400 mb-2">Notes</label>
                         <textarea
+                            id="call-notes"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             className="glass-input w-full h-20 resize-none"
@@ -203,8 +246,9 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
 
                     {/* Next Step */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Next Step</label>
+                        <label htmlFor="call-next-step" className="block text-sm text-slate-400 mb-2">Next Step</label>
                         <input
+                            id="call-next-step"
                             type="text"
                             value={nextStep}
                             onChange={(e) => setNextStep(e.target.value)}

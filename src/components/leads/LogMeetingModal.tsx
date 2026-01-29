@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Lead, ActivityOutcome } from '@/types';
 import { ActivitiesService, LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface LogMeetingModalProps {
     lead: Lead;
@@ -44,6 +45,26 @@ export function LogMeetingModal({
     const [meetingTime, setMeetingTime] = useState('');
     const [shareWithTeam, setShareWithTeam] = useState(false); // Default private
     const [isSaving, setIsSaving] = useState(false);
+    
+    const { containerRef } = useFocusTrap(isOpen);
+
+    // Handle Escape key
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    }, [onClose]);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = '';
+        };
+    }, [isOpen, handleKeyDown]);
 
     // Set default date/time when modal opens
     useEffect(() => {
@@ -101,20 +122,32 @@ export function LogMeetingModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="log-meeting-title"
+        >
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+            <div 
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+                onClick={onClose}
+                aria-hidden="true"
+            />
 
             {/* Modal */}
-            <div className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl">
+            <div 
+                ref={containerRef}
+                className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-lg">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-lg" aria-hidden="true">
                             📅
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Log Meeting</h2>
+                            <h2 id="log-meeting-title" className="text-xl font-bold text-white">Log Meeting</h2>
                             <p className="text-sm text-slate-400">
                                 {lead.companyName} • {lead.contactName}
                             </p>
@@ -127,8 +160,9 @@ export function LogMeetingModal({
                     {/* Date & Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm text-slate-400 mb-2">Date</label>
+                            <label htmlFor="meeting-date" className="block text-sm text-slate-400 mb-2">Date</label>
                             <input
+                                id="meeting-date"
                                 type="date"
                                 value={meetingDate}
                                 onChange={(e) => setMeetingDate(e.target.value)}
@@ -136,8 +170,9 @@ export function LogMeetingModal({
                             />
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-2">Time</label>
+                            <label htmlFor="meeting-time" className="block text-sm text-slate-400 mb-2">Time</label>
                             <input
+                                id="meeting-time"
                                 type="time"
                                 value={meetingTime}
                                 onChange={(e) => setMeetingTime(e.target.value)}
@@ -147,9 +182,9 @@ export function LogMeetingModal({
                     </div>
 
                     {/* Meeting Type */}
-                    <div>
-                        <label className="block text-sm text-slate-400 mb-2">Meeting Type</label>
-                        <div className="flex gap-2">
+                    <fieldset>
+                        <legend className="block text-sm text-slate-400 mb-2">Meeting Type</legend>
+                        <div className="flex gap-2" role="radiogroup" aria-label="Meeting type">
                             {MEETING_TYPES.map((type) => (
                                 <button
                                     key={type.value}
@@ -159,18 +194,20 @@ export function LogMeetingModal({
                                             ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
                                             : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
                                     }`}
+                                    role="radio"
+                                    aria-checked={meetingType === type.value}
                                 >
-                                    <div className="text-xl mb-1">{type.icon}</div>
+                                    <div className="text-xl mb-1" aria-hidden="true">{type.icon}</div>
                                     <div className="text-xs">{type.label}</div>
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </fieldset>
 
                     {/* Duration */}
-                    <div>
-                        <label className="block text-sm text-slate-400 mb-2">Duration</label>
-                        <div className="flex flex-wrap gap-2">
+                    <fieldset>
+                        <legend className="block text-sm text-slate-400 mb-2">Duration</legend>
+                        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Meeting duration">
                             {DURATION_OPTIONS.map((mins) => (
                                 <button
                                     key={mins}
@@ -180,17 +217,20 @@ export function LogMeetingModal({
                                             ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
                                             : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700'
                                     }`}
+                                    role="radio"
+                                    aria-checked={duration === mins}
                                 >
                                     {mins} min
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </fieldset>
 
                     {/* Outcome */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Outcome</label>
+                        <label htmlFor="meeting-outcome" className="block text-sm text-slate-400 mb-2">Outcome</label>
                         <select
+                            id="meeting-outcome"
                             value={outcome}
                             onChange={(e) => setOutcome(e.target.value as ActivityOutcome)}
                             className="glass-input w-full bg-slate-900"
@@ -205,8 +245,9 @@ export function LogMeetingModal({
 
                     {/* Notes */}
                     <div>
-                        <label className="block text-sm text-slate-400 mb-2">Notes</label>
+                        <label htmlFor="meeting-notes" className="block text-sm text-slate-400 mb-2">Notes</label>
                         <textarea
+                            id="meeting-notes"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             className="glass-input w-full h-20 resize-none"

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Lead, LeadStatus, LeadSource } from '@/types';
 import { Upload, X, FileSpreadsheet, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface ImportCSVModalProps {
     isOpen: boolean;
@@ -52,6 +53,27 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
         notes: null,
     });
     const [error, setError] = useState<string | null>(null);
+    
+    const { containerRef } = useFocusTrap(isOpen);
+
+    // Handle Escape key
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            onClose();
+            resetState();
+        }
+    }, [onClose]);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = '';
+        };
+    }, [isOpen, handleKeyDown]);
 
     const parseCSV = (text: string): string[][] => {
         const lines = text.split('\n').filter((line) => line.trim());
@@ -218,29 +240,45 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
         columnMapping.companyName && columnMapping.contactName && columnMapping.email;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="import-csv-title"
+        >
+            <div 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+                onClick={onClose}
+                aria-hidden="true"
+            />
 
-            <div className="relative bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[80vh] overflow-auto">
+            <div 
+                ref={containerRef}
+                className="relative bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[80vh] overflow-auto"
+            >
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <FileSpreadsheet className="text-emerald-400" size={24} />
-                        <h2 className="text-xl font-bold text-white">Import Leads from CSV</h2>
+                        <FileSpreadsheet className="text-emerald-400" size={24} aria-hidden="true" />
+                        <h2 id="import-csv-title" className="text-xl font-bold text-white">Import Leads from CSV</h2>
                     </div>
                     <button
                         onClick={() => {
                             onClose();
                             resetState();
                         }}
-                        className="p-1 text-slate-400 hover:text-white transition-colors"
+                        className="p-1 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                        aria-label="Close import modal"
                     >
-                        <X size={20} />
+                        <X size={20} aria-hidden="true" />
                     </button>
                 </div>
 
                 {error && (
-                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm">
-                        <AlertCircle size={16} />
+                    <div 
+                        className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm"
+                        role="alert"
+                    >
+                        <AlertCircle size={16} aria-hidden="true" />
                         {error}
                     </div>
                 )}
@@ -251,17 +289,20 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
                         className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-emerald-500/50 transition-colors"
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={handleDrop}
+                        role="region"
+                        aria-label="File upload area"
                     >
-                        <Upload className="mx-auto mb-4 text-slate-500" size={48} />
+                        <Upload className="mx-auto mb-4 text-slate-500" size={48} aria-hidden="true" />
                         <p className="text-slate-300 mb-2">Drag & drop your CSV file here</p>
                         <p className="text-slate-500 text-sm mb-4">or</p>
                         <label className="glass-button cursor-pointer inline-block">
-                            Browse Files
+                            <span>Browse Files</span>
                             <input
                                 type="file"
                                 accept=".csv"
                                 onChange={handleFileUpload}
-                                className="hidden"
+                                className="sr-only"
+                                aria-label="Choose CSV file to upload"
                             />
                         </label>
                         <p className="text-slate-600 text-xs mt-4">
@@ -273,20 +314,31 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
                 {/* Step 2: Column Mapping */}
                 {step === 'mapping' && (
                     <div>
-                        <p className="text-slate-400 text-sm mb-4">
+                        <p className="text-slate-400 text-sm mb-4" id="mapping-description">
                             Map your CSV columns to lead fields. Required fields marked with *.
                         </p>
-                        <div className="space-y-3 max-h-[300px] overflow-auto">
+                        <div 
+                            className="space-y-3 max-h-[300px] overflow-auto"
+                            role="group"
+                            aria-describedby="mapping-description"
+                        >
                             {LEAD_FIELDS.map((field) => (
                                 <div key={field.key} className="flex items-center gap-3">
-                                    <span className="text-slate-300 text-sm w-32 flex-shrink-0">
+                                    <label 
+                                        htmlFor={`mapping-${field.key}`}
+                                        className="text-slate-300 text-sm w-32 flex-shrink-0"
+                                    >
                                         {field.label}
                                         {field.required && (
-                                            <span className="text-red-400 ml-0.5">*</span>
+                                            <>
+                                                <span className="text-red-400 ml-0.5" aria-hidden="true">*</span>
+                                                <span className="sr-only">(required)</span>
+                                            </>
                                         )}
-                                    </span>
-                                    <ArrowRight size={14} className="text-slate-600" />
+                                    </label>
+                                    <ArrowRight size={14} className="text-slate-600" aria-hidden="true" />
                                     <select
+                                        id={`mapping-${field.key}`}
                                         value={columnMapping[field.key] || ''}
                                         onChange={(e) =>
                                             setColumnMapping({
@@ -295,6 +347,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
                                             })
                                         }
                                         className="flex-1 glass-input bg-slate-900 text-sm py-1.5"
+                                        aria-required={field.required}
                                     >
                                         <option value="">-- Skip --</option>
                                         {headers.map((h) => (

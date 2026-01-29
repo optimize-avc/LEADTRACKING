@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Lead, Activity } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -24,6 +24,7 @@ import {
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface LeadDetailDrawerProps {
     lead: Lead | null;
@@ -50,6 +51,26 @@ export function LeadDetailDrawer({
     const [activeTab, setActiveTab] = useState<'overview' | 'intelligence' | 'activity'>(
         'overview'
     );
+    
+    const { containerRef } = useFocusTrap(isOpen && !!lead);
+
+    // Handle Escape key
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    }, [onClose]);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = '';
+        };
+    }, [isOpen, handleKeyDown]);
 
     useEffect(() => {
         if (lead) {
@@ -91,35 +112,44 @@ export function LeadDetailDrawer({
                         exit={{ opacity: 0 }}
                         onClick={onClose}
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                        aria-hidden="true"
                     />
 
                     {/* Drawer */}
                     <motion.div
+                        ref={containerRef}
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                         className="fixed right-0 top-0 h-full w-full max-w-2xl bg-slate-900/95 backdrop-blur-xl border-l border-slate-700/50 z-50 overflow-hidden flex flex-col"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="lead-detail-title"
                     >
                         {/* Header */}
                         <div className="p-6 border-b border-slate-700/50">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <Building2 className="text-blue-400" size={24} />
+                                        <Building2 className="text-blue-400" size={24} aria-hidden="true" />
                                         {isEditing ? (
-                                            <input
-                                                value={editedLead.companyName || ''}
-                                                onChange={(e) =>
-                                                    setEditedLead({
-                                                        ...editedLead,
-                                                        companyName: e.target.value,
-                                                    })
-                                                }
-                                                className="text-xl font-bold bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white"
-                                            />
+                                            <>
+                                                <label htmlFor="edit-company-name" className="sr-only">Company name</label>
+                                                <input
+                                                    id="edit-company-name"
+                                                    value={editedLead.companyName || ''}
+                                                    onChange={(e) =>
+                                                        setEditedLead({
+                                                            ...editedLead,
+                                                            companyName: e.target.value,
+                                                        })
+                                                    }
+                                                    className="text-xl font-bold bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white"
+                                                />
+                                            </>
                                         ) : (
-                                            <h2 className="text-xl font-bold text-white">
+                                            <h2 id="lead-detail-title" className="text-xl font-bold text-white">
                                                 {lead.companyName}
                                             </h2>
                                         )}
@@ -146,36 +176,40 @@ export function LeadDetailDrawer({
                                             <button
                                                 onClick={() => setIsEditing(false)}
                                                 className="p-2 text-slate-400 hover:text-white transition-colors"
+                                                aria-label="Cancel editing"
                                             >
-                                                <X size={18} />
+                                                <X size={18} aria-hidden="true" />
                                             </button>
                                             <button
                                                 onClick={handleSave}
                                                 disabled={isSaving}
                                                 className="p-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                                                aria-label="Save changes"
                                             >
-                                                <Check size={18} />
+                                                <Check size={18} aria-hidden="true" />
                                             </button>
                                         </>
                                     ) : (
                                         <button
                                             onClick={() => setIsEditing(true)}
                                             className="p-2 text-slate-400 hover:text-white transition-colors"
+                                            aria-label="Edit lead details"
                                         >
-                                            <Edit3 size={18} />
+                                            <Edit3 size={18} aria-hidden="true" />
                                         </button>
                                     )}
                                     <button
                                         onClick={onClose}
                                         className="p-2 text-slate-400 hover:text-white transition-colors"
+                                        aria-label="Close lead details"
                                     >
-                                        <X size={20} />
+                                        <X size={20} aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex gap-1 mt-4 bg-slate-800/50 rounded-lg p-1">
+                            <div className="flex gap-1 mt-4 bg-slate-800/50 rounded-lg p-1" role="tablist" aria-label="Lead detail sections">
                                 {(['overview', 'intelligence', 'activity'] as const).map((tab) => (
                                     <button
                                         key={tab}
@@ -185,6 +219,10 @@ export function LeadDetailDrawer({
                                                 ? 'bg-blue-500/20 text-blue-400'
                                                 : 'text-slate-400 hover:text-white'
                                         }`}
+                                        role="tab"
+                                        aria-selected={activeTab === tab}
+                                        aria-controls={`tabpanel-${tab}`}
+                                        id={`tab-${tab}`}
                                     >
                                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
                                     </button>
@@ -193,7 +231,12 @@ export function LeadDetailDrawer({
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div 
+                            className="flex-1 overflow-y-auto p-6 space-y-6"
+                            role="tabpanel"
+                            id={`tabpanel-${activeTab}`}
+                            aria-labelledby={`tab-${activeTab}`}
+                        >
                             {activeTab === 'overview' && (
                                 <>
                                     {/* Contact Info */}

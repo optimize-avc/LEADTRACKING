@@ -285,9 +285,9 @@ export async function POST(request: NextRequest) {
             .where('startedAt', '>=', startOfDay)
             .get();
 
-        if (todaySweepsSnap.size >= 3) {
+        if (todaySweepsSnap.size >= 10) {
             return NextResponse.json(
-                { error: 'Daily sweep limit reached (3 per day). Try again tomorrow.' },
+                { error: 'Daily sweep limit reached (10 per day). Try again tomorrow.' },
                 { status: 429 }
             );
         }

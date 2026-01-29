@@ -210,8 +210,8 @@ export default function DiscoverClient() {
                     notes: lead.aiAnalysis.summary,
                     tags: ['ai-discovered'],
                 };
-                const newLead = await LeadsService.createLead(user!.uid, leadData as Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>);
-                pipelineLeadId = newLead.id;
+                const newLeadId = await LeadsService.createLead(user!.uid, leadData as Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>);
+                pipelineLeadId = newLeadId;
                 status = 'added_to_pipeline';
                 toast.success(`${lead.businessName} added to pipeline!`);
             } else if (action === 'watchlist') {
@@ -380,7 +380,7 @@ interface ManualSearchTabProps {
     authLoading: boolean;
     onAuditStart: () => void;
     onAuditComplete: (result: BusinessAuditResult) => void;
-    onSaveToPipeline: (audit: BusinessAuditResult) => void;
+    onSaveToPipeline: (audit: BusinessAuditResult) => Promise<void>;
 }
 
 function ManualSearchTab({

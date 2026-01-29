@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
-import { Bot, CreditCard, ChevronRight, User, Users, Mail } from 'lucide-react';
+import { Bot, CreditCard, ChevronRight, User, Users, Mail, Search } from 'lucide-react';
 import Link from 'next/link';
 import { isGmailConnected } from '@/lib/gmail/gmail-service';
 import { toast } from 'sonner';
@@ -156,6 +156,33 @@ export default function SettingsClient() {
                     </GlassCard>
                 </Link>
 
+                {/* AI Lead Discovery Card - NEW */}
+                <Link href="/settings/discovery" className="block group">
+                    <GlassCard className="border-l-4 border-l-emerald-500 hover:bg-white/5 transition-all cursor-pointer">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                    <Search size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white group-hover:text-emerald-300 transition-colors">
+                                        AI Lead Discovery
+                                    </h3>
+                                    <p className="text-sm text-slate-400">
+                                        Configure automated prospecting and targeting criteria
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+                                    NEW
+                                </Badge>
+                                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+                            </div>
+                        </div>
+                    </GlassCard>
+                </Link>
+
                 {/* Account Preferences Card */}
                 <Link href="/settings/account" className="block group">
                     <GlassCard className="border-l-4 border-l-blue-500 hover:bg-white/5 transition-all cursor-pointer">
@@ -182,14 +209,14 @@ export default function SettingsClient() {
 
                 {/* Team Management Card */}
                 <Link href="/settings/team" className="block group">
-                    <GlassCard className="border-l-4 border-l-emerald-500 hover:bg-white/5 transition-all cursor-pointer">
+                    <GlassCard className="border-l-4 border-l-cyan-500 hover:bg-white/5 transition-all cursor-pointer">
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
                                     <Users size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold text-white group-hover:text-emerald-300 transition-colors">
+                                    <h3 className="text-lg font-semibold text-white group-hover:text-cyan-300 transition-colors">
                                         Team Management
                                     </h3>
                                     <p className="text-sm text-slate-400">
@@ -198,7 +225,7 @@ export default function SettingsClient() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+                                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
                             </div>
                         </div>
                     </GlassCard>

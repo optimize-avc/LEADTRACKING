@@ -19,6 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb, verifyIdToken } from '@/lib/firebase/admin';
+import { AuditService } from '@/lib/firebase/audit';
 
 export async function PATCH(request: NextRequest) {
     try {
@@ -112,6 +113,22 @@ export async function PATCH(request: NextRequest) {
             settings: updatedSettings,
             updatedAt: Date.now(),
         });
+
+        // 6. Audit log the settings change
+        const changedKeys = Object.keys(settings).filter(k => allowedSettings.includes(k));
+        try {
+            await AuditService.logAction(
+                companyId,
+                user.uid,
+                userData?.name || user.email || 'Unknown',
+                'settings.updated',
+                { type: 'settings', id: companyId, name: 'Company Settings' },
+                { changedFields: changedKeys }
+            );
+        } catch (auditError) {
+            console.warn('[Company Settings API] Audit logging failed:', auditError);
+            // Don't fail the request if audit logging fails
+        }
 
         console.log(`[API] Company settings updated: ${companyId} by user: ${user.uid}`);
 

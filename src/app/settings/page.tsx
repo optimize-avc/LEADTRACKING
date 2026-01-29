@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import SettingsClient from './SettingsClient';
+import { PageErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export const metadata: Metadata = {
     title: 'Workspace Settings | SalesTracker AI',
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function SettingsPage() {
-    return <SettingsClient />;
+    return (
+        <PageErrorBoundary>
+            <SettingsClient />
+        </PageErrorBoundary>
+    );
 }

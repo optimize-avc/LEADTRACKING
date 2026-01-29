@@ -1,7 +1,7 @@
 # SalesTracker Production Bug Fix Roadmap
 
 > Generated: 2026-01-29
-> Updated: 2026-01-29 (Day 1 fixes complete)
+> Updated: 2026-01-30 (Day 2 production readiness complete)
 
 ---
 
@@ -55,6 +55,36 @@
 
 ---
 
+## ✅ Completed (Day 2) - Production Readiness
+
+### 1. Audit Logging Added to API Routes
+- `/api/company/settings` (PATCH) - logs `settings.updated` with changed fields
+- `/api/settings/twilio` (POST/DELETE) - logs `settings.updated` for Twilio config changes
+- `/api/team/accept` - already had audit logging ✅
+- All audit calls wrapped in try/catch to prevent request failures
+
+### 2. Client-Side Zod Validation Review
+API routes already using Zod validation:
+- `/api/company/create` - uses `createCompanySchema`
+- `/api/leads` - uses `createLeadSchema`
+- `/api/team/invite` - uses `inviteTeamMemberSchema`
+
+**Note:** Client-side forms do basic validation; API is the source of truth for validation.
+
+### 3. Sentry Error Tracking Configuration
+- Added `NEXT_PUBLIC_SENTRY_DSN` placeholder to `apphosting.yaml`
+- Updated `ErrorBoundary.tsx` to integrate with `captureError()` from `@/lib/sentry`
+- Added `PageErrorBoundary` to critical pages:
+  - `/leads/page.tsx` ✅
+  - `/discover/page.tsx` ✅
+  - `/settings/page.tsx` ✅
+  - `/analytics/page.tsx` ✅
+
+### 4. Skipped (Stripe Billing)
+- Stripe billing integration deferred per instructions
+
+---
+
 ## 🔧 Still Pending
 
 ### Firestore Rules Deployment
@@ -69,17 +99,22 @@ firebase deploy --only firestore:rules
 - Added `users/{userId}/resources/{resourceId}` subcollection rule
 - Users can now store personal resources in their user subcollection
 
+### Production Checklist
+- [ ] Deploy Firestore rules
+- [ ] Add Sentry DSN to `apphosting.yaml` (after creating Sentry project)
+- [ ] Set up Stripe billing when ready
+
 ---
 
 ## 📁 Files Modified
 
-### New Files
+### Day 1 - New Files
 - `src/lib/api/auth-helpers.ts` - Shared auth context helper
 - `src/app/api/company/settings/route.ts` - Server-side settings API
 - `public/icons/icon-*.png` (8 files) - PWA icons
 - `scripts/generate-pwa-icons.mjs` - Icon generation script
 
-### Modified Files
+### Day 1 - Modified Files
 - `src/app/api/discovery/leads/route.ts`
 - `src/app/api/discovery/profile/route.ts`
 - `src/app/api/discovery/sweep/route.ts`
@@ -88,6 +123,17 @@ firebase deploy --only firestore:rules
 - `src/app/resources/ResourcesClient.tsx`
 - `src/lib/firebase/company.ts`
 - `firestore.rules`
+
+### Day 2 - Modified Files
+- `src/app/api/company/settings/route.ts` - Added audit logging
+- `src/app/api/settings/twilio/route.ts` - Added audit logging
+- `src/components/ui/ErrorBoundary.tsx` - Integrated Sentry
+- `src/app/leads/page.tsx` - Added PageErrorBoundary
+- `src/app/discover/page.tsx` - Added PageErrorBoundary
+- `src/app/settings/page.tsx` - Added PageErrorBoundary
+- `src/app/analytics/page.tsx` - Added PageErrorBoundary
+- `apphosting.yaml` - Added SENTRY_DSN placeholder
+- `BUGFIX_ROADMAP.md` - Updated with Day 2 tasks
 
 ---
 
@@ -102,3 +148,5 @@ After deployment, verify:
 - [ ] Settings → Twilio config saves/clears
 - [ ] PWA icons load at `/icons/icon-144x144.png`
 - [ ] No "Missing or insufficient permissions" errors in console
+- [ ] Audit logs appear in Firestore under `companies/{id}/auditLog`
+- [ ] Error boundaries catch and display errors gracefully

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { getAuthContext, isAdmin } from '@/lib/api/auth-helpers';
+import { AuditService } from '@/lib/firebase/audit';
 import twilio from 'twilio';
 
 // POST: Save Twilio configuration for a company
@@ -54,6 +55,20 @@ export async function POST(request: NextRequest) {
             updatedAt: Date.now(),
         });
 
+        // Audit log the Twilio configuration change
+        try {
+            await AuditService.logAction(
+                authContext.companyId,
+                authContext.userId,
+                authContext.userName || 'Unknown',
+                'settings.updated',
+                { type: 'settings', id: authContext.companyId, name: 'Twilio Configuration' },
+                { action: 'configured', phoneNumber: phoneNumber || 'not set' }
+            );
+        } catch (auditError) {
+            console.warn('[Twilio Settings API] Audit logging failed:', auditError);
+        }
+
         return NextResponse.json({
             success: true,
             connected: twilioConfig.connected,
@@ -87,6 +102,20 @@ export async function DELETE(request: NextRequest) {
             'settings.twilioConfig': {},
             updatedAt: Date.now(),
         });
+
+        // Audit log the Twilio config removal
+        try {
+            await AuditService.logAction(
+                authContext.companyId,
+                authContext.userId,
+                authContext.userName || 'Unknown',
+                'settings.updated',
+                { type: 'settings', id: authContext.companyId, name: 'Twilio Configuration' },
+                { action: 'cleared' }
+            );
+        } catch (auditError) {
+            console.warn('[Twilio Settings API] Audit logging failed:', auditError);
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import AnalyticsClient from './AnalyticsClient';
+import { PageErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export const metadata: Metadata = {
     title: 'Sales Performance Analytics',
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function AnalyticsPage() {
-    return <AnalyticsClient />;
+    return (
+        <PageErrorBoundary>
+            <AnalyticsClient />
+        </PageErrorBoundary>
+    );
 }

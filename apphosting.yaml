@@ -47,6 +47,13 @@ env:
           - BUILD
           - RUNTIME
 
+    # Sentry Error Tracking (public DSN is safe to expose)
+    - variable: NEXT_PUBLIC_SENTRY_DSN
+      value: '' # Add your Sentry DSN here after creating a project at sentry.io
+      availability:
+          - BUILD
+          - RUNTIME
+
     # Google OAuth (client ID is public)
     - variable: GOOGLE_CLIENT_ID
       value: 343608443426-qd6f4kkvvkfbeb71ncuug9ldse4ob7cn.apps.googleusercontent.com

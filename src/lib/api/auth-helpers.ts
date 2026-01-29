@@ -13,6 +13,7 @@ export interface AuthContext {
     companyId: string;
     role: 'owner' | 'admin' | 'manager' | 'member';
     email?: string;
+    userName?: string;
 }
 
 /**
@@ -44,11 +45,16 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContext 
             .get();
 
         if (!ownedCompaniesSnap.empty) {
+            // Get user name from user doc if available
+            const userDoc = await db.collection('users').doc(userId).get();
+            const userName = userDoc.exists ? userDoc.data()?.name : undefined;
+            
             return {
                 userId,
                 companyId: ownedCompaniesSnap.docs[0].id,
                 role: 'owner',
                 email,
+                userName,
             };
         }
 
@@ -62,6 +68,7 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContext 
                     companyId: userData.companyId,
                     role: userData.role || 'member',
                     email,
+                    userName: userData.name,
                 };
             }
         }

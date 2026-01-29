@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import DiscoverClient from './DiscoverClient';
+import { PageErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export const metadata: Metadata = {
     title: 'Business Intelligence Discovery',
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function DiscoverPage() {
-    return <DiscoverClient />;
+    return (
+        <PageErrorBoundary>
+            <DiscoverClient />
+        </PageErrorBoundary>
+    );
 }

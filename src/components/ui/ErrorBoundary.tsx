@@ -4,11 +4,12 @@
  * Error Boundary Component
  * 
  * Catches React errors and displays a fallback UI.
- * Logs errors to console (Sentry integration can be added via environment).
+ * Integrates with Sentry for error reporting.
  */
 
 import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { captureError } from '@/lib/sentry';
 
 interface Props {
     children: ReactNode;
@@ -34,10 +35,11 @@ export class ErrorBoundary extends Component<Props, State> {
         // Log to console
         console.error('Error caught by boundary:', error, errorInfo);
         
-        // TODO: Integrate with error reporting service (e.g., Sentry)
-        // if (typeof window !== 'undefined' && window.Sentry) {
-        //     window.Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
-        // }
+        // Report to Sentry
+        captureError(error, {
+            action: 'ErrorBoundary.componentDidCatch',
+            metadata: { componentStack: errorInfo.componentStack }
+        });
     }
 
     handleRetry = () => {

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import LeadsClient from './LeadsClient';
+import { PageErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 export const metadata: Metadata = {
     title: 'Leads & Pipeline Navigation',
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function LeadsPage() {
-    return <LeadsClient />;
+    return (
+        <PageErrorBoundary>
+            <LeadsClient />
+        </PageErrorBoundary>
+    );
 }

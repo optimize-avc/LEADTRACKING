@@ -201,6 +201,25 @@ export function rawToDiscoveredLead(
     profileId: string,
     sweepId: string
 ): Omit<DiscoveredLead, 'id' | 'aiAnalysis'> {
+    // Build location object - only include coordinates if they exist
+    // (Firestore doesn't accept undefined values)
+    const location: {
+        address: string | null;
+        city: string;
+        state: string;
+        country: string;
+        coordinates?: { lat: number; lng: number };
+    } = {
+        address: raw.address || null,
+        city: raw.city || 'Unknown',
+        state: raw.state || 'Unknown',
+        country: raw.country || 'US',
+    };
+    
+    if (raw.coordinates) {
+        location.coordinates = raw.coordinates;
+    }
+
     return {
         companyId,
         discoveryProfileId: profileId,
@@ -214,13 +233,7 @@ export function rawToDiscoveredLead(
             phone: raw.phone || null,
             linkedin: null,
         }] : [],
-        location: {
-            address: raw.address || null,
-            city: raw.city || 'Unknown',
-            state: raw.state || 'Unknown',
-            country: raw.country || 'US',
-            coordinates: raw.coordinates || null,
-        },
+        location,
         verification: {
             status: 'pending',
             verifiedAt: null,

@@ -175,6 +175,11 @@ service cloud.firestore {
       match /emailMessages/{messageId} {
         allow read, write: if isOwner(userId);
       }
+      
+      // User's personal resources subcollection
+      match /resources/{resourceId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // ==========================================================================

@@ -2,6 +2,9 @@
  * Discovery Sweep API
  * POST - Trigger a manual discovery sweep
  * GET - Get sweep history
+ * 
+ * Phase 3: Now includes AI-powered lead scoring and analysis
+ * @see SPEC-AI-LEAD-DISCOVERY.md sections 6.1, 8.1-8.3
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,8 +20,12 @@ import {
     createDedupeKey,
     mergeBusinessData,
     rawToDiscoveredLead,
-    CollectorSearchResult,
 } from '@/lib/discovery/types';
+import { 
+    analyzeAllLeads, 
+    getAvailableProvider,
+    AI_LIMITS 
+} from '@/lib/discovery/aiAnalyzer';
 
 async function getCompanyIdFromToken(request: NextRequest): Promise<{ companyId: string; userId: string } | null> {
     const authHeader = request.headers.get('authorization');
@@ -183,67 +190,41 @@ function generateMockBusinessData(
 }
 
 // ========================================
-// Lead Conversion (with placeholder AI analysis)
+// Lead Conversion (with AI Analysis - Phase 3)
 // ========================================
 
 /**
- * Convert raw business data to discovered leads
- * Includes placeholder AI analysis (real AI analysis comes in Phase 3)
+ * Convert raw business data to discovered leads with AI analysis
+ * 
+ * @param businesses Raw business data from collectors
+ * @param aiAnalyses AI analysis results (indexed by business position)
+ * @param companyId Company ID
+ * @param profileId Discovery profile ID
+ * @param sweepId Current sweep ID
+ * @returns Discovered leads with full AI analysis
  */
 function convertToDiscoveredLeads(
     businesses: RawBusinessData[],
+    aiAnalyses: Map<number, import('@/types/discovery').DiscoveredLeadAIAnalysis>,
     companyId: string,
     profileId: string,
-    sweepId: string,
-    criteria: TargetingCriteria
+    sweepId: string
 ): Omit<DiscoveredLead, 'id'>[] {
     return businesses.map((business, index) => {
-        // Calculate basic match score based on criteria alignment
-        const matchScore = calculateBasicMatchScore(business, criteria);
-        
-        // Build match reasons
-        const matchReasons: string[] = [];
-        if (criteria.industries.some(ind => 
-            business.industry?.toLowerCase().includes(ind.toLowerCase())
-        )) {
-            matchReasons.push(`In target industry (${business.industry})`);
-        }
-        if (business.city && criteria.geography.cities.some(city => 
-            city.toLowerCase() === business.city?.toLowerCase()
-        )) {
-            matchReasons.push(`Located in target city (${business.city})`);
-        }
-        if (business.state && criteria.geography.states.some(state => 
-            state.toLowerCase() === business.state?.toLowerCase()
-        )) {
-            matchReasons.push(`Located in target state (${business.state})`);
-        }
-        if (business.rating && business.rating >= 4.0) {
-            matchReasons.push(`High customer ratings (${business.rating}★)`);
-        }
-        if (business.reviewCount && business.reviewCount >= 50) {
-            matchReasons.push(`Established presence (${business.reviewCount}+ reviews)`);
-        }
-        if (matchReasons.length === 0) {
-            matchReasons.push('Basic criteria match');
-        }
-
-        // Generate summary
-        const summary = generateBasicSummary(business, matchScore, criteria);
+        // Get AI analysis for this lead
+        const aiAnalysis = aiAnalyses.get(index) || {
+            matchScore: 50,
+            matchReasons: ['Basic criteria match'],
+            painPointsIdentified: [],
+            buyingSignals: [],
+            summary: `${business.name} is a business that may match your criteria.`,
+        };
 
         const baseLead = rawToDiscoveredLead(business, companyId, profileId, sweepId);
         
         return {
             ...baseLead,
-            aiAnalysis: {
-                matchScore,
-                matchReasons,
-                painPointsIdentified: [], // Will be filled by AI analysis in Phase 3
-                buyingSignals: business.rating && business.rating >= 4.5 && business.reviewCount && business.reviewCount >= 100
-                    ? ['Strong market presence']
-                    : [],
-                summary,
-            },
+            aiAnalysis,
             verification: {
                 status: 'verified' as const,
                 verifiedAt: Date.now(),
@@ -256,86 +237,6 @@ function convertToDiscoveredLeads(
             },
         };
     });
-}
-
-/**
- * Calculate basic match score without AI
- */
-function calculateBasicMatchScore(
-    business: RawBusinessData,
-    criteria: TargetingCriteria
-): number {
-    let score = 50; // Base score
-    
-    // Industry match: +20
-    if (criteria.industries.length > 0 && business.industry) {
-        const industryMatch = criteria.industries.some(ind =>
-            business.industry!.toLowerCase().includes(ind.toLowerCase()) ||
-            ind.toLowerCase().includes(business.industry!.toLowerCase())
-        );
-        if (industryMatch) score += 20;
-    }
-    
-    // City match: +15
-    if (criteria.geography.cities.length > 0 && business.city) {
-        const cityMatch = criteria.geography.cities.some(city =>
-            city.toLowerCase() === business.city!.toLowerCase()
-        );
-        if (cityMatch) score += 15;
-    }
-    
-    // State match: +10
-    if (criteria.geography.states.length > 0 && business.state) {
-        const stateMatch = criteria.geography.states.some(state =>
-            state.toLowerCase() === business.state!.toLowerCase()
-        );
-        if (stateMatch) score += 10;
-    }
-    
-    // Good rating: +5-10
-    if (business.rating) {
-        if (business.rating >= 4.5) score += 10;
-        else if (business.rating >= 4.0) score += 5;
-    }
-    
-    // Established business (reviews): +5
-    if (business.reviewCount && business.reviewCount >= 50) {
-        score += 5;
-    }
-    
-    // Website exists: +5
-    if (business.website) {
-        score += 5;
-    }
-    
-    // Cap at 100
-    return Math.min(100, score);
-}
-
-/**
- * Generate a basic summary without AI
- */
-function generateBasicSummary(
-    business: RawBusinessData,
-    matchScore: number,
-    criteria: TargetingCriteria
-): string {
-    const strength = matchScore >= 85 ? 'strong' : matchScore >= 70 ? 'good' : 'moderate';
-    const location = [business.city, business.state].filter(Boolean).join(', ');
-    
-    let summary = `${business.name} is a ${business.industry || 'business'} in ${location || 'the target area'}`;
-    
-    if (business.rating && business.reviewCount) {
-        summary += ` with ${business.rating}★ rating from ${business.reviewCount} reviews`;
-    }
-    
-    summary += `. Shows ${strength} alignment with targeting criteria.`;
-    
-    if (business.website) {
-        summary += ` Has an active web presence.`;
-    }
-    
-    return summary;
 }
 
 // ========================================
@@ -434,19 +335,35 @@ export async function POST(request: NextRequest) {
         // PHASE 2: Real Data Collection
         // ========================================
         
-        const maxLeads = 10; // Conservative limit for cost control
+        const maxLeads = Math.min(10, AI_LIMITS.maxLeadsToScore); // Stay within cost limits
         const criteria = profile.targetingCriteria as TargetingCriteria;
         
         // Collect business data from configured sources
         const { businesses, apiCalls, usedMockData } = await collectBusinessData(criteria, maxLeads);
         
-        // Convert to discovered leads
+        // ========================================
+        // PHASE 3: AI Analysis
+        // ========================================
+        
+        console.log(`[Sweep] Starting AI analysis for ${businesses.length} businesses`);
+        const aiProvider = getAvailableProvider();
+        console.log(`[Sweep] AI Provider: ${aiProvider || 'none (using rule-based fallback)'}`);
+        
+        // Run two-stage AI analysis
+        const analysisResult = await analyzeAllLeads(businesses, criteria);
+        
+        // Log any warnings
+        if (analysisResult.warnings.length > 0) {
+            console.log(`[Sweep] AI Analysis warnings:`, analysisResult.warnings);
+        }
+        
+        // Convert to discovered leads with AI analysis
         const leads = convertToDiscoveredLeads(
             businesses,
+            analysisResult.leadAnalyses,
             auth.companyId,
             'current',
-            sweepId,
-            criteria
+            sweepId
         );
 
         // Save leads
@@ -462,17 +379,18 @@ export async function POST(request: NextRequest) {
             leadIds.push(leadRef.id);
         }
 
-        // Calculate estimated cost (Google Places: ~$0.032 per request for Basic)
-        const estimatedCost = apiCalls * 0.032;
+        // Calculate total cost (Google Places + AI tokens)
+        const googlePlacesCost = apiCalls * 0.032;
+        const totalCost = googlePlacesCost + analysisResult.totalTokenUsage.estimatedCostUSD;
 
         // Update sweep as completed
         batch.update(sweepRef, {
             status: 'completed',
             completedAt: Date.now(),
             tokenUsage: {
-                tokensUsed: 0, // No LLM tokens yet (Phase 3)
-                apiCalls,
-                estimatedCostUSD: estimatedCost,
+                tokensUsed: analysisResult.totalTokenUsage.tokensUsed,
+                apiCalls: apiCalls + analysisResult.totalTokenUsage.apiCalls,
+                estimatedCostUSD: totalCost,
                 timestamp: Date.now(),
             },
             results: {
@@ -482,6 +400,11 @@ export async function POST(request: NextRequest) {
                 afterVerification: leads.length,
                 finalLeadsCount: leads.length,
             },
+            errors: analysisResult.warnings.map(w => ({
+                source: 'ai_analyzer',
+                error: w,
+                timestamp: Date.now(),
+            })),
         });
 
         // Update profile stats
@@ -493,9 +416,20 @@ export async function POST(request: NextRequest) {
 
         await batch.commit();
 
-        const message = usedMockData 
-            ? `Sweep completed with mock data. Found ${leads.length} leads. Configure GOOGLE_PLACES_API_KEY for real data.`
-            : `Sweep completed! Found ${leads.length} new leads from Google Places.`;
+        // Build response message
+        let message = usedMockData 
+            ? `Sweep completed with mock data. Found ${leads.length} leads.`
+            : `Sweep completed! Found ${leads.length} new leads.`;
+        
+        if (!aiProvider) {
+            message += ' (No AI key configured - using rule-based scoring)';
+        } else {
+            message += ` AI-scored with ${aiProvider === 'gemini' ? 'Gemini' : 'OpenAI'}.`;
+        }
+        
+        if (!isGooglePlacesConfigured() && !usedMockData) {
+            message += ' Configure GOOGLE_PLACES_API_KEY for real data.';
+        }
 
         return NextResponse.json({
             success: true,
@@ -503,8 +437,14 @@ export async function POST(request: NextRequest) {
             leadsFound: leads.length,
             message,
             dataSource: usedMockData ? 'mock' : 'google_places',
+            aiProvider: aiProvider || 'rule-based',
             apiCalls,
-            estimatedCostUSD: estimatedCost,
+            tokenUsage: {
+                tokensUsed: analysisResult.totalTokenUsage.tokensUsed,
+                aiApiCalls: analysisResult.totalTokenUsage.apiCalls,
+            },
+            estimatedCostUSD: totalCost,
+            warnings: analysisResult.warnings.length > 0 ? analysisResult.warnings : undefined,
         });
     } catch (error) {
         console.error('Error running sweep:', error);

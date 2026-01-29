@@ -132,6 +132,32 @@ env:
     #   availability:
     #       - RUNTIME
 
+    # ============================================
+    # AI API Keys (for Lead Scoring & Analysis)
+    # ============================================
+    # Options (pick one, Gemini preferred for cost):
+    #
+    # Option 1: Google AI / Gemini (RECOMMENDED - cheapest)
+    # firebase apphosting:secrets:set GOOGLE_AI_API_KEY
+    # - variable: GOOGLE_AI_API_KEY
+    #   secret: GOOGLE_AI_API_KEY
+    #   availability:
+    #       - RUNTIME
+    # 
+    # Option 2: OpenAI
+    # firebase apphosting:secrets:set OPENAI_API_KEY
+    # - variable: OPENAI_API_KEY
+    #   secret: OPENAI_API_KEY
+    #   availability:
+    #       - RUNTIME
+    #
+    # Cost estimates per sweep (10 leads):
+    # - Gemini Flash (scoring): ~$0.01
+    # - Gemini Pro (analysis): ~$0.05-0.10
+    # - GPT-4o-mini (scoring): ~$0.01
+    # - GPT-4o (analysis): ~$0.10-0.20
+    # Total: $0.05-0.30 per sweep
+
     # SendGrid - COMMENTED OUT (not yet in Secret Manager)
     # - variable: SENDGRID_API_KEY
     #   secret: SENDGRID_API_KEY

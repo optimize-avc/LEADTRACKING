@@ -2,128 +2,78 @@ import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 
 /**
- * Discord OAuth2 Callback Handler
- * Handles the redirect from Discord after authorization
- * Links the Discord guild to the company
+ * Discord OAuth2 Callback Handler for Multi-Tenant SaaS
+ * 
+ * This handles the bot install flow where:
+ * 1. User clicks "Connect Discord" in our app
+ * 2. User authorizes bot on their Discord server
+ * 3. Discord redirects back with guild_id in URL params
+ * 4. We store the guild_id linked to their company
+ * 
+ * For bot installs with `bot` scope, Discord returns guild_id directly
+ * - no code exchange needed (that requires client_secret)
  */
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const code = searchParams.get('code');
-    const state = searchParams.get('companyId') || searchParams.get('state'); // companyId
     const guildId = searchParams.get('guild_id');
+    const state = searchParams.get('state'); // companyId passed from BotStudioClient
     const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    const permissions = searchParams.get('permissions');
 
-    // Handle user cancellation
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app';
+
+    console.log('Discord OAuth callback received:', {
+        guildId,
+        state,
+        error,
+        errorDescription,
+        permissions,
+        fullUrl: request.url
+    });
+
+    // Handle user cancellation or access denied
     if (error) {
-        console.log('Discord OAuth cancelled:', error);
-        return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?error=cancelled`
-        );
+        console.log('Discord OAuth error:', error, errorDescription);
+        const errorMsg = error === 'access_denied' ? 'cancelled' : 'auth_error';
+        return NextResponse.redirect(`${baseUrl}/settings/bot?error=${errorMsg}`);
     }
 
-    // Validate required params
+    // Validate state (companyId) is present
     if (!state) {
-        return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?error=missing_state`
-        );
+        console.error('Missing state parameter in Discord callback');
+        return NextResponse.redirect(`${baseUrl}/settings/bot?error=missing_state`);
     }
 
-    // If guild_id is present, bot was added successfully
+    // For bot installs, Discord returns guild_id directly in the URL
+    // This is the primary flow for multi-tenant SaaS bot connections
     if (guildId) {
         try {
             const db = getAdminDb();
 
-            // Get guild info from Discord API (optional - we can just store the ID)
-            // For now, we'll store guild_id and fetch name later
-
             // Update company with Discord guild info
-            await db
-                .collection('companies')
-                .doc(state)
-                .update({
-                    discordGuildId: guildId,
-                    discordGuildName: `Server ${guildId.slice(-4)}`, // Placeholder - will be updated by bot
-                    updatedAt: Date.now(),
-                });
-
-            console.log(`✅ Linked Discord guild ${guildId} to company ${state}`);
-
-            return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?success=connected`
-            );
-        } catch (err) {
-            console.error('Failed to link Discord:', err);
-            return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?error=link_failed`
-            );
-        }
-    }
-
-    // If we have a code but no guild_id, exchange for token (alternative flow)
-    if (code) {
-        try {
-            const clientId = process.env.DISCORD_CLIENT_ID;
-            const clientSecret = process.env.DISCORD_CLIENT_SECRET;
-            const redirectUri =
-                process.env.DISCORD_REDIRECT_URI ||
-                `${process.env.NEXT_PUBLIC_APP_URL}/api/discord/callback`;
-
-            // Exchange code for access token
-            const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    client_id: clientId!,
-                    client_secret: clientSecret!,
-                    grant_type: 'authorization_code',
-                    code,
-                    redirect_uri: redirectUri,
-                }),
+            await db.collection('companies').doc(state).update({
+                discordGuildId: guildId,
+                discordGuildName: null, // Will be fetched by the bot when it joins
+                discordConnectedAt: Date.now(),
+                discordPermissions: permissions || null,
+                updatedAt: Date.now(),
             });
 
-            if (!tokenResponse.ok) {
-                const errorData = await tokenResponse.text();
-                console.error('Token exchange failed:', errorData);
-                return NextResponse.redirect(
-                    `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?error=token_failed`
-                );
-            }
+            console.log(`✅ Successfully linked Discord guild ${guildId} to company ${state}`);
 
-            const tokenData = await tokenResponse.json();
-
-            // If we got the token but no guild, redirect with partial success
-            // The guild_id should come from the OAuth response for bot flows
-            if (tokenData.guild?.id) {
-                const db = getAdminDb();
-
-                await db
-                    .collection('companies')
-                    .doc(state)
-                    .update({
-                        discordGuildId: tokenData.guild.id,
-                        discordGuildName:
-                            tokenData.guild.name || `Server ${tokenData.guild.id.slice(-4)}`,
-                        updatedAt: Date.now(),
-                    });
-
-                return NextResponse.redirect(
-                    `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?success=connected`
-                );
-            }
-
-            return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?error=no_guild`
-            );
+            return NextResponse.redirect(`${baseUrl}/settings/bot?success=connected&guild=${guildId}`);
         } catch (err) {
-            console.error('OAuth callback error:', err);
-            return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?error=callback_failed`
-            );
+            console.error('Failed to link Discord guild to company:', err);
+            return NextResponse.redirect(`${baseUrl}/settings/bot?error=database_error`);
         }
     }
 
-    // No code or guild_id - unknown state
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/settings/bot?error=unknown`);
+    // If we reach here without a guild_id, something went wrong
+    // This shouldn't happen with the bot scope flow
+    console.error('Discord callback missing guild_id - unexpected flow', {
+        params: Object.fromEntries(searchParams.entries())
+    });
+    
+    return NextResponse.redirect(`${baseUrl}/settings/bot?error=no_guild`);
 }

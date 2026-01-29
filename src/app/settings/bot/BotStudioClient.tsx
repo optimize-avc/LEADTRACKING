@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
@@ -17,6 +18,7 @@ const DISCORD_REDIRECT_URI =
 
 export default function BotStudioClient() {
     const { user, loading: authLoading } = useAuth();
+    const searchParams = useSearchParams();
     const [company, setCompany] = useState<Company | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -26,6 +28,28 @@ export default function BotStudioClient() {
     const [persona, setPersona] = useState<'professional' | 'friendly' | 'casual'>('professional');
     const [qualificationRules, setQualificationRules] = useState<string[]>([]);
     const [newRule, setNewRule] = useState('');
+
+    // Handle OAuth callback messages
+    useEffect(() => {
+        const success = searchParams.get('success');
+        const error = searchParams.get('error');
+        
+        if (success === 'connected') {
+            toast.success('🎉 Discord server connected successfully!');
+            // Clean URL
+            window.history.replaceState({}, '', '/settings/bot');
+        } else if (error) {
+            const errorMessages: Record<string, string> = {
+                cancelled: 'Discord connection was cancelled',
+                missing_state: 'Invalid request - please try again',
+                database_error: 'Failed to save connection - please try again',
+                no_guild: 'No Discord server was selected',
+                auth_error: 'Discord authentication failed',
+            };
+            toast.error(errorMessages[error] || 'Failed to connect Discord');
+            window.history.replaceState({}, '', '/settings/bot');
+        }
+    }, [searchParams]);
 
     // Load company data
     const loadCompany = useCallback(async () => {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { lookupPhoneNumber } from '@/lib/twilio/lookup-service';
 import { isTwilioConfigured } from '@/lib/twilio/twilio-config';
-import { withAuth } from '@/lib/auth';
+// import { withAuth } from '@/lib/auth'; // TODO: Add auth protection
 
 export async function POST(request: NextRequest) {
     try {

@@ -27,7 +27,7 @@ import type { Lead } from '@/types';
 /**
  * Verify Firebase Auth token from Authorization header
  */
-async function verifyAuth(request: Request) {
+async function verifyAuth(_request: Request) {
   const headersList = await headers();
   const authHeader = headersList.get('Authorization');
   

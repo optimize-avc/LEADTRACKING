@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
         // Get generic params
         const userId = request.nextUrl.searchParams.get('userId');
-        const leadId = request.nextUrl.searchParams.get('leadId');
+        const _leadId = request.nextUrl.searchParams.get('leadId'); // Reserved for future use
 
         // Map Twilio status
         const validStatuses = ['queued', 'sent', 'delivered', 'failed', 'undelivered'];

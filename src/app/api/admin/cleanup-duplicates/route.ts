@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
     try {
         const adminDb = getAdminDb();
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         const toDelete: string[] = [];
         const duplicateGroups: Array<{ name: string; kept: string; deleted: string[] }> = [];
 
-        for (const [name, arr] of Object.entries(byName)) {
+        for (const [_name, arr] of Object.entries(byName)) {
             if (arr.length <= 1) continue;
 
             // Sort by createdAt descending (newest first)

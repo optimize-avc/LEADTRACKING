@@ -10,11 +10,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb, verifyIdToken } from '@/lib/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
-import { rateLimit, handleValidationError } from '@/lib/api-middleware';
-import { createCompanySchema } from '@/lib/validation';
+import { rateLimit } from '@/lib/api-middleware';
 import { RATE_LIMITS } from '@/lib/rate-limit';
-import { ZodError } from 'zod';
+// TODO: Add Zod validation
+// import { FieldValue } from 'firebase-admin/firestore';
+// import { handleValidationError } from '@/lib/api-middleware';
+// import { createCompanySchema } from '@/lib/validation';
+// import { ZodError } from 'zod';
 
 export async function POST(request: NextRequest) {
     try {

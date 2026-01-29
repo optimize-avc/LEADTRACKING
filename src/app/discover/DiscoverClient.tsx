@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { User } from 'firebase/auth';
 import { BusinessSearch } from '@/components/discover/BusinessSearch';
 import { AuditResultCard } from '@/components/discover/AuditResultCard';
 import { BusinessAuditResult } from '@/lib/ai/business-audit';
@@ -376,7 +377,7 @@ interface ManualSearchTabProps {
     isAuditing: boolean;
     isSaving: boolean;
     userToken: string | null;
-    user: any;
+    user: User | null;
     authLoading: boolean;
     onAuditStart: () => void;
     onAuditComplete: (result: BusinessAuditResult) => void;
@@ -517,7 +518,7 @@ interface AIDiscoveredTabProps {
     total: number;
     onRefresh: () => void;
     onAction: (lead: DiscoveredLead, action: 'pipeline' | 'watchlist' | 'dismiss') => void;
-    user: any;
+    user: User | null;
 }
 
 function AIDiscoveredTab({ leads, isLoading, total, onRefresh, onAction, user }: AIDiscoveredTabProps) {
@@ -604,7 +605,7 @@ interface WatchlistTabProps {
     isLoading: boolean;
     onRefresh: () => void;
     onAction: (lead: DiscoveredLead, action: 'pipeline' | 'watchlist' | 'dismiss') => void;
-    user: any;
+    user: User | null;
 }
 
 function WatchlistTab({ leads, isLoading, onRefresh, onAction, user }: WatchlistTabProps) {

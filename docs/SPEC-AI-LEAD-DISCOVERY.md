@@ -1,0 +1,629 @@
+# AI Lead Discovery Engine - Technical Specification
+
+> **Status:** Draft v1.0
+> **Author:** Clawd + Funky Phantom
+> **Date:** 2026-01-29
+
+---
+
+## 1. Overview
+
+### What It Does
+An AI-powered automated prospecting system that continuously discovers potential leads based on user-defined targeting criteria, verifies them, and delivers qualified prospects to both the app and connected Discord servers.
+
+### Value Proposition
+- **Save hours** of manual prospecting
+- **Never miss** a potential customer
+- **AI-verified** leads with real contact info
+- **Automated delivery** on your schedule
+
+---
+
+## 2. User Journey
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           USER JOURNEY                                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  1. SETUP (One-time)                                                    │
+│     ├── Navigate to Settings → Bot Studio                               │
+│     ├── Connect Discord server ✅ (already built)                       │
+│     └── Configure brain (industry, persona) ✅ (already built)          │
+│                                                                         │
+│  2. CONFIGURE DISCOVERY (Settings → Discovery)                          │
+│     ├── Describe your business in plain English                         │
+│     ├── AI parses into targeting criteria                               │
+│     ├── Review & refine the parsed criteria                             │
+│     ├── Set sweep schedule (daily/weekly/custom)                        │
+│     └── Choose notification preferences                                 │
+│                                                                         │
+│  3. AUTOMATED SWEEPS (Background)                                       │
+│     ├── Cron job triggers based on schedule                             │
+│     ├── AI searches multiple sources                                    │
+│     ├── Results are fact-checked & verified                             │
+│     └── Qualified leads stored in database                              │
+│                                                                         │
+│  4. DELIVERY                                                            │
+│     ├── In-App: New tab in Discover page shows results                  │
+│     ├── Discord: Bot posts summary to configured channel                │
+│     └── Optional: Email digest                                          │
+│                                                                         │
+│  5. ACTION                                                              │
+│     ├── Review discovered leads                                         │
+│     ├── Click "Add to Pipeline" to convert                              │
+│     └── Dismiss irrelevant ones (trains AI)                             │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Database Schema
+
+### 3.1 Discovery Profiles (per company)
+
+```typescript
+// Collection: companies/{companyId}/discoveryProfile
+
+interface DiscoveryProfile {
+  id: string;
+  companyId: string;
+  
+  // Raw user input
+  businessDescription: string;  // Plain English description
+  
+  // AI-parsed targeting criteria
+  targetingCriteria: {
+    industries: string[];           // ["HVAC", "Plumbing", "Electrical"]
+    companySize: {
+      min: number;                  // 10
+      max: number;                  // 500
+    };
+    geography: {
+      countries: string[];          // ["US"]
+      states: string[];             // ["TX", "OK", "LA"]
+      cities: string[];             // ["Houston", "Dallas"]
+      radius?: number;              // miles from a point
+    };
+    painPoints: string[];           // ["outdated equipment", "high energy costs"]
+    buyingSignals: string[];        // ["hiring", "expanding", "funding"]
+    excludeKeywords: string[];      // ["residential", "DIY"]
+    idealCustomerProfile: string;   // AI-generated summary
+  };
+  
+  // Schedule settings
+  schedule: {
+    enabled: boolean;
+    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
+    customDays?: number;            // If custom, run every N days
+    preferredTime: string;          // "09:00" UTC
+    lastRunAt: number | null;       // Timestamp
+    nextRunAt: number | null;       // Timestamp
+  };
+  
+  // Notification settings
+  notifications: {
+    discord: {
+      enabled: boolean;
+      channelId: string | null;     // Which channel to post to
+      mentionRole: string | null;   // @sales-team etc
+    };
+    email: {
+      enabled: boolean;
+      recipients: string[];
+    };
+    inApp: {
+      enabled: boolean;             // Always true basically
+    };
+  };
+  
+  // Stats
+  stats: {
+    totalLeadsFound: number;
+    leadsAddedToPipeline: number;
+    leadsDismissed: number;
+    lastSweepLeadsCount: number;
+  };
+  
+  createdAt: number;
+  updatedAt: number;
+}
+```
+
+### 3.2 Discovered Leads
+
+```typescript
+// Collection: companies/{companyId}/discoveredLeads
+
+interface DiscoveredLead {
+  id: string;
+  companyId: string;
+  discoveryProfileId: string;
+  
+  // Business info
+  businessName: string;
+  industry: string;
+  website: string | null;
+  
+  // Contact info
+  contacts: {
+    name: string;
+    title: string;
+    email: string | null;
+    phone: string | null;
+    linkedin: string | null;
+  }[];
+  
+  // Location
+  location: {
+    address: string | null;
+    city: string;
+    state: string;
+    country: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  
+  // AI analysis
+  aiAnalysis: {
+    matchScore: number;             // 0-100, how well they match criteria
+    matchReasons: string[];         // ["In target industry", "Recently funded"]
+    painPointsIdentified: string[]; // ["Mentioned equipment issues in review"]
+    buyingSignals: string[];        // ["Hiring 3 sales reps", "New location"]
+    summary: string;                // AI-generated 2-3 sentence summary
+  };
+  
+  // Verification
+  verification: {
+    status: 'pending' | 'verified' | 'failed';
+    verifiedAt: number | null;
+    checks: {
+      websiteExists: boolean;
+      phoneValid: boolean;
+      emailValid: boolean;
+      businessRegistered: boolean;  // If we can check
+    };
+  };
+  
+  // Sources where we found them
+  sources: {
+    type: 'linkedin' | 'google' | 'directory' | 'news' | 'jobs' | 'social';
+    url: string;
+    foundAt: number;
+  }[];
+  
+  // Status
+  status: 'new' | 'reviewed' | 'added_to_pipeline' | 'dismissed';
+  dismissReason?: string;           // If dismissed, why (for AI learning)
+  pipelineLeadId?: string;          // If added, link to pipeline lead
+  
+  // Sweep info
+  sweepId: string;                  // Which sweep found this
+  discoveredAt: number;
+  reviewedAt: number | null;
+  reviewedBy: string | null;        // userId
+}
+```
+
+### 3.3 Discovery Sweeps (audit log)
+
+```typescript
+// Collection: companies/{companyId}/discoverySweeps
+
+interface DiscoverySweep {
+  id: string;
+  companyId: string;
+  discoveryProfileId: string;
+  
+  // Execution
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  startedAt: number;
+  completedAt: number | null;
+  
+  // Results
+  results: {
+    sourcesSearched: number;
+    rawResultsFound: number;
+    afterDeduplication: number;
+    afterVerification: number;
+    finalLeadsCount: number;
+  };
+  
+  // Errors if any
+  errors: {
+    source: string;
+    error: string;
+    timestamp: number;
+  }[];
+  
+  // Notifications sent
+  notificationsSent: {
+    discord: boolean;
+    email: boolean;
+  };
+  
+  // Trigger
+  triggeredBy: 'schedule' | 'manual';
+  triggeredByUserId?: string;
+}
+```
+
+---
+
+## 4. API Endpoints
+
+### 4.1 Discovery Profile Management
+
+```
+GET    /api/discovery/profile           - Get company's discovery profile
+POST   /api/discovery/profile           - Create/update profile
+DELETE /api/discovery/profile           - Delete profile (stops all sweeps)
+
+POST   /api/discovery/parse-description - AI parses business description
+       Body: { description: string }
+       Returns: { targetingCriteria: {...} }
+```
+
+### 4.2 Sweep Management
+
+```
+POST   /api/discovery/sweep             - Trigger manual sweep
+GET    /api/discovery/sweeps            - List past sweeps
+GET    /api/discovery/sweeps/:id        - Get sweep details
+```
+
+### 4.3 Discovered Leads
+
+```
+GET    /api/discovery/leads             - List discovered leads
+       Query: ?status=new&limit=50&offset=0
+       
+GET    /api/discovery/leads/:id         - Get lead details
+PATCH  /api/discovery/leads/:id         - Update lead (review, dismiss)
+POST   /api/discovery/leads/:id/add-to-pipeline - Convert to pipeline lead
+```
+
+### 4.4 Discord Integration
+
+```
+GET    /api/discovery/discord/channels  - List available channels in guild
+POST   /api/discovery/discord/test      - Send test message to channel
+```
+
+---
+
+## 5. UI Components
+
+### 5.1 Discovery Settings Page (`/settings/discovery`)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ ← Back to Settings                                              │
+│                                                                 │
+│ 🔍 AI Lead Discovery                                            │
+│ Configure automated prospecting for your business               │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ DESCRIBE YOUR BUSINESS                                          │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ We're a commercial HVAC company in Texas. We help           │ │
+│ │ businesses with 50-500 employees reduce energy costs        │ │
+│ │ through modern HVAC systems. Our ideal customers are        │ │
+│ │ warehouses, manufacturing plants, and office buildings      │ │
+│ │ that have equipment over 10 years old...                    │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│                                        [✨ Parse with AI]       │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ TARGETING CRITERIA (AI-Generated)                    [Edit ✏️]  │
+│                                                                 │
+│ Industries:     [HVAC] [Commercial Real Estate] [Manufacturing] │
+│ Company Size:   50 - 500 employees                              │
+│ Geography:      Texas, Oklahoma, Louisiana                      │
+│ Pain Points:    • High energy costs                             │
+│                 • Aging equipment (10+ years)                   │
+│                 • Compliance concerns                           │
+│ Buying Signals: • Facility expansion                            │
+│                 • Sustainability initiatives                    │
+│                 • Recent funding                                │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ SCHEDULE                                                        │
+│                                                                 │
+│ ◉ Enabled   ○ Disabled                                         │
+│                                                                 │
+│ Run every:  [Weekly ▾]  on  [Monday ▾]  at  [9:00 AM ▾]        │
+│                                                                 │
+│ Next sweep: Monday, Feb 3, 2026 at 9:00 AM                     │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ NOTIFICATIONS                                                   │
+│                                                                 │
+│ ☑️ Discord    Channel: [#leads-feed ▾]   Mention: [@sales ▾]   │
+│ ☐ Email      Recipients: [Add emails...]                       │
+│ ☑️ In-App    (Always on)                                        │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ [💾 Save Configuration]              [🚀 Run Sweep Now]         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Discover Page - AI Results Tab (`/discover`)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔍 Discover                                                     │
+│                                                                 │
+│ [Manual Search]  [✨ AI Discovered]                             │
+│                  ━━━━━━━━━━━━━━━━━                              │
+│                                                                 │
+│ 12 new leads found · Last sweep: 2 hours ago    [🔄 Refresh]   │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ 🏢 Texas Manufacturing Corp              Match: 94% 🟢      │ │
+│ │    Manufacturing · Houston, TX · 150 employees              │ │
+│ │                                                             │ │
+│ │ "Expanding to new facility, mentioned HVAC upgrade needs    │ │
+│ │  in recent job posting. Equipment is 15+ years old."        │ │
+│ │                                                             │ │
+│ │ 📧 john.smith@texasmfg.com  📞 (713) 555-0123              │ │
+│ │                                                             │ │
+│ │ Sources: LinkedIn · Google · Indeed                         │ │
+│ │                                                             │ │
+│ │ [➕ Add to Pipeline]  [👁️ View Details]  [✖️ Dismiss]       │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ 🏢 Gulf Coast Warehousing                 Match: 87% 🟢     │ │
+│ │    Logistics · Galveston, TX · 80 employees                 │ │
+│ │    ...                                                      │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ 🏢 Sunrise Office Park                    Match: 72% 🟡     │ │
+│ │    Commercial Real Estate · Dallas, TX · 200 employees      │ │
+│ │    ...                                                      │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 5.3 Discord Notification Format
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 AI Lead Discovery - 12 New Leads Found
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@sales-team Your weekly sweep is complete!
+
+🏆 **Top Matches:**
+
+**1. Texas Manufacturing Corp** (94% match)
+   📍 Houston, TX · 150 employees
+   💡 Expanding facility, needs HVAC upgrade
+   🔗 [View in App](https://app.../discover?lead=xxx)
+
+**2. Gulf Coast Warehousing** (87% match)
+   📍 Galveston, TX · 80 employees
+   💡 Recent funding, sustainability focus
+   🔗 [View in App](https://app.../discover?lead=xxx)
+
+**3. Sunrise Office Park** (72% match)
+   📍 Dallas, TX · 200 employees
+   💡 15-year-old equipment, maintenance issues
+   🔗 [View in App](https://app.../discover?lead=xxx)
+
+📊 **Summary:** 12 leads found · 8 verified · 3 high-priority
+
+👉 [View All Leads](https://app.../discover?tab=ai)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 6. Technical Architecture
+
+### 6.1 System Flow
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                         DISCOVERY ENGINE FLOW                          │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  TRIGGER                                                               │
+│  ───────                                                               │
+│  ┌──────────────┐     ┌──────────────┐                                │
+│  │ Cron Job     │ OR  │ Manual       │                                │
+│  │ (scheduled)  │     │ (user click) │                                │
+│  └──────┬───────┘     └──────┬───────┘                                │
+│         └──────────┬─────────┘                                        │
+│                    ▼                                                   │
+│  ORCHESTRATOR (Cloud Function / Cloud Run)                            │
+│  ─────────────────────────────────────────                            │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │ 1. Load company's discovery profile                             │  │
+│  │ 2. Create sweep record (status: running)                        │  │
+│  │ 3. Fan out to data collectors                                   │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                    │                                                   │
+│                    ▼                                                   │
+│  DATA COLLECTORS (Parallel)                                           │
+│  ──────────────────────────                                           │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
+│  │ LinkedIn │ │ Google   │ │ Industry │ │ News     │ │ Job      │   │
+│  │ Scraper  │ │ Places   │ │ Dirs     │ │ Articles │ │ Boards   │   │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘   │
+│       └────────────┴────────────┴────────────┴────────────┘          │
+│                                 │                                      │
+│                                 ▼                                      │
+│  AGGREGATOR                                                           │
+│  ──────────                                                           │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │ 1. Merge results from all collectors                            │  │
+│  │ 2. Deduplicate (by name + location)                             │  │
+│  │ 3. Initial relevance scoring                                    │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                 │                                      │
+│                                 ▼                                      │
+│  AI ANALYZER (GPT-4 / Claude)                                         │
+│  ────────────────────────────                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │ For each candidate:                                             │  │
+│  │ 1. Match against targeting criteria → score 0-100               │  │
+│  │ 2. Identify pain points from available data                     │  │
+│  │ 3. Detect buying signals                                        │  │
+│  │ 4. Generate 2-3 sentence summary                                │  │
+│  │ 5. Flag any red flags (competitors, wrong fit)                  │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                 │                                      │
+│                                 ▼                                      │
+│  VERIFIER                                                             │
+│  ────────                                                             │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │ 1. Check website exists (HEAD request)                          │  │
+│  │ 2. Validate email format + MX records                           │  │
+│  │ 3. Validate phone format                                        │  │
+│  │ 4. Optional: Business registry lookup                           │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                 │                                      │
+│                                 ▼                                      │
+│  STORAGE & NOTIFICATION                                               │
+│  ──────────────────────                                               │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │ 1. Save verified leads to Firestore                             │  │
+│  │ 2. Update sweep record (status: completed)                      │  │
+│  │ 3. Send Discord notification via bot                            │  │
+│  │ 4. Send email digest (if enabled)                               │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Scheduler | Firebase Cloud Scheduler + Pub/Sub |
+| Orchestrator | Cloud Functions (Node.js) or Cloud Run |
+| Data Collectors | Cloud Functions (parallelized) |
+| AI Analysis | OpenAI GPT-4 or Anthropic Claude API |
+| Verification | Custom validation + 3rd party APIs |
+| Storage | Firestore |
+| Discord Bot | Discord.js (existing bot) |
+| Email | SendGrid |
+
+### 6.3 Data Sources & Methods
+
+| Source | Method | What We Get |
+|--------|--------|-------------|
+| Google Places | API | Business name, address, phone, website, reviews |
+| LinkedIn | Scraper/API | Company size, industry, recent posts, employees |
+| Industry Directories | Scraper | Niche-specific business listings |
+| News/PR | API (NewsAPI) | Funding, expansion, leadership changes |
+| Job Boards | Scraper | Hiring signals, growth indicators |
+| Social Media | APIs | Sentiment, engagement, recent activity |
+| Business Registries | API | Verification, founding date, status |
+
+---
+
+## 7. Implementation Phases
+
+### Phase 1: Foundation (Week 1-2)
+- [ ] Database schema setup
+- [ ] Discovery profile CRUD API
+- [ ] Settings UI for discovery configuration
+- [ ] AI description parser (LLM integration)
+
+### Phase 2: Data Collection (Week 3-4)
+- [ ] Google Places integration
+- [ ] Basic web scraper framework
+- [ ] News API integration
+- [ ] Result aggregation & deduplication
+
+### Phase 3: AI Analysis (Week 5)
+- [ ] Lead scoring algorithm
+- [ ] Pain point identification
+- [ ] Summary generation
+- [ ] Match reasoning
+
+### Phase 4: Verification (Week 6)
+- [ ] Website validation
+- [ ] Email validation (MX check)
+- [ ] Phone format validation
+- [ ] Verification status tracking
+
+### Phase 5: Delivery (Week 7)
+- [ ] Discover page AI tab UI
+- [ ] Discord notification integration
+- [ ] Email digest setup
+- [ ] "Add to Pipeline" flow
+
+### Phase 6: Scheduling (Week 8)
+- [ ] Cloud Scheduler setup
+- [ ] Sweep history & audit log
+- [ ] Manual sweep trigger
+- [ ] Error handling & retry logic
+
+### Phase 7: Polish (Week 9-10)
+- [ ] Performance optimization
+- [ ] Rate limiting & quotas
+- [ ] Feedback loop (dismissed leads train AI)
+- [ ] Analytics dashboard for discovery stats
+
+---
+
+## 8. Cost Considerations
+
+| Service | Estimated Cost | Notes |
+|---------|---------------|-------|
+| OpenAI GPT-4 | ~$0.50-2.00 per sweep | Depends on lead count |
+| Google Places API | ~$17/1000 requests | Basic place details |
+| Cloud Functions | ~$0.40/million invocations | Minimal |
+| Cloud Scheduler | Free (3 jobs/month) | One per company on paid? |
+| SendGrid | Free tier: 100/day | Or existing plan |
+| Web scraping | Variable | May need proxy service |
+
+**Estimate per sweep:** $1-5 depending on lead volume and sources used.
+
+**Pricing strategy:** Include X sweeps/month in subscription tiers, charge for additional.
+
+---
+
+## 9. Open Questions
+
+1. **Scraping legality:** Need to ensure compliance with ToS for each source. Consider using official APIs where available.
+
+2. **Rate limits:** How do we handle multiple companies sweeping simultaneously? Queue system?
+
+3. **Data freshness:** How long do we keep discovered leads? Auto-archive after X days?
+
+4. **Feedback loop:** How do we use "dismissed" leads to improve targeting? Store reasons and retrain?
+
+5. **Multi-tenant isolation:** Ensure one company's searches don't leak to another.
+
+---
+
+## 10. Success Metrics
+
+- **Leads discovered per sweep** (target: 10-50)
+- **Lead quality score** (avg match % of added leads)
+- **Conversion rate** (discovered → pipeline → won)
+- **Time saved** (estimated hours of manual research replaced)
+- **User engagement** (how often they review discovered leads)
+
+---
+
+*This spec is a living document. Update as we build and learn.*

@@ -5,16 +5,24 @@ import { useSearchParams } from 'next/navigation';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
-import { Bot, Link2, Unlink, Settings, MessageSquare, Save, ChevronLeft } from 'lucide-react';
+import { Bot, Link2, Unlink, Settings, MessageSquare, Save, ChevronLeft, RefreshCw, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { CompanyService } from '@/lib/firebase/company';
-import type { Company, CompanySettings } from '@/types/company';
+import type { Company, CompanySettings, ChannelMapping, DiscordChannel } from '@/types/company';
 import Link from 'next/link';
 
 // Discord OAuth2 configuration
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const DISCORD_REDIRECT_URI =
     typeof window !== 'undefined' ? `${window.location.origin}/api/discord/callback` : '';
+
+// Channel mapping configuration
+const CHANNEL_MAPPING_OPTIONS: { key: keyof ChannelMapping; label: string; description: string }[] = [
+    { key: 'newLeads', label: 'New Leads', description: 'Notifications when new leads are discovered' },
+    { key: 'wins', label: 'Closed Won', description: 'Celebrate when deals are closed' },
+    { key: 'triage', label: 'Lead Triage', description: 'Leads needing review or assignment' },
+    { key: 'digest', label: 'Daily Digest', description: 'Daily summary of pipeline activity' },
+];
 
 export default function BotStudioClient() {
     const { user, loading: authLoading } = useAuth();
@@ -29,6 +37,12 @@ export default function BotStudioClient() {
     const [qualificationRules, setQualificationRules] = useState<string[]>([]);
     const [newRule, setNewRule] = useState('');
 
+    // Channel mapping state
+    const [discordChannels, setDiscordChannels] = useState<DiscordChannel[]>([]);
+    const [channelMapping, setChannelMapping] = useState<ChannelMapping>({});
+    const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+    const [isSavingChannels, setIsSavingChannels] = useState(false);
+
     // Handle OAuth callback messages
     useEffect(() => {
         const success = searchParams.get('success');
@@ -36,8 +50,9 @@ export default function BotStudioClient() {
         
         if (success === 'connected') {
             toast.success('🎉 Discord server connected successfully!');
-            // Clean URL
+            // Clean URL and reload to fetch channels
             window.history.replaceState({}, '', '/settings/bot');
+            loadCompany();
         } else if (error) {
             const errorMessages: Record<string, string> = {
                 cancelled: 'Discord connection was cancelled',
@@ -71,6 +86,12 @@ export default function BotStudioClient() {
                 setIndustry(companyData.settings.industry || '');
                 setPersona(companyData.settings.persona || 'professional');
                 setQualificationRules(companyData.settings.qualificationRules || []);
+                setChannelMapping(companyData.settings.channelMapping || {});
+
+                // Load Discord channels if connected
+                if (companyData.discordGuildId) {
+                    loadDiscordChannels();
+                }
             }
         } catch (error) {
             console.error('Failed to load company:', error);
@@ -79,6 +100,34 @@ export default function BotStudioClient() {
             setIsLoading(false);
         }
     }, [user]);
+
+    // Load Discord channels
+    const loadDiscordChannels = async () => {
+        setIsLoadingChannels(true);
+        try {
+            const token = await user?.getIdToken();
+            const response = await fetch('/api/discord/channels', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setDiscordChannels(data.channels || []);
+            } else {
+                const error = await response.json();
+                console.error('Failed to load channels:', error);
+                if (response.status !== 400) { // Don't show error for "not connected"
+                    toast.error('Failed to load Discord channels');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading Discord channels:', error);
+        } finally {
+            setIsLoadingChannels(false);
+        }
+    };
 
     useEffect(() => {
         if (!authLoading && user) {
@@ -115,6 +164,8 @@ export default function BotStudioClient() {
         try {
             await CompanyService.unlinkDiscord(company.id);
             setCompany({ ...company, discordGuildId: undefined, discordGuildName: undefined });
+            setDiscordChannels([]);
+            setChannelMapping({});
             toast.success('Discord server disconnected');
         } catch (error) {
             console.error('Failed to disconnect Discord:', error);
@@ -151,6 +202,39 @@ export default function BotStudioClient() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    // Save channel mapping
+    const handleSaveChannelMapping = async () => {
+        if (!company) return;
+
+        setIsSavingChannels(true);
+        try {
+            await CompanyService.updateChannelMapping(company.id, channelMapping as Record<string, string>);
+
+            setCompany({
+                ...company,
+                settings: {
+                    ...company.settings,
+                    channelMapping,
+                },
+            });
+
+            toast.success('Channel mapping saved!');
+        } catch (error) {
+            console.error('Failed to save channel mapping:', error);
+            toast.error('Failed to save channel mapping');
+        } finally {
+            setIsSavingChannels(false);
+        }
+    };
+
+    // Update channel mapping
+    const handleChannelChange = (key: keyof ChannelMapping, channelId: string) => {
+        setChannelMapping((prev) => ({
+            ...prev,
+            [key]: channelId || undefined, // Remove key if empty
+        }));
     };
 
     // Add qualification rule
@@ -227,7 +311,7 @@ export default function BotStudioClient() {
                                             Connected
                                         </Badge>
                                         <span className="text-sm text-slate-400">
-                                            {company.discordGuildName || 'Unknown Server'}
+                                            {company.discordGuildName || 'Server Connected'}
                                         </span>
                                     </div>
                                 ) : (
@@ -258,6 +342,90 @@ export default function BotStudioClient() {
                         </div>
                     </div>
                 </GlassCard>
+
+                {/* Channel Mapping Card - Only show if connected */}
+                {company?.discordGuildId && (
+                    <GlassCard>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                                    <MessageSquare size={20} className="text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white">
+                                        Channel Mapping
+                                    </h3>
+                                    <p className="text-sm text-slate-400">
+                                        Select which channels receive notifications
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={loadDiscordChannels}
+                                disabled={isLoadingChannels}
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
+                            >
+                                <RefreshCw size={12} className={isLoadingChannels ? 'animate-spin' : ''} />
+                                Refresh
+                            </button>
+                        </div>
+
+                        {isLoadingChannels ? (
+                            <div className="text-sm text-slate-500 italic py-4 text-center">
+                                Loading channels...
+                            </div>
+                        ) : discordChannels.length === 0 ? (
+                            <div className="text-sm text-slate-500 py-4 text-center">
+                                <p>No channels found. Make sure the bot has permission to view channels.</p>
+                                <button
+                                    onClick={loadDiscordChannels}
+                                    className="mt-2 text-indigo-400 hover:text-indigo-300"
+                                >
+                                    Try again
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {CHANNEL_MAPPING_OPTIONS.map((option) => (
+                                    <div key={option.key} className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                {option.label}
+                                            </label>
+                                            <p className="text-xs text-slate-500">{option.description}</p>
+                                        </div>
+                                        <div className="w-48">
+                                            <select
+                                                value={channelMapping[option.key] || ''}
+                                                onChange={(e) => handleChannelChange(option.key, e.target.value)}
+                                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                                            >
+                                                <option value="">None</option>
+                                                {discordChannels.map((ch) => (
+                                                    <option key={ch.id} value={ch.id}>
+                                                        # {ch.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* Save Channel Mapping Button */}
+                                <div className="pt-4 border-t border-white/10">
+                                    <button
+                                        onClick={handleSaveChannelMapping}
+                                        disabled={isSavingChannels}
+                                        className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all disabled:opacity-50"
+                                    >
+                                        <Save size={14} />
+                                        {isSavingChannels ? 'Saving...' : 'Save Channel Mapping'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </GlassCard>
+                )}
 
                 {/* Brain Configuration Card */}
                 <GlassCard>
@@ -368,26 +536,48 @@ export default function BotStudioClient() {
                     </div>
                 </GlassCard>
 
-                {/* Channel Mapping Card - Only show if connected */}
+                {/* Bot Commands Reference */}
                 {company?.discordGuildId && (
                     <GlassCard>
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                                <MessageSquare size={20} className="text-white" />
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                <Hash size={20} className="text-white" />
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-white">
-                                    Channel Mapping
+                                    Bot Commands
                                 </h3>
                                 <p className="text-sm text-slate-400">
-                                    Select which Discord channels receive notifications
+                                    Available slash commands in your Discord server
                                 </p>
                             </div>
                         </div>
 
-                        <div className="text-sm text-slate-500 italic">
-                            Channel mapping configuration will be available after connecting your
-                            Discord server and granting the bot access to view channels.
+                        <div className="space-y-3 text-sm">
+                            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                                <code className="text-indigo-400 font-mono">/lead create</code>
+                                <span className="text-slate-400">Create a new lead with auto-assignment</span>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                                <code className="text-indigo-400 font-mono">/lead update</code>
+                                <span className="text-slate-400">Update lead stage, value, or assignee</span>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                                <code className="text-indigo-400 font-mono">/pipeline view</code>
+                                <span className="text-slate-400">View your current pipeline by stage</span>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                                <code className="text-indigo-400 font-mono">/genleads</code>
+                                <span className="text-slate-400">AI-generate leads based on your industry</span>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                                <code className="text-indigo-400 font-mono">/remind set</code>
+                                <span className="text-slate-400">Set follow-up reminders for leads</span>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                                <code className="text-indigo-400 font-mono">/team list</code>
+                                <span className="text-slate-400">View team members and their capacity</span>
+                            </div>
                         </div>
                     </GlassCard>
                 )}

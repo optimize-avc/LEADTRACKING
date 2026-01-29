@@ -887,11 +887,11 @@ export default function DiscoverySettingsClient() {
                 </div>
 
                 {/* Info Note */}
-                <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                    <AlertCircle size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-amber-200">
-                        <strong>Phase 1 Note:</strong> Discovery sweeps currently generate mock leads for testing. 
-                        Real data collection from Google, LinkedIn, and other sources coming in Phase 2.
+                <div className="flex items-start gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <AlertCircle size={20} className="text-green-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-green-200">
+                        <strong>Google Places Active:</strong> Discovery sweeps now pull real business data from Google Places API. 
+                        Configure your targeting criteria above and run a sweep to find leads matching your ideal customer profile.
                     </div>
                 </div>
             </div>

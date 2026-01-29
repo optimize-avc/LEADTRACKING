@@ -125,12 +125,10 @@ env:
     #       - RUNTIME
 
     # Google Places API - For AI Lead Discovery
-    # To add: firebase apphosting:secrets:set GOOGLE_PLACES_API_KEY
-    # Setup: Enable "Places API (New)" in Google Cloud Console
-    # - variable: GOOGLE_PLACES_API_KEY
-    #   secret: GOOGLE_PLACES_API_KEY
-    #   availability:
-    #       - RUNTIME
+    - variable: GOOGLE_PLACES_API_KEY
+      secret: GOOGLE_PLACES_API_KEY
+      availability:
+          - RUNTIME
 
     # ============================================
     # AI API Keys (for Lead Scoring & Analysis)

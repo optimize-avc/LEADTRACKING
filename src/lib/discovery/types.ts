@@ -219,7 +219,7 @@ export function rawToDiscoveredLead(
             city: raw.city || 'Unknown',
             state: raw.state || 'Unknown',
             country: raw.country || 'US',
-            coordinates: raw.coordinates,
+            coordinates: raw.coordinates || null,
         },
         verification: {
             status: 'pending',

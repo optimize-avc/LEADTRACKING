@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { getAuthContext, isAdmin } from '@/lib/api/auth-helpers';
 import twilio from 'twilio';
 
 // POST: Save Twilio configuration for a company
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
-        const { userId, companyId, accountSid, authToken, phoneNumber } = body;
-
-        if (!userId || !companyId) {
-            return NextResponse.json({ error: 'Missing userId or companyId' }, { status: 400 });
+        // Verify authentication and get company context
+        const authContext = await getAuthContext(request);
+        if (!authContext) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Only admins/owners can update settings
+        if (!isAdmin(authContext)) {
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { accountSid, authToken, phoneNumber } = body;
 
         // Validate credentials by making a test API call
         if (accountSid && authToken) {
@@ -30,18 +38,7 @@ export async function POST(request: NextRequest) {
         }
 
         const db = getAdminDb();
-        const companyRef = db.collection('companies').doc(companyId);
-
-        // Get current company to verify ownership
-        const companySnap = await companyRef.get();
-        if (!companySnap.exists) {
-            return NextResponse.json({ error: 'Company not found' }, { status: 404 });
-        }
-
-        const companyData = companySnap.data();
-        if (companyData?.ownerId !== userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        const companyRef = db.collection('companies').doc(authContext.companyId);
 
         // Update Twilio config
         const twilioConfig = {
@@ -71,27 +68,19 @@ export async function POST(request: NextRequest) {
 // DELETE: Clear Twilio configuration for a company
 export async function DELETE(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId');
-        const companyId = searchParams.get('companyId');
+        // Verify authentication and get company context
+        const authContext = await getAuthContext(request);
+        if (!authContext) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-        if (!userId || !companyId) {
-            return NextResponse.json({ error: 'Missing userId or companyId' }, { status: 400 });
+        // Only admins/owners can update settings
+        if (!isAdmin(authContext)) {
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
         const db = getAdminDb();
-        const companyRef = db.collection('companies').doc(companyId);
-
-        // Get current company to verify ownership
-        const companySnap = await companyRef.get();
-        if (!companySnap.exists) {
-            return NextResponse.json({ error: 'Company not found' }, { status: 404 });
-        }
-
-        const companyData = companySnap.data();
-        if (companyData?.ownerId !== userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        const companyRef = db.collection('companies').doc(authContext.companyId);
 
         // Clear Twilio config
         await companyRef.update({
@@ -112,15 +101,14 @@ export async function DELETE(request: NextRequest) {
 // GET: Get Twilio status for a company
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const companyId = searchParams.get('companyId');
-
-        if (!companyId) {
-            return NextResponse.json({ error: 'Missing companyId' }, { status: 400 });
+        // Verify authentication and get company context
+        const authContext = await getAuthContext(request);
+        if (!authContext) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const db = getAdminDb();
-        const companySnap = await db.collection('companies').doc(companyId).get();
+        const companySnap = await db.collection('companies').doc(authContext.companyId).get();
 
         if (!companySnap.exists) {
             return NextResponse.json({ error: 'Company not found' }, { status: 404 });

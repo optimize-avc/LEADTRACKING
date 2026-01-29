@@ -357,13 +357,20 @@ POST   /api/discovery/discord/test      - Send test message to channel
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 Discover Page - AI Results Tab (`/discover`)
+### 5.2 Discover Page Tabs (`/discover`)
+
+**Navigation:** Discover is accessible from sidebar. Tabs are internal to the page (not in sidebar).
+
+**Tab Structure:**
+1. **Manual Search** - User-initiated business searches (current functionality)
+2. **AI Discovered** - Automated sweep results, daily feed of AI-found leads
+3. **Watchlist** - Saved/bookmarked businesses not yet in pipeline (staging area)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ 🔍 Discover                                                     │
 │                                                                 │
-│ [Manual Search]  [✨ AI Discovered]                             │
+│ [Manual Search]  [✨ AI Discovered]  [👁️ Watchlist]             │
 │                  ━━━━━━━━━━━━━━━━━                              │
 │                                                                 │
 │ 12 new leads found · Last sweep: 2 hours ago    [🔄 Refresh]   │
@@ -381,7 +388,7 @@ POST   /api/discovery/discord/test      - Send test message to channel
 │ │                                                             │ │
 │ │ Sources: LinkedIn · Google · Indeed                         │ │
 │ │                                                             │ │
-│ │ [➕ Add to Pipeline]  [👁️ View Details]  [✖️ Dismiss]       │ │
+│ │ [➕ Add to Pipeline]  [👁️ Watchlist]  [✖️ Dismiss]            │ │
 │ └─────────────────────────────────────────────────────────────┘ │
 │                                                                 │
 │ ┌─────────────────────────────────────────────────────────────┐ │

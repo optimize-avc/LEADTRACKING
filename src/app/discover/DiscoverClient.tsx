@@ -5,21 +5,53 @@ import { BusinessSearch } from '@/components/discover/BusinessSearch';
 import { AuditResultCard } from '@/components/discover/AuditResultCard';
 import { BusinessAuditResult } from '@/lib/ai/business-audit';
 import { Resource, Lead } from '@/types';
+import { DiscoveredLead } from '@/types/discovery';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { ResourcesService } from '@/lib/firebase/resources';
 import { LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
-import { Compass, Sparkles, Search, Target, TrendingUp, FileSearch, Loader2 } from 'lucide-react';
+import {
+    Compass,
+    Sparkles,
+    Search,
+    Target,
+    TrendingUp,
+    FileSearch,
+    Loader2,
+    Bot,
+    Bookmark,
+    Building2,
+    MapPin,
+    ExternalLink,
+    Plus,
+    X,
+    Eye,
+    RefreshCw,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+type TabType = 'manual' | 'ai-discovered' | 'watchlist';
 
 export default function DiscoverClient() {
     const { user, loading: authLoading } = useAuth();
     const [userToken, setUserToken] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<TabType>('manual');
+
+    // Manual search state
     const [resources, setResources] = useState<Resource[]>([]);
     const [isLoadingResources, setIsLoadingResources] = useState(false);
     const [auditResult, setAuditResult] = useState<BusinessAuditResult | null>(null);
     const [isAuditing, setIsAuditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // AI Discovered state
+    const [discoveredLeads, setDiscoveredLeads] = useState<DiscoveredLead[]>([]);
+    const [isLoadingDiscovered, setIsLoadingDiscovered] = useState(false);
+    const [discoveredTotal, setDiscoveredTotal] = useState(0);
+
+    // Watchlist state
+    const [watchlistLeads, setWatchlistLeads] = useState<DiscoveredLead[]>([]);
+    const [isLoadingWatchlist, setIsLoadingWatchlist] = useState(false);
 
     // Get auth token
     useEffect(() => {
@@ -35,24 +67,67 @@ export default function DiscoverClient() {
 
             setIsLoadingResources(true);
             try {
-                // Load both user's private resources and company resources
                 const [userResources, companyResources] = await Promise.all([
                     ResourcesService.getUserResources(user.uid),
                     ResourcesService.getCompanyResources(),
                 ]);
-
-                // Combine and dedupe
-                const allResources = [...userResources, ...companyResources];
-                setResources(allResources);
+                setResources([...userResources, ...companyResources]);
             } catch (error) {
                 console.error('Failed to load resources:', error);
             } finally {
                 setIsLoadingResources(false);
             }
         }
-
         loadResources();
     }, [user?.uid]);
+
+    // Load discovered leads when tab changes
+    useEffect(() => {
+        if (activeTab === 'ai-discovered' && user && userToken) {
+            loadDiscoveredLeads();
+        } else if (activeTab === 'watchlist' && user && userToken) {
+            loadWatchlistLeads();
+        }
+    }, [activeTab, user, userToken]);
+
+    const loadDiscoveredLeads = async () => {
+        if (!userToken) return;
+        setIsLoadingDiscovered(true);
+        try {
+            const response = await fetch('/api/discovery/leads?status=new&limit=50', {
+                headers: { Authorization: `Bearer ${userToken}` },
+            });
+            const data = await response.json();
+            if (data.leads) {
+                setDiscoveredLeads(data.leads);
+                setDiscoveredTotal(data.total);
+            }
+        } catch (error) {
+            console.error('Failed to load discovered leads:', error);
+            toast.error('Failed to load discovered leads');
+        } finally {
+            setIsLoadingDiscovered(false);
+        }
+    };
+
+    const loadWatchlistLeads = async () => {
+        if (!userToken) return;
+        setIsLoadingWatchlist(true);
+        try {
+            const response = await fetch('/api/discovery/leads?status=reviewed&limit=50', {
+                headers: { Authorization: `Bearer ${userToken}` },
+            });
+            const data = await response.json();
+            if (data.leads) {
+                setWatchlistLeads(data.leads);
+            }
+        } catch (error) {
+            console.error('Failed to load watchlist:', error);
+            toast.error('Failed to load watchlist');
+        } finally {
+            setIsLoadingWatchlist(false);
+        }
+    };
 
     const handleAuditStart = () => {
         setIsAuditing(true);
@@ -75,15 +150,14 @@ export default function DiscoverClient() {
             const leadData = {
                 companyName: audit.companyName,
                 contactName: audit.overview.keyPeople[0]?.split(' - ')[0] || 'Unknown',
-                email: '', // Would need to be enriched separately
+                email: '',
                 phone: '',
-                value: 0, // User can update later
+                value: 0,
                 status: 'New' as const,
                 industry: audit.overview.industry,
                 source: 'Business Intelligence',
                 notes: `Enriched via AI audit on ${new Date(audit.auditedAt).toLocaleDateString()}`,
                 tags: ['ai-enriched', audit.overview.industry.toLowerCase().replace(/\s+/g, '-')],
-                // Store full enrichment data
                 enrichmentData: {
                     overview: audit.overview,
                     digitalPresence: audit.digitalPresence,
@@ -112,10 +186,77 @@ export default function DiscoverClient() {
         }
     };
 
+    const handleDiscoveredLeadAction = async (
+        lead: DiscoveredLead,
+        action: 'pipeline' | 'watchlist' | 'dismiss'
+    ) => {
+        if (!userToken) return;
+
+        try {
+            let status: string;
+            let pipelineLeadId: string | undefined;
+
+            if (action === 'pipeline') {
+                // First create the pipeline lead
+                const leadData = {
+                    companyName: lead.businessName,
+                    contactName: lead.contacts[0]?.name || 'Unknown',
+                    email: lead.contacts[0]?.email || '',
+                    phone: lead.contacts[0]?.phone || '',
+                    value: 0,
+                    status: 'New' as const,
+                    industry: lead.industry,
+                    source: 'AI Discovery',
+                    notes: lead.aiAnalysis.summary,
+                    tags: ['ai-discovered'],
+                };
+                const newLead = await LeadsService.createLead(user!.uid, leadData as Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>);
+                pipelineLeadId = newLead.id;
+                status = 'added_to_pipeline';
+                toast.success(`${lead.businessName} added to pipeline!`);
+            } else if (action === 'watchlist') {
+                status = 'reviewed';
+                toast.success(`${lead.businessName} added to watchlist`);
+            } else {
+                status = 'dismissed';
+                toast.info(`${lead.businessName} dismissed`);
+            }
+
+            await fetch('/api/discovery/leads', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${userToken}`,
+                },
+                body: JSON.stringify({
+                    leadId: lead.id,
+                    status,
+                    pipelineLeadId,
+                }),
+            });
+
+            // Refresh the lists
+            if (activeTab === 'ai-discovered') {
+                loadDiscoveredLeads();
+            } else {
+                loadWatchlistLeads();
+            }
+        } catch (error) {
+            console.error('Failed to update lead:', error);
+            toast.error('Failed to update lead');
+        }
+    };
+
+    const tabs = [
+        { id: 'manual' as TabType, label: 'Manual Search', icon: Search },
+        { id: 'ai-discovered' as TabType, label: 'AI Discovered', icon: Bot, badge: discoveredTotal > 0 ? discoveredTotal : undefined },
+        { id: 'watchlist' as TabType, label: 'Watchlist', icon: Bookmark },
+    ];
+
     return (
         <div className="min-h-screen p-8">
             {/* Header */}
-            <header className="max-w-4xl mx-auto text-center mb-12">
+            <header className="max-w-5xl mx-auto text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500/10 border border-violet-500/30 rounded-full text-violet-300 text-sm mb-6">
                     <Sparkles className="w-4 h-4" />
                     AI-Powered Business Intelligence
@@ -126,21 +267,146 @@ export default function DiscoverClient() {
                 </h1>
 
                 <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                    Deep-audit any business in seconds. Get AI-powered insights on their digital
-                    presence, pain points, and exactly how you can help them.
+                    Find new leads with manual search, automated AI discovery, or track businesses on your watchlist.
                 </p>
             </header>
 
+            {/* Tabs */}
+            <div className="max-w-5xl mx-auto mb-8">
+                <div className="flex gap-2 p-1.5 bg-slate-800/50 rounded-xl border border-slate-700/50 w-fit mx-auto">
+                    {tabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                                    isActive
+                                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/25'
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                }`}
+                            >
+                                <Icon className="w-4 h-4" />
+                                {tab.label}
+                                {tab.badge && (
+                                    <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                        isActive ? 'bg-white/20' : 'bg-violet-500/30 text-violet-300'
+                                    }`}>
+                                        {tab.badge}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Tab Content */}
+            <AnimatePresence mode="wait">
+                {activeTab === 'manual' && (
+                    <motion.div
+                        key="manual"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <ManualSearchTab
+                            resources={resources}
+                            isLoadingResources={isLoadingResources}
+                            auditResult={auditResult}
+                            isAuditing={isAuditing}
+                            isSaving={isSaving}
+                            userToken={userToken}
+                            user={user}
+                            authLoading={authLoading}
+                            onAuditStart={handleAuditStart}
+                            onAuditComplete={handleAuditComplete}
+                            onSaveToPipeline={handleSaveToPipeline}
+                        />
+                    </motion.div>
+                )}
+
+                {activeTab === 'ai-discovered' && (
+                    <motion.div
+                        key="ai-discovered"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <AIDiscoveredTab
+                            leads={discoveredLeads}
+                            isLoading={isLoadingDiscovered}
+                            total={discoveredTotal}
+                            onRefresh={loadDiscoveredLeads}
+                            onAction={handleDiscoveredLeadAction}
+                            user={user}
+                        />
+                    </motion.div>
+                )}
+
+                {activeTab === 'watchlist' && (
+                    <motion.div
+                        key="watchlist"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <WatchlistTab
+                            leads={watchlistLeads}
+                            isLoading={isLoadingWatchlist}
+                            onRefresh={loadWatchlistLeads}
+                            onAction={handleDiscoveredLeadAction}
+                            user={user}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+// ============================================
+// Manual Search Tab
+// ============================================
+interface ManualSearchTabProps {
+    resources: Resource[];
+    isLoadingResources: boolean;
+    auditResult: BusinessAuditResult | null;
+    isAuditing: boolean;
+    isSaving: boolean;
+    userToken: string | null;
+    user: any;
+    authLoading: boolean;
+    onAuditStart: () => void;
+    onAuditComplete: (result: BusinessAuditResult) => void;
+    onSaveToPipeline: (audit: BusinessAuditResult) => void;
+}
+
+function ManualSearchTab({
+    resources,
+    isLoadingResources,
+    auditResult,
+    isAuditing,
+    isSaving,
+    userToken,
+    user,
+    authLoading,
+    onAuditStart,
+    onAuditComplete,
+    onSaveToPipeline,
+}: ManualSearchTabProps) {
+    return (
+        <>
             {/* Search Section */}
             <section className="max-w-4xl mx-auto mb-12">
                 <BusinessSearch
-                    onAuditStart={handleAuditStart}
-                    onAuditComplete={handleAuditComplete}
+                    onAuditStart={onAuditStart}
+                    onAuditComplete={onAuditComplete}
                     resources={resources}
                     userToken={userToken}
                 />
 
-                {/* Loading resources indicator */}
                 {isLoadingResources && (
                     <div className="mt-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -148,7 +414,6 @@ export default function DiscoverClient() {
                     </div>
                 )}
 
-                {/* Resources loaded indicator */}
                 {!isLoadingResources && resources.length > 0 && !auditResult && !isAuditing && (
                     <div className="mt-4 text-center text-xs text-slate-500">
                         <FileSearch className="w-3 h-3 inline mr-1" />
@@ -180,8 +445,7 @@ export default function DiscoverClient() {
                                 Conducting Deep Audit
                             </h3>
                             <p className="text-slate-400">
-                                Searching the web, analyzing their digital presence, and generating
-                                insights...
+                                Searching the web, analyzing their digital presence, and generating insights...
                             </p>
                         </div>
                     </motion.section>
@@ -196,7 +460,7 @@ export default function DiscoverClient() {
                     >
                         <AuditResultCard
                             audit={auditResult}
-                            onSaveToPipeline={handleSaveToPipeline}
+                            onSaveToPipeline={onSaveToPipeline}
                             isSaving={isSaving}
                         />
                     </motion.section>
@@ -230,8 +494,7 @@ export default function DiscoverClient() {
             {!authLoading && !user && (
                 <div className="max-w-md mx-auto mt-12 p-6 glass-card text-center">
                     <p className="text-slate-400 mb-4">
-                        Sign in to save leads to your pipeline and use your enablement materials for
-                        context.
+                        Sign in to save leads to your pipeline and use your enablement materials for context.
                     </p>
                     <button
                         onClick={() => (window.location.href = '/login')}
@@ -241,10 +504,297 @@ export default function DiscoverClient() {
                     </button>
                 </div>
             )}
+        </>
+    );
+}
+
+// ============================================
+// AI Discovered Tab
+// ============================================
+interface AIDiscoveredTabProps {
+    leads: DiscoveredLead[];
+    isLoading: boolean;
+    total: number;
+    onRefresh: () => void;
+    onAction: (lead: DiscoveredLead, action: 'pipeline' | 'watchlist' | 'dismiss') => void;
+    user: any;
+}
+
+function AIDiscoveredTab({ leads, isLoading, total, onRefresh, onAction, user }: AIDiscoveredTabProps) {
+    if (!user) {
+        return (
+            <div className="max-w-md mx-auto p-8 glass-card text-center">
+                <Bot className="w-12 h-12 text-violet-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Sign In Required</h3>
+                <p className="text-slate-400 mb-4">
+                    Sign in to see AI-discovered leads based on your targeting criteria.
+                </p>
+                <button onClick={() => (window.location.href = '/login')} className="glass-button">
+                    Sign In
+                </button>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="max-w-4xl mx-auto">
+                <div className="glass-card p-12 text-center">
+                    <Loader2 className="w-12 h-12 text-violet-400 mx-auto mb-4 animate-spin" />
+                    <h3 className="text-xl font-semibold text-white mb-2">Loading Discovered Leads</h3>
+                    <p className="text-slate-400">Fetching AI-discovered businesses...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (leads.length === 0) {
+        return (
+            <div className="max-w-lg mx-auto p-8 glass-card text-center">
+                <Bot className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No Leads Discovered Yet</h3>
+                <p className="text-slate-400 mb-6">
+                    Configure your targeting criteria and run a sweep to discover new leads automatically.
+                </p>
+                <a
+                    href="/settings/discovery"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                >
+                    <Target className="w-4 h-4" />
+                    Configure Discovery
+                </a>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-lg font-semibold text-white">
+                        {total} new lead{total !== 1 ? 's' : ''} discovered
+                    </h2>
+                    <p className="text-sm text-slate-400">Review and add to your pipeline or watchlist</p>
+                </div>
+                <button
+                    onClick={onRefresh}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
+                >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                </button>
+            </div>
+
+            {/* Leads Grid */}
+            <div className="space-y-4">
+                {leads.map((lead) => (
+                    <DiscoveredLeadCard key={lead.id} lead={lead} onAction={onAction} />
+                ))}
+            </div>
         </div>
     );
 }
 
+// ============================================
+// Watchlist Tab
+// ============================================
+interface WatchlistTabProps {
+    leads: DiscoveredLead[];
+    isLoading: boolean;
+    onRefresh: () => void;
+    onAction: (lead: DiscoveredLead, action: 'pipeline' | 'watchlist' | 'dismiss') => void;
+    user: any;
+}
+
+function WatchlistTab({ leads, isLoading, onRefresh, onAction, user }: WatchlistTabProps) {
+    if (!user) {
+        return (
+            <div className="max-w-md mx-auto p-8 glass-card text-center">
+                <Bookmark className="w-12 h-12 text-violet-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Sign In Required</h3>
+                <p className="text-slate-400 mb-4">
+                    Sign in to view your watchlist of saved businesses.
+                </p>
+                <button onClick={() => (window.location.href = '/login')} className="glass-button">
+                    Sign In
+                </button>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="max-w-4xl mx-auto">
+                <div className="glass-card p-12 text-center">
+                    <Loader2 className="w-12 h-12 text-violet-400 mx-auto mb-4 animate-spin" />
+                    <h3 className="text-xl font-semibold text-white mb-2">Loading Watchlist</h3>
+                    <p className="text-slate-400">Fetching your saved businesses...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (leads.length === 0) {
+        return (
+            <div className="max-w-lg mx-auto p-8 glass-card text-center">
+                <Bookmark className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Watchlist Empty</h3>
+                <p className="text-slate-400">
+                    Save businesses from AI Discovered or Manual Search to track them here before adding to your pipeline.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-lg font-semibold text-white">
+                        {leads.length} business{leads.length !== 1 ? 'es' : ''} on watchlist
+                    </h2>
+                    <p className="text-sm text-slate-400">Businesses you&apos;re tracking before committing to pipeline</p>
+                </div>
+                <button
+                    onClick={onRefresh}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors"
+                >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                </button>
+            </div>
+
+            {/* Leads Grid */}
+            <div className="space-y-4">
+                {leads.map((lead) => (
+                    <DiscoveredLeadCard key={lead.id} lead={lead} onAction={onAction} isWatchlist />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ============================================
+// Discovered Lead Card
+// ============================================
+interface DiscoveredLeadCardProps {
+    lead: DiscoveredLead;
+    onAction: (lead: DiscoveredLead, action: 'pipeline' | 'watchlist' | 'dismiss') => void;
+    isWatchlist?: boolean;
+}
+
+function DiscoveredLeadCard({ lead, onAction, isWatchlist }: DiscoveredLeadCardProps) {
+    const matchColor =
+        lead.aiAnalysis.matchScore >= 80
+            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+            : lead.aiAnalysis.matchScore >= 60
+            ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30'
+            : 'text-slate-400 bg-slate-500/10 border-slate-500/30';
+
+    return (
+        <div className="glass-card p-6 hover:bg-slate-800/60 transition-colors">
+            <div className="flex items-start gap-4">
+                {/* Icon */}
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-700/50 rounded-xl flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-violet-400" />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h3 className="text-lg font-semibold text-white truncate">
+                                {lead.businessName}
+                            </h3>
+                            <div className="flex items-center gap-3 text-sm text-slate-400 mt-1">
+                                <span>{lead.industry}</span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {lead.location.city}, {lead.location.state}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Match Score */}
+                        <div className={`px-3 py-1.5 rounded-full border ${matchColor} text-sm font-medium`}>
+                            {lead.aiAnalysis.matchScore}% match
+                        </div>
+                    </div>
+
+                    {/* AI Summary */}
+                    <p className="text-slate-300 mt-3 line-clamp-2">{lead.aiAnalysis.summary}</p>
+
+                    {/* Match Reasons */}
+                    {lead.aiAnalysis.matchReasons.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                            {lead.aiAnalysis.matchReasons.slice(0, 3).map((reason, i) => (
+                                <span
+                                    key={i}
+                                    className="px-2 py-1 text-xs bg-violet-500/10 text-violet-300 rounded-full"
+                                >
+                                    {reason}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Contact & Actions */}
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700/50">
+                        <div className="flex items-center gap-4 text-sm text-slate-400">
+                            {lead.contacts[0] && (
+                                <span>{lead.contacts[0].name}</span>
+                            )}
+                            {lead.website && (
+                                <a
+                                    href={lead.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 hover:text-violet-400 transition-colors"
+                                >
+                                    <ExternalLink className="w-3 h-3" />
+                                    Website
+                                </a>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => onAction(lead, 'pipeline')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add to Pipeline
+                            </button>
+                            {!isWatchlist && (
+                                <button
+                                    onClick={() => onAction(lead, 'watchlist')}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                                >
+                                    <Bookmark className="w-4 h-4" />
+                                    Watchlist
+                                </button>
+                            )}
+                            <button
+                                onClick={() => onAction(lead, 'dismiss')}
+                                className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Dismiss"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ============================================
+// Feature Card
+// ============================================
 function FeatureCard({
     icon,
     title,

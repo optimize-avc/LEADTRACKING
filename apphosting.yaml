@@ -124,6 +124,14 @@ env:
     #   availability:
     #       - RUNTIME
 
+    # Google Places API - For AI Lead Discovery
+    # To add: firebase apphosting:secrets:set GOOGLE_PLACES_API_KEY
+    # Setup: Enable "Places API (New)" in Google Cloud Console
+    # - variable: GOOGLE_PLACES_API_KEY
+    #   secret: GOOGLE_PLACES_API_KEY
+    #   availability:
+    #       - RUNTIME
+
     # SendGrid - COMMENTED OUT (not yet in Secret Manager)
     # - variable: SENDGRID_API_KEY
     #   secret: SENDGRID_API_KEY

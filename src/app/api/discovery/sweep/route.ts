@@ -7,7 +7,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { DiscoverySweep, DiscoveredLead } from '@/types/discovery';
+import { DiscoverySweep, DiscoveredLead, TargetingCriteria } from '@/types/discovery';
+import { 
+    getGooglePlacesCollector, 
+    isGooglePlacesConfigured 
+} from '@/lib/discovery/googlePlaces';
+import {
+    RawBusinessData,
+    createDedupeKey,
+    mergeBusinessData,
+    rawToDiscoveredLead,
+    CollectorSearchResult,
+} from '@/lib/discovery/types';
 
 async function getCompanyIdFromToken(request: NextRequest): Promise<{ companyId: string; userId: string } | null> {
     const authHeader = request.headers.get('authorization');
@@ -38,91 +49,298 @@ async function getCompanyIdFromToken(request: NextRequest): Promise<{ companyId:
     }
 }
 
-/**
- * Generate mock leads for Phase 1 testing
- */
-function generateMockLeads(
-    companyId: string,
-    profileId: string,
-    sweepId: string,
-    count: number
-): Omit<DiscoveredLead, 'id'>[] {
-    const industries = ['Manufacturing', 'Healthcare', 'Technology', 'Retail', 'Construction'];
-    const cities = ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth'];
-    const painPoints = [
-        'Outdated equipment needs replacement',
-        'High energy costs impacting margins',
-        'Struggling with digital transformation',
-        'Customer retention challenges',
-        'Manual processes slowing growth',
-    ];
+// ========================================
+// Data Collection
+// ========================================
 
-    const leads: Omit<DiscoveredLead, 'id'>[] = [];
+/**
+ * Collect data from configured sources
+ * Returns deduplicated raw business data
+ */
+async function collectBusinessData(
+    criteria: TargetingCriteria,
+    maxLeads: number
+): Promise<{ businesses: RawBusinessData[]; apiCalls: number; usedMockData: boolean }> {
+    const allBusinesses: RawBusinessData[] = [];
+    let totalApiCalls = 0;
+    let usedMockData = false;
+
+    // Try Google Places first
+    if (isGooglePlacesConfigured()) {
+        console.log('[Sweep] Using Google Places for data collection');
+        const collector = getGooglePlacesCollector();
+        
+        try {
+            const result = await collector.search({
+                criteria,
+                maxResults: maxLeads,
+            });
+            
+            allBusinesses.push(...result.businesses);
+            totalApiCalls += result.metadata.apiCalls;
+            
+            console.log(`[Sweep] Google Places returned ${result.businesses.length} businesses`);
+        } catch (error) {
+            console.error('[Sweep] Google Places error:', error);
+            // Fall through to mock data
+        }
+    } else {
+        console.warn('[Sweep] Google Places API key not configured (GOOGLE_PLACES_API_KEY)');
+    }
+
+    // If we didn't get enough data, fall back to mock data (development/testing)
+    if (allBusinesses.length < 3) {
+        console.log('[Sweep] Insufficient data from APIs, generating mock data');
+        const mockData = generateMockBusinessData(criteria, Math.max(3, maxLeads - allBusinesses.length));
+        allBusinesses.push(...mockData);
+        usedMockData = true;
+    }
+
+    // Deduplicate
+    const deduped = deduplicateBusinesses(allBusinesses);
+    
+    console.log(`[Sweep] Collected ${allBusinesses.length} total, ${deduped.length} after dedup, ${totalApiCalls} API calls`);
+    
+    return {
+        businesses: deduped.slice(0, maxLeads),
+        apiCalls: totalApiCalls,
+        usedMockData,
+    };
+}
+
+/**
+ * Deduplicate businesses by name + location
+ */
+function deduplicateBusinesses(businesses: RawBusinessData[]): RawBusinessData[] {
+    const byKey = new Map<string, RawBusinessData[]>();
+    
+    for (const business of businesses) {
+        const key = createDedupeKey(business);
+        if (!byKey.has(key)) {
+            byKey.set(key, []);
+        }
+        byKey.get(key)!.push(business);
+    }
+    
+    // Merge duplicates
+    return Array.from(byKey.values()).map(records => 
+        records.length === 1 ? records[0] : mergeBusinessData(records)
+    );
+}
+
+// ========================================
+// Mock Data Generator (Fallback)
+// ========================================
+
+/**
+ * Generate mock business data when APIs aren't available
+ * This is for development/testing only
+ */
+function generateMockBusinessData(
+    criteria: TargetingCriteria,
+    count: number
+): RawBusinessData[] {
+    const industries = criteria.industries.length > 0 
+        ? criteria.industries 
+        : ['Manufacturing', 'Healthcare', 'Technology', 'Retail', 'Construction'];
+    
+    const cities = criteria.geography.cities.length > 0 
+        ? criteria.geography.cities 
+        : ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth'];
+    
+    const state = criteria.geography.states.length > 0 
+        ? criteria.geography.states[0] 
+        : 'TX';
+
+    const businesses: RawBusinessData[] = [];
 
     for (let i = 0; i < count; i++) {
         const industry = industries[Math.floor(Math.random() * industries.length)];
         const city = cities[Math.floor(Math.random() * cities.length)];
-        const matchScore = Math.floor(70 + Math.random() * 30);
+        const rating = 3.5 + Math.random() * 1.5; // 3.5 - 5.0
+        const reviewCount = Math.floor(10 + Math.random() * 200);
 
-        leads.push({
-            companyId,
-            discoveryProfileId: profileId,
-            businessName: `${city} ${industry} Solutions ${i + 1}`,
+        businesses.push({
+            externalId: `mock-${Date.now()}-${i}`,
+            name: `${city} ${industry} Solutions ${i + 1}`,
             industry,
-            website: `https://www.${city.toLowerCase()}${industry.toLowerCase().replace(' ', '')}${i + 1}.com`,
-            contacts: [
-                {
-                    name: `John Smith ${i + 1}`,
-                    title: 'Operations Manager',
-                    email: `jsmith@${city.toLowerCase()}${industry.toLowerCase().replace(' ', '')}${i + 1}.com`,
-                    phone: `(${Math.floor(200 + Math.random() * 800)}) 555-${String(Math.floor(1000 + Math.random() * 9000))}`,
-                    linkedin: null,
-                },
-            ],
-            location: {
-                address: `${Math.floor(100 + Math.random() * 9900)} Main Street`,
-                city,
-                state: 'TX',
-                country: 'US',
-            },
-            aiAnalysis: {
-                matchScore,
-                matchReasons: [
-                    `In target industry (${industry})`,
-                    `Located in target geography (${city}, TX)`,
-                    matchScore > 85 ? 'Strong buying signals detected' : 'Moderate fit based on profile',
-                ],
-                painPointsIdentified: [painPoints[Math.floor(Math.random() * painPoints.length)]],
-                buyingSignals: matchScore > 85 ? ['Recent expansion', 'Hiring for new roles'] : [],
-                summary: `${city} ${industry} company showing ${matchScore > 85 ? 'strong' : 'moderate'} alignment with targeting criteria. Recently mentioned ${painPoints[Math.floor(Math.random() * painPoints.length)].toLowerCase()} in public communications.`,
-            },
-            verification: {
-                status: 'verified',
-                verifiedAt: Date.now(),
-                checks: {
-                    websiteExists: true,
-                    phoneValid: true,
-                    emailValid: true,
-                    businessRegistered: true,
-                },
-            },
-            sources: [
-                {
-                    type: 'google',
-                    url: 'https://google.com/search?q=...',
-                    foundAt: Date.now() - 60000,
-                },
-            ],
-            status: 'new',
-            sweepId,
-            discoveredAt: Date.now(),
-            reviewedAt: null,
-            reviewedBy: null,
+            website: `https://www.${city.toLowerCase().replace(/\s+/g, '')}${industry.toLowerCase().replace(/\s+/g, '')}${i + 1}.com`,
+            address: `${Math.floor(100 + Math.random() * 9900)} Main Street`,
+            city,
+            state,
+            country: 'US',
+            phone: `(${Math.floor(200 + Math.random() * 800)}) 555-${String(Math.floor(1000 + Math.random() * 9000))}`,
+            rating: Math.round(rating * 10) / 10,
+            reviewCount,
+            businessStatus: 'OPERATIONAL',
+            source: 'mock',
+            sourceUrl: 'https://example.com/mock',
+            fetchedAt: Date.now(),
         });
     }
 
-    return leads;
+    return businesses;
 }
+
+// ========================================
+// Lead Conversion (with placeholder AI analysis)
+// ========================================
+
+/**
+ * Convert raw business data to discovered leads
+ * Includes placeholder AI analysis (real AI analysis comes in Phase 3)
+ */
+function convertToDiscoveredLeads(
+    businesses: RawBusinessData[],
+    companyId: string,
+    profileId: string,
+    sweepId: string,
+    criteria: TargetingCriteria
+): Omit<DiscoveredLead, 'id'>[] {
+    return businesses.map((business, index) => {
+        // Calculate basic match score based on criteria alignment
+        const matchScore = calculateBasicMatchScore(business, criteria);
+        
+        // Build match reasons
+        const matchReasons: string[] = [];
+        if (criteria.industries.some(ind => 
+            business.industry?.toLowerCase().includes(ind.toLowerCase())
+        )) {
+            matchReasons.push(`In target industry (${business.industry})`);
+        }
+        if (business.city && criteria.geography.cities.some(city => 
+            city.toLowerCase() === business.city?.toLowerCase()
+        )) {
+            matchReasons.push(`Located in target city (${business.city})`);
+        }
+        if (business.state && criteria.geography.states.some(state => 
+            state.toLowerCase() === business.state?.toLowerCase()
+        )) {
+            matchReasons.push(`Located in target state (${business.state})`);
+        }
+        if (business.rating && business.rating >= 4.0) {
+            matchReasons.push(`High customer ratings (${business.rating}★)`);
+        }
+        if (business.reviewCount && business.reviewCount >= 50) {
+            matchReasons.push(`Established presence (${business.reviewCount}+ reviews)`);
+        }
+        if (matchReasons.length === 0) {
+            matchReasons.push('Basic criteria match');
+        }
+
+        // Generate summary
+        const summary = generateBasicSummary(business, matchScore, criteria);
+
+        const baseLead = rawToDiscoveredLead(business, companyId, profileId, sweepId);
+        
+        return {
+            ...baseLead,
+            aiAnalysis: {
+                matchScore,
+                matchReasons,
+                painPointsIdentified: [], // Will be filled by AI analysis in Phase 3
+                buyingSignals: business.rating && business.rating >= 4.5 && business.reviewCount && business.reviewCount >= 100
+                    ? ['Strong market presence']
+                    : [],
+                summary,
+            },
+            verification: {
+                status: 'verified' as const,
+                verifiedAt: Date.now(),
+                checks: {
+                    websiteExists: !!business.website,
+                    phoneValid: !!business.phone,
+                    emailValid: !!business.email,
+                    businessRegistered: business.businessStatus === 'OPERATIONAL',
+                },
+            },
+        };
+    });
+}
+
+/**
+ * Calculate basic match score without AI
+ */
+function calculateBasicMatchScore(
+    business: RawBusinessData,
+    criteria: TargetingCriteria
+): number {
+    let score = 50; // Base score
+    
+    // Industry match: +20
+    if (criteria.industries.length > 0 && business.industry) {
+        const industryMatch = criteria.industries.some(ind =>
+            business.industry!.toLowerCase().includes(ind.toLowerCase()) ||
+            ind.toLowerCase().includes(business.industry!.toLowerCase())
+        );
+        if (industryMatch) score += 20;
+    }
+    
+    // City match: +15
+    if (criteria.geography.cities.length > 0 && business.city) {
+        const cityMatch = criteria.geography.cities.some(city =>
+            city.toLowerCase() === business.city!.toLowerCase()
+        );
+        if (cityMatch) score += 15;
+    }
+    
+    // State match: +10
+    if (criteria.geography.states.length > 0 && business.state) {
+        const stateMatch = criteria.geography.states.some(state =>
+            state.toLowerCase() === business.state!.toLowerCase()
+        );
+        if (stateMatch) score += 10;
+    }
+    
+    // Good rating: +5-10
+    if (business.rating) {
+        if (business.rating >= 4.5) score += 10;
+        else if (business.rating >= 4.0) score += 5;
+    }
+    
+    // Established business (reviews): +5
+    if (business.reviewCount && business.reviewCount >= 50) {
+        score += 5;
+    }
+    
+    // Website exists: +5
+    if (business.website) {
+        score += 5;
+    }
+    
+    // Cap at 100
+    return Math.min(100, score);
+}
+
+/**
+ * Generate a basic summary without AI
+ */
+function generateBasicSummary(
+    business: RawBusinessData,
+    matchScore: number,
+    criteria: TargetingCriteria
+): string {
+    const strength = matchScore >= 85 ? 'strong' : matchScore >= 70 ? 'good' : 'moderate';
+    const location = [business.city, business.state].filter(Boolean).join(', ');
+    
+    let summary = `${business.name} is a ${business.industry || 'business'} in ${location || 'the target area'}`;
+    
+    if (business.rating && business.reviewCount) {
+        summary += ` with ${business.rating}★ rating from ${business.reviewCount} reviews`;
+    }
+    
+    summary += `. Shows ${strength} alignment with targeting criteria.`;
+    
+    if (business.website) {
+        summary += ` Has an active web presence.`;
+    }
+    
+    return summary;
+}
+
+// ========================================
+// API Handlers
+// ========================================
 
 export async function POST(request: NextRequest) {
     const auth = await getCompanyIdFromToken(request);
@@ -157,7 +375,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Check daily sweep limit (simple check)
+        // Check daily sweep limit
         const today = new Date().toISOString().split('T')[0];
         const startOfDay = new Date(today).getTime();
         const todaySweepsSnap = await db.collection('companies')
@@ -212,15 +430,30 @@ export async function POST(request: NextRequest) {
 
         await sweepRef.set(sweep);
 
-        // Generate mock leads (Phase 1)
-        const leadsCount = Math.floor(3 + Math.random() * 5); // 3-7 leads
-        const mockLeads = generateMockLeads(auth.companyId, 'current', sweepId, leadsCount);
+        // ========================================
+        // PHASE 2: Real Data Collection
+        // ========================================
+        
+        const maxLeads = 10; // Conservative limit for cost control
+        const criteria = profile.targetingCriteria as TargetingCriteria;
+        
+        // Collect business data from configured sources
+        const { businesses, apiCalls, usedMockData } = await collectBusinessData(criteria, maxLeads);
+        
+        // Convert to discovered leads
+        const leads = convertToDiscoveredLeads(
+            businesses,
+            auth.companyId,
+            'current',
+            sweepId,
+            criteria
+        );
 
         // Save leads
         const batch = db.batch();
         const leadIds: string[] = [];
         
-        for (const lead of mockLeads) {
+        for (const lead of leads) {
             const leadRef = db.collection('companies')
                 .doc(auth.companyId)
                 .collection('discoveredLeads')
@@ -229,33 +462,49 @@ export async function POST(request: NextRequest) {
             leadIds.push(leadRef.id);
         }
 
+        // Calculate estimated cost (Google Places: ~$0.032 per request for Basic)
+        const estimatedCost = apiCalls * 0.032;
+
         // Update sweep as completed
         batch.update(sweepRef, {
             status: 'completed',
             completedAt: Date.now(),
+            tokenUsage: {
+                tokensUsed: 0, // No LLM tokens yet (Phase 3)
+                apiCalls,
+                estimatedCostUSD: estimatedCost,
+                timestamp: Date.now(),
+            },
             results: {
-                sourcesSearched: 3,
-                rawResultsFound: leadsCount * 3,
-                afterDeduplication: leadsCount * 2,
-                afterVerification: leadsCount,
-                finalLeadsCount: leadsCount,
+                sourcesSearched: isGooglePlacesConfigured() ? 1 : 0,
+                rawResultsFound: businesses.length,
+                afterDeduplication: businesses.length,
+                afterVerification: leads.length,
+                finalLeadsCount: leads.length,
             },
         });
 
         // Update profile stats
         batch.update(profileRef, {
-            'stats.totalLeadsFound': FieldValue.increment(leadsCount),
-            'stats.lastSweepLeadsCount': leadsCount,
+            'stats.totalLeadsFound': FieldValue.increment(leads.length),
+            'stats.lastSweepLeadsCount': leads.length,
             'schedule.lastRunAt': now,
         });
 
         await batch.commit();
 
+        const message = usedMockData 
+            ? `Sweep completed with mock data. Found ${leads.length} leads. Configure GOOGLE_PLACES_API_KEY for real data.`
+            : `Sweep completed! Found ${leads.length} new leads from Google Places.`;
+
         return NextResponse.json({
             success: true,
             sweepId,
-            leadsFound: leadsCount,
-            message: `Sweep completed! Found ${leadsCount} new leads.`,
+            leadsFound: leads.length,
+            message,
+            dataSource: usedMockData ? 'mock' : 'google_places',
+            apiCalls,
+            estimatedCostUSD: estimatedCost,
         });
     } catch (error) {
         console.error('Error running sweep:', error);

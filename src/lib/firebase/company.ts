@@ -1,16 +1,11 @@
 import { getFirebaseDb } from './config';
 import {
-    collection,
     doc,
     getDoc,
-    setDoc,
     updateDoc,
-    query,
-    where,
-    getDocs,
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import type { Company, CompanySettings, DEFAULT_COMPANY_SETTINGS } from '@/types/company';
+import type { Company, CompanySettings } from '@/types/company';
 
 /**
  * CompanyService - Manages company/tenant data for multi-tenant SaaS
@@ -106,24 +101,31 @@ export const CompanyService = {
     },
 
     /**
-     * Update company settings
+     * Update company settings - Uses server-side API to bypass Firestore rules
      */
     async updateSettings(companyId: string, settings: Partial<CompanySettings>): Promise<void> {
-        const db = getFirebaseDb();
-        const companyRef = doc(db, 'companies', companyId);
+        const authToken = await getAuth().currentUser?.getIdToken();
 
-        // Merge settings with existing
-        const current = await getDoc(companyRef);
-        if (!current.exists()) {
-            throw new Error('Company not found');
+        if (!authToken) {
+            throw new Error('No auth token available');
         }
 
-        const currentSettings = current.data()?.settings || {};
-
-        await updateDoc(companyRef, {
-            settings: { ...currentSettings, ...settings },
-            updatedAt: Date.now(),
+        const response = await fetch('/api/company/settings', {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                companyId,
+                settings,
+            }),
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update settings');
+        }
     },
 
     /**
@@ -156,103 +158,162 @@ export const CompanyService = {
     },
 
     /**
-     * Update channel mapping
+     * Update channel mapping - Uses server-side API to bypass Firestore rules
      */
     async updateChannelMapping(
         companyId: string,
         channelMapping: Record<string, string>
     ): Promise<void> {
-        const db = getFirebaseDb();
-        const companyRef = doc(db, 'companies', companyId);
+        const authToken = await getAuth().currentUser?.getIdToken();
 
-        await updateDoc(companyRef, {
-            'settings.channelMapping': channelMapping,
-            updatedAt: Date.now(),
+        if (!authToken) {
+            throw new Error('No auth token available');
+        }
+
+        const response = await fetch('/api/company/settings', {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                companyId,
+                settings: { channelMapping },
+            }),
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update channel mapping');
+        }
     },
 
     /**
-     * Update email configuration (SendGrid)
+     * Update email configuration (SendGrid) - Uses server-side API
      */
     async updateEmailConfig(
         companyId: string,
         emailConfig: { sendgridApiKey?: string; fromEmail?: string; fromName?: string }
     ): Promise<void> {
-        const db = getFirebaseDb();
-        const companyRef = doc(db, 'companies', companyId);
+        const authToken = await getAuth().currentUser?.getIdToken();
 
-        // Get current settings to merge
-        const current = await getDoc(companyRef);
-        if (!current.exists()) {
-            throw new Error('Company not found');
+        if (!authToken) {
+            throw new Error('No auth token available');
         }
 
-        const currentSettings = current.data()?.settings || {};
-        const currentEmailConfig = currentSettings.emailConfig || {};
-
-        await updateDoc(companyRef, {
-            'settings.emailConfig': { ...currentEmailConfig, ...emailConfig },
-            updatedAt: Date.now(),
+        const response = await fetch('/api/company/settings', {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                companyId,
+                settings: { emailConfig },
+            }),
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update email config');
+        }
     },
 
     /**
      * Clear email configuration (reverts to platform defaults)
      */
     async clearEmailConfig(companyId: string): Promise<void> {
-        const db = getFirebaseDb();
-        const companyRef = doc(db, 'companies', companyId);
+        const authToken = await getAuth().currentUser?.getIdToken();
 
-        await updateDoc(companyRef, {
-            'settings.emailConfig': {},
-            updatedAt: Date.now(),
+        if (!authToken) {
+            throw new Error('No auth token available');
+        }
+
+        const response = await fetch('/api/company/settings', {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                companyId,
+                settings: { emailConfig: {} },
+            }),
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to clear email config');
+        }
     },
 
     /**
-     * Update Twilio configuration
+     * Update Twilio configuration - Uses server-side API
      */
     async updateTwilioConfig(
         companyId: string,
         twilioConfig: { accountSid?: string; authToken?: string; phoneNumber?: string }
     ): Promise<void> {
-        const db = getFirebaseDb();
-        const companyRef = doc(db, 'companies', companyId);
+        const authToken = await getAuth().currentUser?.getIdToken();
 
-        // Get current settings to merge
-        const current = await getDoc(companyRef);
-        if (!current.exists()) {
-            throw new Error('Company not found');
+        if (!authToken) {
+            throw new Error('No auth token available');
         }
 
-        const currentSettings = current.data()?.settings || {};
-        const currentTwilioConfig = currentSettings.twilioConfig || {};
+        // Add connection metadata
+        const configWithMeta = {
+            ...twilioConfig,
+            connected: !!(
+                twilioConfig.accountSid &&
+                twilioConfig.authToken &&
+                twilioConfig.phoneNumber
+            ),
+            connectedAt: Date.now(),
+        };
 
-        await updateDoc(companyRef, {
-            'settings.twilioConfig': {
-                ...currentTwilioConfig,
-                ...twilioConfig,
-                connected: !!(
-                    twilioConfig.accountSid &&
-                    twilioConfig.authToken &&
-                    twilioConfig.phoneNumber
-                ),
-                connectedAt: Date.now(),
+        const response = await fetch('/api/company/settings', {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
             },
-            updatedAt: Date.now(),
+            body: JSON.stringify({
+                companyId,
+                settings: { twilioConfig: configWithMeta },
+            }),
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update Twilio config');
+        }
     },
 
     /**
      * Clear Twilio configuration (reverts to platform defaults)
      */
     async clearTwilioConfig(companyId: string): Promise<void> {
-        const db = getFirebaseDb();
-        const companyRef = doc(db, 'companies', companyId);
+        const authToken = await getAuth().currentUser?.getIdToken();
 
-        await updateDoc(companyRef, {
-            'settings.twilioConfig': {},
-            updatedAt: Date.now(),
+        if (!authToken) {
+            throw new Error('No auth token available');
+        }
+
+        const response = await fetch('/api/company/settings', {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                companyId,
+                settings: { twilioConfig: {} },
+            }),
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to clear Twilio config');
+        }
     },
 };

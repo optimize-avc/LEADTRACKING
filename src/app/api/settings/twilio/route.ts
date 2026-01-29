@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
             await AuditService.logAction(
                 authContext.companyId,
                 authContext.userId,
-                authContext.userName || 'Unknown',
+                authContext.email || 'Unknown',
                 'settings.updated',
                 { type: 'settings', id: authContext.companyId, name: 'Twilio Configuration' },
                 { action: 'configured', phoneNumber: phoneNumber || 'not set' }
@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
             await AuditService.logAction(
                 authContext.companyId,
                 authContext.userId,
-                authContext.userName || 'Unknown',
+                authContext.email || 'Unknown',
                 'settings.updated',
                 { type: 'settings', id: authContext.companyId, name: 'Twilio Configuration' },
                 { action: 'cleared' }

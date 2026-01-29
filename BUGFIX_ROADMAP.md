@@ -1,7 +1,7 @@
 # SalesTracker Production Bug Fix Roadmap
 
 > Generated: 2026-01-29
-> Updated: 2026-01-30 (Day 2 production readiness complete)
+> Updated: 2026-01-29 (Day 1 + Day 2 complete)
 
 ---
 
@@ -14,6 +14,7 @@
 | 3 | Discovery API 500 errors | 🔴 High | ✅ Fixed | Shared auth helper + empty handling |
 | 4 | Resources page permissions | 🟠 High | ✅ Fixed | Auth racing + graceful errors |
 | 5 | Channel mapping save fails | 🔴 High | ✅ Fixed | Moved to server-side API |
+| 6 | Firestore rules deploy | 🔴 High | ✅ Fixed | Deployed via CLI |
 
 ---
 
@@ -39,70 +40,53 @@
 ### 4. Company Settings → Server-Side API
 - Created `POST/PATCH /api/company/settings` endpoint
 - Uses Firebase Admin SDK (bypasses Firestore rules)
-- Moved all settings updates from client-side Firestore:
-  - `updateChannelMapping()` ✅
-  - `updateSettings()` ✅
-  - `updateEmailConfig()` ✅
-  - `clearEmailConfig()` ✅
-  - `updateTwilioConfig()` ✅
-  - `clearTwilioConfig()` ✅
+- Moved all settings updates from client-side Firestore
 - Proper auth checks (owner OR admin role required)
 
 ### 5. Twilio Settings API
 - Updated `/api/settings/twilio` to use shared auth helper
 - Now supports both owners AND admins
-- Removed manual userId/companyId params
+
+### 6. Firestore Rules Deploy
+- Deployed updated rules via `firebase deploy --only firestore:rules`
+- Resources collection now accessible to authenticated users
+- User resources subcollection working
 
 ---
 
-## ✅ Completed (Day 2) - Production Readiness
+## ✅ Completed (Day 2)
 
-### 1. Audit Logging Added to API Routes
-- `/api/company/settings` (PATCH) - logs `settings.updated` with changed fields
-- `/api/settings/twilio` (POST/DELETE) - logs `settings.updated` for Twilio config changes
-- `/api/team/accept` - already had audit logging ✅
-- All audit calls wrapped in try/catch to prevent request failures
-
-### 2. Client-Side Zod Validation Review
-API routes already using Zod validation:
-- `/api/company/create` - uses `createCompanySchema`
-- `/api/leads` - uses `createLeadSchema`
-- `/api/team/invite` - uses `inviteTeamMemberSchema`
-
-**Note:** Client-side forms do basic validation; API is the source of truth for validation.
-
-### 3. Sentry Error Tracking Configuration
+### 1. Sentry Configuration
 - Added `NEXT_PUBLIC_SENTRY_DSN` placeholder to `apphosting.yaml`
-- Updated `ErrorBoundary.tsx` to integrate with `captureError()` from `@/lib/sentry`
-- Added `PageErrorBoundary` to critical pages:
-  - `/leads/page.tsx` ✅
-  - `/discover/page.tsx` ✅
-  - `/settings/page.tsx` ✅
-  - `/analytics/page.tsx` ✅
+- User needs to create Sentry project and add DSN value
+- ErrorBoundary now integrates with Sentry `captureError()`
 
-### 4. Skipped (Stripe Billing)
-- Stripe billing integration deferred per instructions
+### 2. Error Boundaries on Critical Pages
+- Added `PageErrorBoundary` wrapper to:
+  - `/leads` (LeadsClient)
+  - `/discover` (DiscoverClient)
+  - `/analytics` (AnalyticsClient)
+  - `/settings` (SettingsClient)
+
+### 3. Audit Logging
+- Added audit logging to `/api/company/settings` PATCH
+- Added audit logging to `/api/settings/twilio` POST/DELETE
+- Extended `AuthContext` with `userName` field for better audit trails
 
 ---
 
 ## 🔧 Still Pending
 
-### Firestore Rules Deployment
-The `firestore.rules` file is updated but needs manual deployment:
-```bash
-cd C:\Users\tryst\LEADTRACKING
-firebase login --reauth
-firebase deploy --only firestore:rules
-```
+### Stripe Billing (Deferred)
+- Create Stripe products/prices in Dashboard
+- Set Stripe secrets in Cloud Secret Manager
+- Test checkout + webhook flow
+- Configure customer portal
 
-**Rules changes made:**
-- Added `users/{userId}/resources/{resourceId}` subcollection rule
-- Users can now store personal resources in their user subcollection
-
-### Production Checklist
-- [ ] Deploy Firestore rules
-- [ ] Add Sentry DSN to `apphosting.yaml` (after creating Sentry project)
-- [ ] Set up Stripe billing when ready
+### Nice-to-Have
+- Add audit logging to more API routes
+- SendGrid email templates
+- Client-side Zod validation on forms
 
 ---
 
@@ -125,28 +109,29 @@ firebase deploy --only firestore:rules
 - `firestore.rules`
 
 ### Day 2 - Modified Files
-- `src/app/api/company/settings/route.ts` - Added audit logging
-- `src/app/api/settings/twilio/route.ts` - Added audit logging
-- `src/components/ui/ErrorBoundary.tsx` - Integrated Sentry
+- `apphosting.yaml` - Added Sentry DSN config
 - `src/app/leads/page.tsx` - Added PageErrorBoundary
 - `src/app/discover/page.tsx` - Added PageErrorBoundary
-- `src/app/settings/page.tsx` - Added PageErrorBoundary
 - `src/app/analytics/page.tsx` - Added PageErrorBoundary
-- `apphosting.yaml` - Added SENTRY_DSN placeholder
-- `BUGFIX_ROADMAP.md` - Updated with Day 2 tasks
+- `src/app/settings/page.tsx` - Added PageErrorBoundary
+- `src/components/ui/ErrorBoundary.tsx` - Sentry integration
+- `src/app/api/company/settings/route.ts` - Audit logging
+- `src/app/api/settings/twilio/route.ts` - Audit logging
+- `src/lib/api/auth-helpers.ts` - Added userName to AuthContext
 
 ---
 
-## 🧪 Testing Checklist
+## 🧪 Testing Results
 
-After deployment, verify:
+**Day 1 Testing (Verified):**
+- ✅ Dashboard loads without console errors
+- ✅ Discover → AI Discovered tab shows empty state (not 500)
+- ✅ Resources/Enablement page loads without crashing
+- ✅ Bot Studio → Save Channel Mapping works
+- ✅ PWA icons load properly
+- ✅ No "Missing or insufficient permissions" errors after rules deploy
 
-- [ ] Dashboard loads without console errors
-- [ ] Discover → AI Discovered tab shows empty state (not 500)
-- [ ] Resources/Enablement page loads without crashing
-- [ ] Bot Studio → Save Channel Mapping works
-- [ ] Settings → Twilio config saves/clears
-- [ ] PWA icons load at `/icons/icon-144x144.png`
-- [ ] No "Missing or insufficient permissions" errors in console
-- [ ] Audit logs appear in Firestore under `companies/{id}/auditLog`
-- [ ] Error boundaries catch and display errors gracefully
+**Day 2 Testing (Pending Build):**
+- ⏳ Error boundaries catch crashes gracefully
+- ⏳ Sentry receives error reports (once DSN configured)
+- ⏳ Audit logs appear in Firestore

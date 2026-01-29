@@ -585,20 +585,224 @@ POST   /api/discovery/discord/test      - Send test message to channel
 
 ---
 
-## 8. Cost Considerations
+## 8. Cost Considerations & Token Safety
 
-| Service | Estimated Cost | Notes |
-|---------|---------------|-------|
-| OpenAI GPT-4 | ~$0.50-2.00 per sweep | Depends on lead count |
-| Google Places API | ~$17/1000 requests | Basic place details |
-| Cloud Functions | ~$0.40/million invocations | Minimal |
-| Cloud Scheduler | Free (3 jobs/month) | One per company on paid? |
-| SendGrid | Free tier: 100/day | Or existing plan |
-| Web scraping | Variable | May need proxy service |
+### 8.1 Cost-Optimized Architecture
 
-**Estimate per sweep:** $1-5 depending on lead volume and sources used.
+**Philosophy:** AI is expensive. Use it surgically, not liberally.
 
-**Pricing strategy:** Include X sweeps/month in subscription tiers, charge for additional.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    COST OPTIMIZATION FUNNEL                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  STAGE 1: Free/Cheap Data Collection                           │
+│  ────────────────────────────────────                          │
+│  • Google Search (free via scraping)                           │
+│  • Public directories (free)                                   │
+│  • Cached results (free)                                       │
+│  → Output: ~500 raw candidates                                 │
+│                                                                 │
+│  STAGE 2: Rule-Based Filtering (NO AI)                         │
+│  ─────────────────────────────────────                         │
+│  • Location match? (string comparison)                         │
+│  • Industry keywords? (regex)                                  │
+│  • Company size in range? (number comparison)                  │
+│  • Already in pipeline? (DB lookup)                            │
+│  • Already dismissed? (DB lookup)                              │
+│  → Output: ~50 filtered candidates                             │
+│                                                                 │
+│  STAGE 3: Cheap AI Scoring (GPT-4o-mini / Gemini Flash)        │
+│  ──────────────────────────────────────────────────────        │
+│  • Batch process in single API call                            │
+│  • Simple relevance score 0-100                                │
+│  • ~$0.01 for 50 leads                                         │
+│  → Output: ~15 high-scoring leads                              │
+│                                                                 │
+│  STAGE 4: Smart AI Analysis (GPT-4o / Claude Sonnet)           │
+│  ───────────────────────────────────────────────────           │
+│  • Only for leads scoring 70+                                  │
+│  • Pain point identification                                   │
+│  • Buying signal detection                                     │
+│  • Summary generation                                          │
+│  • ~$0.10-0.20 for 15 leads                                    │
+│  → Output: Final enriched leads                                │
+│                                                                 │
+│  TOTAL COST PER SWEEP: ~$0.05 - $0.30                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 Token Safety Guardrails
+
+**Hard Limits (Non-negotiable)**
+
+```typescript
+// Global limits - stored in config, enforced in code
+const TOKEN_SAFETY = {
+  // Per-sweep limits
+  maxTokensPerSweep: 50_000,        // Hard cap per sweep
+  maxAPICallsPerSweep: 20,          // Max LLM calls per sweep
+  maxLeadsToAnalyze: 50,            // Never analyze more than this
+  
+  // Per-company daily limits
+  maxTokensPerCompanyPerDay: 100_000,
+  maxSweepsPerCompanyPerDay: 3,
+  
+  // Global platform limits (all companies combined)
+  maxTokensPerHour: 500_000,        // Platform-wide hourly cap
+  maxConcurrentSweeps: 5,           // Don't overload APIs
+  
+  // Cost circuit breaker
+  maxDailyCostUSD: 50.00,           // Platform-wide daily spend cap
+  alertThresholdUSD: 25.00,         // Alert admin at this point
+};
+```
+
+**Enforcement Layers**
+
+```typescript
+// Layer 1: Pre-sweep check
+async function canRunSweep(companyId: string): Promise<boolean> {
+  const usage = await getCompanyUsageToday(companyId);
+  
+  if (usage.sweepCount >= TOKEN_SAFETY.maxSweepsPerCompanyPerDay) {
+    throw new Error('Daily sweep limit reached');
+  }
+  if (usage.tokensUsed >= TOKEN_SAFETY.maxTokensPerCompanyPerDay) {
+    throw new Error('Daily token limit reached');
+  }
+  
+  const platformUsage = await getPlatformUsageToday();
+  if (platformUsage.costUSD >= TOKEN_SAFETY.maxDailyCostUSD) {
+    await alertAdmin('CIRCUIT BREAKER: Daily cost limit reached');
+    throw new Error('Platform cost limit reached');
+  }
+  
+  return true;
+}
+
+// Layer 2: Mid-sweep monitoring
+class TokenBudget {
+  private tokensUsed = 0;
+  private apiCalls = 0;
+  
+  consume(tokens: number) {
+    this.tokensUsed += tokens;
+    this.apiCalls++;
+    
+    if (this.tokensUsed > TOKEN_SAFETY.maxTokensPerSweep) {
+      throw new Error('Sweep token budget exceeded');
+    }
+    if (this.apiCalls > TOKEN_SAFETY.maxAPICallsPerSweep) {
+      throw new Error('Sweep API call limit exceeded');
+    }
+  }
+  
+  getRemaining() {
+    return TOKEN_SAFETY.maxTokensPerSweep - this.tokensUsed;
+  }
+}
+
+// Layer 3: Batch processing to minimize calls
+async function analyzeLeadsBatch(leads: Lead[], budget: TokenBudget) {
+  // Instead of 50 API calls, make 1 call with all leads
+  const prompt = buildBatchPrompt(leads); // All leads in one prompt
+  
+  const estimatedTokens = estimateTokens(prompt);
+  if (estimatedTokens > budget.getRemaining()) {
+    // Reduce batch size to fit budget
+    leads = leads.slice(0, Math.floor(leads.length * budget.getRemaining() / estimatedTokens));
+  }
+  
+  budget.consume(estimatedTokens);
+  return await callLLM(prompt);
+}
+```
+
+**Caching Strategy**
+
+```typescript
+// Cache everything possible
+const CACHE_CONFIG = {
+  // Business info cache (they don't change often)
+  businessInfoTTL: 7 * 24 * 60 * 60 * 1000,  // 7 days
+  
+  // AI analysis cache (reuse for same business)
+  aiAnalysisTTL: 30 * 24 * 60 * 60 * 1000,   // 30 days
+  
+  // Search results cache
+  searchResultsTTL: 24 * 60 * 60 * 1000,      // 24 hours
+};
+
+async function getBusinessAnalysis(businessId: string, data: BusinessData) {
+  // Check cache first
+  const cached = await cache.get(`analysis:${businessId}`);
+  if (cached && !isStale(cached, CACHE_CONFIG.aiAnalysisTTL)) {
+    return cached; // FREE!
+  }
+  
+  // Only call AI if not cached
+  const analysis = await analyzeWithAI(data);
+  await cache.set(`analysis:${businessId}`, analysis);
+  return analysis;
+}
+```
+
+**Usage Tracking & Alerts**
+
+```typescript
+// Collection: platform/usage/daily/{date}
+interface DailyUsage {
+  date: string;
+  totalTokens: number;
+  totalCostUSD: number;
+  sweepCount: number;
+  byCompany: {
+    [companyId: string]: {
+      tokens: number;
+      sweeps: number;
+      costUSD: number;
+    };
+  };
+}
+
+// Alert thresholds
+async function checkAndAlert(usage: DailyUsage) {
+  if (usage.totalCostUSD >= TOKEN_SAFETY.alertThresholdUSD) {
+    await notifyAdmin({
+      type: 'cost_warning',
+      message: `Daily spend at $${usage.totalCostUSD}`,
+      threshold: TOKEN_SAFETY.maxDailyCostUSD
+    });
+  }
+}
+```
+
+### 8.3 Revised Cost Estimates
+
+| Component | Cost | Notes |
+|-----------|------|-------|
+| Data collection | ~$0 | Free sources + caching |
+| Rule filtering | ~$0 | Pure code, no API |
+| Cheap AI scoring | ~$0.01 | GPT-4o-mini batch |
+| Smart AI analysis | ~$0.10-0.20 | Only top 15 leads |
+| Verification | ~$0.01 | MX lookup, HEAD requests |
+| **Total per sweep** | **$0.05-0.30** | |
+
+**Monthly estimate per company:**
+- Weekly sweeps (4/month): $0.20 - $1.20
+- Daily sweeps (30/month): $1.50 - $9.00
+
+### 8.4 Subscription Tier Limits
+
+| Tier | Sweeps/Month | Max Leads/Sweep | AI Analysis |
+|------|-------------|-----------------|-------------|
+| Free | 2 | 10 | Basic (mini only) |
+| Pro | 8 | 25 | Full |
+| Enterprise | Unlimited* | 50 | Full + priority |
+
+*Enterprise "unlimited" still has daily caps for safety
 
 ---
 

@@ -30,23 +30,37 @@ function safeLeadValue(value: number | undefined | null): number {
 // ============================================
 
 export const LeadsService = {
+    // Get user's companyId from their profile
+    async getUserCompanyId(userId: string): Promise<string | null> {
+        const userRef = doc(getFirebaseDb(), 'users', userId);
+        const userDoc = await getDoc(userRef);
+        if (!userDoc.exists()) return null;
+        return userDoc.data()?.companyId || null;
+    },
+
     // Get all leads for user's company (Multi-tenant: filters by companyId)
     async getLeads(userId: string, companyId?: string): Promise<Lead[]> {
         const leadsRef = collection(getFirebaseDb(), 'leads');
         let q;
         
-        if (companyId) {
+        // If no companyId provided, look it up from user profile
+        const effectiveCompanyId = companyId || await this.getUserCompanyId(userId);
+        
+        if (effectiveCompanyId) {
             // Multi-tenant query: only return leads for this company
             q = query(
                 leadsRef, 
-                where('companyId', '==', companyId),
+                where('companyId', '==', effectiveCompanyId),
                 orderBy('createdAt', 'desc')
             );
         } else {
-            // Fallback for legacy/demo: return all leads (NOT recommended for production)
-            // TODO: Remove this fallback once all users have companyId
-            console.warn('[LeadsService] No companyId provided - returning all leads (legacy mode)');
-            q = query(leadsRef, orderBy('createdAt', 'desc'));
+            // No company - filter by userId as fallback
+            console.warn('[LeadsService] No companyId found - filtering by userId');
+            q = query(
+                leadsRef, 
+                where('userId', '==', userId),
+                orderBy('createdAt', 'desc')
+            );
         }
         
         const snapshot = await getDocs(q);
@@ -74,12 +88,16 @@ export const LeadsService = {
         lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>,
         companyId?: string
     ): Promise<string> {
+        // If no companyId provided, look it up from user profile
+        const effectiveCompanyId = companyId || await this.getUserCompanyId(userId);
+        
         const leadsRef = collection(getFirebaseDb(), 'leads');
         const now = Date.now();
         const docRef = await addDoc(leadsRef, {
             ...lead,
             assignedTo: userId,
-            companyId: companyId || null, // For multi-tenancy - filter by companyId in queries
+            userId: userId, // Store userId for fallback filtering
+            companyId: effectiveCompanyId || null, // For multi-tenancy
             createdAt: now,
             updatedAt: now,
         });

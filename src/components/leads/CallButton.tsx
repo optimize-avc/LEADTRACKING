@@ -94,23 +94,42 @@ export function CallButton({
         lg: 22,
     };
 
+    // Get status description for screen readers
+    const getStatusDescription = () => {
+        switch (callStatus) {
+            case 'connecting':
+                return 'Connecting call';
+            case 'ringing':
+                return 'Call ringing';
+            case 'in-progress':
+                return 'Call in progress';
+            case 'completed':
+                return 'Call completed';
+            case 'failed':
+                return 'Call failed';
+            default:
+                return '';
+        }
+    };
+
     // Active call state
     if (callStatus !== 'idle' && callStatus !== 'failed') {
         return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" role="status" aria-live="polite">
                 <button
                     onClick={handleEndCall}
                     className={`${sizeClasses[size]} rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all shadow-lg animate-pulse`}
-                    title="End call"
+                    aria-label={`End call with ${leadName}`}
                 >
-                    <PhoneOff size={iconSize[size]} />
+                    <PhoneOff size={iconSize[size]} aria-hidden="true" />
                 </button>
-                <span className="text-xs text-slate-400 capitalize">
+                <span className="text-xs text-slate-400 capitalize" aria-live="polite">
                     {callStatus === 'connecting' && 'Connecting...'}
                     {callStatus === 'ringing' && 'Ringing...'}
                     {callStatus === 'in-progress' && 'In Progress'}
                     {callStatus === 'completed' && 'Completed'}
                 </span>
+                <span className="sr-only">{getStatusDescription()} with {leadName}</span>
             </div>
         );
     }
@@ -126,9 +145,10 @@ export function CallButton({
             onClick={handleCall}
             disabled={false}
             className={`${sizeClasses[size]} rounded-lg ${baseClasses} transition-all disabled:opacity-50`}
+            aria-label={`Call ${leadName}${leadPhone ? ` at ${leadPhone}` : ''}`}
             title={`Call ${leadName}`}
         >
-            <Phone size={iconSize[size]} />
+            <Phone size={iconSize[size]} aria-hidden="true" />
         </button>
     );
 }

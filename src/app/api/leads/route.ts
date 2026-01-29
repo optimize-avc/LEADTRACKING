@@ -261,13 +261,19 @@ export async function GET(request: NextRequest) {
     
     const companyId = userDoc.data()?.companyId;
     
-    // 3. Fetch leads
-    let leadsQuery = db.collection('leads').orderBy('createdAt', 'desc').limit(100);
+    // 3. Fetch leads - ALWAYS require company or user filtering
+    let leadsQuery;
     
     if (companyId) {
       // Multi-tenant: filter by company
       leadsQuery = db.collection('leads')
         .where('companyId', '==', companyId)
+        .orderBy('createdAt', 'desc')
+        .limit(100);
+    } else {
+      // No company - filter by userId as fallback (shouldn't normally happen)
+      leadsQuery = db.collection('leads')
+        .where('userId', '==', userId)
         .orderBy('createdAt', 'desc')
         .limit(100);
     }

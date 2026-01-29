@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Bell, Check, X, ExternalLink, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -74,6 +74,7 @@ export function NotificationCenter() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>(SAMPLE_NOTIFICATIONS);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
 
     const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -87,6 +88,14 @@ export function NotificationCenter() {
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Handle keyboard navigation
+    const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            setIsOpen(false);
+            buttonRef.current?.focus();
+        }
     }, []);
 
     const markAsRead = (id: string) => {
@@ -109,13 +118,20 @@ export function NotificationCenter() {
         <div className="relative" ref={dropdownRef}>
             {/* Bell Icon Button */}
             <button
+                ref={buttonRef}
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                aria-label="Notifications"
+                aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+                aria-expanded={isOpen}
+                aria-haspopup="menu"
+                aria-controls="notification-menu"
             >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-5 h-5" aria-hidden="true" />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    <span 
+                        className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                        aria-hidden="true"
+                    >
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
@@ -123,15 +139,22 @@ export function NotificationCenter() {
 
             {/* Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <div 
+                    id="notification-menu"
+                    role="menu"
+                    aria-label="Notifications"
+                    onKeyDown={handleKeyDown}
+                    className="absolute right-0 mt-2 w-80 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                >
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                        <h3 className="text-white font-semibold">Notifications</h3>
+                        <h3 id="notification-heading" className="text-white font-semibold">Notifications</h3>
                         <div className="flex items-center gap-2">
                             {unreadCount > 0 && (
                                 <button
                                     onClick={markAllAsRead}
                                     className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                                    aria-label="Mark all notifications as read"
                                 >
                                     Mark all read
                                 </button>
@@ -140,15 +163,16 @@ export function NotificationCenter() {
                     </div>
 
                     {/* Notifications List */}
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-80 overflow-y-auto" role="list" aria-labelledby="notification-heading">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-slate-500 text-sm">
+                            <div className="p-8 text-center text-slate-500 text-sm" role="listitem">
                                 No notifications yet
                             </div>
                         ) : (
                             notifications.map((notification) => (
                                 <div
                                     key={notification.id}
+                                    role="listitem"
                                     className={`group flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 ${
                                         !notification.read ? 'bg-violet-500/5' : ''
                                     }`}
@@ -158,6 +182,7 @@ export function NotificationCenter() {
                                         className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getTypeColor(
                                             notification.type
                                         )}`}
+                                        aria-hidden="true"
                                     />
 
                                     {/* Content */}
@@ -171,8 +196,12 @@ export function NotificationCenter() {
                                                 }`}
                                             >
                                                 {notification.title}
+                                                {!notification.read && (
+                                                    <span className="sr-only"> (unread)</span>
+                                                )}
                                             </span>
                                             <span className="text-xs text-slate-500 whitespace-nowrap">
+                                                <span className="sr-only">Received </span>
                                                 {formatTimeAgo(notification.timestamp)}
                                             </span>
                                         </div>
@@ -190,23 +219,26 @@ export function NotificationCenter() {
                                                         setIsOpen(false);
                                                     }}
                                                     className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1"
+                                                    aria-label={`View ${notification.title}`}
                                                 >
-                                                    View <ExternalLink className="w-3 h-3" />
+                                                    View <ExternalLink className="w-3 h-3" aria-hidden="true" />
                                                 </Link>
                                             )}
                                             {!notification.read && (
                                                 <button
                                                     onClick={() => markAsRead(notification.id)}
                                                     className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                                                    aria-label={`Mark "${notification.title}" as read`}
                                                 >
-                                                    <Check className="w-3 h-3" /> Read
+                                                    <Check className="w-3 h-3" aria-hidden="true" /> Read
                                                 </button>
                                             )}
                                             <button
                                                 onClick={() => deleteNotification(notification.id)}
                                                 className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+                                                aria-label={`Delete notification: ${notification.title}`}
                                             >
-                                                <Trash2 className="w-3 h-3" />
+                                                <Trash2 className="w-3 h-3" aria-hidden="true" />
                                             </button>
                                         </div>
                                     </div>
@@ -228,6 +260,7 @@ export function NotificationCenter() {
                             <button
                                 onClick={clearAll}
                                 className="text-xs text-slate-400 hover:text-red-400 transition-colors"
+                                aria-label="Clear all notifications"
                             >
                                 Clear all
                             </button>

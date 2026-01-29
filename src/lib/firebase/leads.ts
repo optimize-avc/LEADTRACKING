@@ -3,8 +3,10 @@ import {
     collection,
     query,
     getDocs,
+    getDoc,
     orderBy,
     limit,
+    where,
     doc,
     updateDoc,
     Timestamp,
@@ -27,13 +29,44 @@ export interface Lead {
     updatedAt: Timestamp | number;
     aiGenerated: boolean;
     location?: string;
+    companyId?: string;
+    userId?: string;
 }
 
 export const LeadsService = {
-    // Get leads for dashboard
-    async getLeads(limitCount: number = 50): Promise<Lead[]> {
+    // Get user's companyId from their profile
+    async getUserCompanyId(userId: string): Promise<string | null> {
+        const userRef = doc(getFirebaseDb(), 'users', userId);
+        const userDoc = await getDoc(userRef);
+        if (!userDoc.exists()) return null;
+        return userDoc.data()?.companyId || null;
+    },
+
+    // Get leads for dashboard - filtered by user's company
+    async getLeads(userId: string, limitCount: number = 50): Promise<Lead[]> {
+        // First get the user's companyId
+        const companyId = await this.getUserCompanyId(userId);
+        
         const leadsRef = collection(getFirebaseDb(), 'leads');
-        const q = query(leadsRef, orderBy('createdAt', 'desc'), limit(limitCount));
+        let q;
+        
+        if (companyId) {
+            // Multi-tenant: filter by company
+            q = query(
+                leadsRef, 
+                where('companyId', '==', companyId),
+                orderBy('createdAt', 'desc'), 
+                limit(limitCount)
+            );
+        } else {
+            // Fallback: filter by userId (for users without a company)
+            q = query(
+                leadsRef, 
+                where('userId', '==', userId),
+                orderBy('createdAt', 'desc'), 
+                limit(limitCount)
+            );
+        }
 
         const snapshot = await getDocs(q);
         return snapshot.docs.map((doc) => ({

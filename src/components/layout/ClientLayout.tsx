@@ -24,6 +24,7 @@ import { QueryProvider } from '@/components/providers/QueryProvider';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { CookieConsent } from '@/components/ui/CookieConsent';
 import { WelcomeTour } from '@/components/onboarding/WelcomeTour';
+import { SkipToContent } from '@/components/ui/SkipToContent';
 import { toast, Toaster } from 'sonner';
 import { AIContextProvider } from '@/components/providers/AIContext';
 
@@ -205,9 +206,10 @@ function SidebarContent({
                             className={`w-full flex items-center gap-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all ${
                                 showLabel ? 'px-3 py-2' : 'p-3 justify-center'
                             }`}
-                            title={!showLabel ? 'Sign Out' : ''}
+                            title={!showLabel ? 'Sign Out' : undefined}
+                            aria-label="Sign out of your account"
                         >
-                            <LogOut size={18} />
+                            <LogOut size={18} aria-hidden="true" />
                             {showLabel && <span>Sign Out</span>}
                         </button>
                     </>
@@ -218,9 +220,10 @@ function SidebarContent({
                         className={`w-full flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/25 ${
                             showLabel ? 'px-4 py-3' : 'p-3 justify-center'
                         }`}
-                        title={!showLabel ? 'Sign In' : ''}
+                        title={!showLabel ? 'Sign In' : undefined}
+                        aria-label="Sign in with Google"
                     >
-                        <LogIn size={18} />
+                        <LogIn size={18} aria-hidden="true" />
                         {showLabel && <span>Sign In</span>}
                     </button>
                 )}
@@ -276,6 +279,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         <QueryProvider>
             <AuthProvider>
                 <AIContextProvider>
+                    {/* Skip to main content link for keyboard accessibility */}
+                    <SkipToContent mainContentId="main-content" />
+
                     {/* Global Dark Background Base (Fix for App Hosting) */}
                     <div className="fixed inset-0 bg-slate-950 z-[-2]" />
 
@@ -303,6 +309,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                         w-64
                         overflow-hidden md:overflow-visible
                     `}
+                        role="navigation"
+                        aria-label="Main navigation"
                     >
                         {/* Header / Logo */}
                         <div
@@ -345,11 +353,16 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
                     {/* Main Content Area */}
                     <main
+                        id="main-content"
+                        tabIndex={-1}
                         className={`
                         flex-1 relative z-0 transition-all duration-300 ease-in-out min-h-screen flex flex-col
                         ${collapsed ? 'md:ml-20' : 'md:ml-64'}
                         ml-0
+                        focus:outline-none
                     `}
+                        role="main"
+                        aria-label="Main content"
                     >
                         {/* Mobile Header */}
                         <div className="md:hidden sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/5 p-4 flex items-center justify-between">
@@ -358,10 +371,12 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                             </div>
                             <button
                                 onClick={() => setMobileMenuOpen(true)}
-                                aria-label="Open mobile menu"
+                                aria-label="Open navigation menu"
+                                aria-expanded={mobileMenuOpen}
+                                aria-controls="mobile-navigation"
                                 className="p-3 min-w-[44px] min-h-[44px] text-slate-300 hover:text-white hover:bg-white/5 active:bg-white/10 rounded-lg transition-colors touch-manipulation"
                             >
-                                <Menu size={24} />
+                                <Menu size={24} aria-hidden="true" />
                             </button>
                         </div>
 
@@ -436,8 +451,9 @@ function NavLink({
         <Link
             href={href}
             onClick={onClick}
-            title={!showLabel ? label : ''}
+            title={!showLabel ? label : undefined}
             aria-label={label}
+            aria-current={isActive ? 'page' : undefined}
             className={`
                 group flex items-center rounded-xl transition-all duration-300 ease-out relative min-h-[44px] touch-manipulation active:scale-[0.98]
                 ${!showLabel ? 'justify-center p-3' : 'px-4 py-3'}
@@ -450,10 +466,11 @@ function NavLink({
         >
             {/* Active Glow for Icon */}
             {isActive && !showLabel && (
-                <div className="absolute inset-0 bg-indigo-500/20 rounded-xl blur-md"></div>
+                <div className="absolute inset-0 bg-indigo-500/20 rounded-xl blur-md" aria-hidden="true"></div>
             )}
 
             <span
+                aria-hidden="true"
                 className={`relative z-10 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
             >
                 {React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
@@ -473,7 +490,10 @@ function NavLink({
 
             {/* Tooltip for collapsed state (Desktop only) */}
             {!showLabel && (
-                <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded border border-white/10 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl hidden md:block">
+                <div 
+                    role="tooltip"
+                    className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded border border-white/10 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl hidden md:block"
+                >
                     {label}
                 </div>
             )}

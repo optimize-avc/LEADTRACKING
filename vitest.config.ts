@@ -21,13 +21,12 @@ export default defineConfig({
                 'src/app/**/loading.tsx',
                 'src/app/**/error.tsx',
             ],
-            // Coverage thresholds - currently low to allow CI to pass
-            // TODO: Increase thresholds as test coverage improves
+            // Coverage thresholds - minimum 30% coverage required
             thresholds: {
-                statements: 0,
-                branches: 0,
-                functions: 0,
-                lines: 0,
+                statements: 30,
+                branches: 30,
+                functions: 30,
+                lines: 30,
             },
         },
     },

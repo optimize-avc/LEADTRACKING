@@ -78,54 +78,57 @@ env:
     # firebase apphosting:secrets:set STRIPE_WEBHOOK_SECRET --data-file=-
     # etc.
 
-    # Stripe Secrets
-    - variable: STRIPE_SECRET_KEY
-      secret: STRIPE_SECRET_KEY
-      availability:
-          - RUNTIME
-    - variable: STRIPE_WEBHOOK_SECRET
-      secret: STRIPE_WEBHOOK_SECRET
-      availability:
-          - RUNTIME
-    - variable: STRIPE_PRICE_ID_PRO
-      secret: STRIPE_PRICE_ID_PRO
-      availability:
-          - RUNTIME
-    - variable: STRIPE_PRICE_ID_VENTURE
-      secret: STRIPE_PRICE_ID_VENTURE
-      availability:
-          - RUNTIME
+    # NOTE: Most secrets commented out temporarily until added to Secret Manager
+    # Run `gcloud auth login` then use firebase apphosting:secrets:set to add them
 
-    # Twilio Secrets
-    - variable: TWILIO_ACCOUNT_SID
-      secret: TWILIO_ACCOUNT_SID
-      availability:
-          - RUNTIME
-    - variable: TWILIO_AUTH_TOKEN
-      secret: TWILIO_AUTH_TOKEN
-      availability:
-          - RUNTIME
+    # Stripe Secrets - COMMENTED OUT (not yet in Secret Manager)
+    # - variable: STRIPE_SECRET_KEY
+    #   secret: STRIPE_SECRET_KEY
+    #   availability:
+    #       - RUNTIME
+    # - variable: STRIPE_WEBHOOK_SECRET
+    #   secret: STRIPE_WEBHOOK_SECRET
+    #   availability:
+    #       - RUNTIME
+    # - variable: STRIPE_PRICE_ID_PRO
+    #   secret: STRIPE_PRICE_ID_PRO
+    #   availability:
+    #       - RUNTIME
+    # - variable: STRIPE_PRICE_ID_VENTURE
+    #   secret: STRIPE_PRICE_ID_VENTURE
+    #   availability:
+    #       - RUNTIME
 
-    # Google/Firebase Secrets
-    - variable: GOOGLE_CLIENT_SECRET
-      secret: GOOGLE_CLIENT_SECRET
-      availability:
-          - RUNTIME
-    - variable: GOOGLE_AI_API_KEY
-      secret: GOOGLE_AI_API_KEY
-      availability:
-          - RUNTIME
+    # Twilio Secrets - COMMENTED OUT (not yet in Secret Manager)
+    # - variable: TWILIO_ACCOUNT_SID
+    #   secret: TWILIO_ACCOUNT_SID
+    #   availability:
+    #       - RUNTIME
+    # - variable: TWILIO_AUTH_TOKEN
+    #   secret: TWILIO_AUTH_TOKEN
+    #   availability:
+    #       - RUNTIME
+
+    # Google/Firebase Secrets - COMMENTED OUT (not yet in Secret Manager)
+    # - variable: GOOGLE_CLIENT_SECRET
+    #   secret: GOOGLE_CLIENT_SECRET
+    #   availability:
+    #       - RUNTIME
+    # - variable: GOOGLE_AI_API_KEY
+    #   secret: GOOGLE_AI_API_KEY
+    #   availability:
+    #       - RUNTIME
     # Alias for backward compatibility
-    - variable: GEMINI_API_KEY
-      secret: GOOGLE_AI_API_KEY
-      availability:
-          - RUNTIME
+    # - variable: GEMINI_API_KEY
+    #   secret: GOOGLE_AI_API_KEY
+    #   availability:
+    #       - RUNTIME
 
-    # SendGrid (platform default email service)
-    - variable: SENDGRID_API_KEY
-      secret: SENDGRID_API_KEY
-      availability:
-          - RUNTIME
+    # SendGrid - COMMENTED OUT (not yet in Secret Manager)
+    # - variable: SENDGRID_API_KEY
+    #   secret: SENDGRID_API_KEY
+    #   availability:
+    #       - RUNTIME
 
     # Discord OAuth2 (Bot Studio)
     - variable: NEXT_PUBLIC_DISCORD_CLIENT_ID
@@ -137,10 +140,11 @@ env:
       value: '1464013717522874419'
       availability:
           - RUNTIME
-    - variable: DISCORD_CLIENT_SECRET
-      secret: DISCORD_CLIENT_SECRET
-      availability:
-          - RUNTIME
+    # Discord secret - COMMENTED OUT (not yet in Secret Manager)
+    # - variable: DISCORD_CLIENT_SECRET
+    #   secret: DISCORD_CLIENT_SECRET
+    #   availability:
+    #       - RUNTIME
     - variable: DISCORD_REDIRECT_URI
       value: https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app/api/discord/callback
       availability:

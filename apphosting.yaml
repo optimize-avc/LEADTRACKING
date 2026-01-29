@@ -49,7 +49,7 @@ env:
 
     # Sentry Error Tracking (public DSN is safe to expose)
     - variable: NEXT_PUBLIC_SENTRY_DSN
-      value: '' # Add your Sentry DSN here after creating a project at sentry.io
+      value: 'https://2d2c3e60451058c9f5d0ef380f7e71bd@o4510179283042305.ingest.us.sentry.io/4510796116066304'
       availability:
           - BUILD
           - RUNTIME

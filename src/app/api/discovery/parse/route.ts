@@ -4,40 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { getAuthContext } from '@/lib/api/auth-helpers';
 import { TargetingCriteria, DEFAULT_TARGETING_CRITERIA } from '@/types/discovery';
 
 interface ParseRequest {
     description: string;
-}
-
-async function getCompanyIdFromToken(request: NextRequest): Promise<{ companyId: string; userId: string } | null> {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-        return null;
-    }
-
-    try {
-        const token = authHeader.split('Bearer ')[1];
-        const auth = getAdminAuth();
-        const decodedToken = await auth.verifyIdToken(token);
-        const userId = decodedToken.uid;
-
-        const db = getAdminDb();
-        const companiesSnap = await db.collection('companies')
-            .where('ownerId', '==', userId)
-            .limit(1)
-            .get();
-
-        if (companiesSnap.empty) {
-            return null;
-        }
-
-        return { companyId: companiesSnap.docs[0].id, userId };
-    } catch (error) {
-        console.error('Auth error:', error);
-        return null;
-    }
 }
 
 /**
@@ -134,7 +105,7 @@ function parseBusinessDescription(description: string): TargetingCriteria {
 }
 
 export async function POST(request: NextRequest) {
-    const auth = await getCompanyIdFromToken(request);
+    const auth = await getAuthContext(request);
     if (!auth) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

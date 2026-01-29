@@ -57,22 +57,46 @@ export default function ResourcesClient() {
         async function fetchResources() {
             // Don't fetch until auth is resolved
             if (authLoading) return;
+            
+            // No user = not authenticated, stop loading
+            if (!user?.uid) {
+                setLoading(false);
+                return;
+            }
 
             setLoading(true);
             try {
-                // Only fetch if authenticated (Firestore rules require auth)
-                if (user?.uid) {
-                    // Fetch company resources
+                // Ensure we have a valid auth token before making Firestore requests
+                // This prevents race conditions where auth state exists but token isn't ready
+                try {
+                    await user.getIdToken(true);
+                } catch (tokenError) {
+                    console.error('Failed to get auth token:', tokenError);
+                    setLoading(false);
+                    return;
+                }
+
+                // Fetch company resources (with error handling for permissions)
+                try {
                     const companyData = await ResourcesService.getCompanyResources();
                     setCompanyResources(companyData);
+                } catch (companyError) {
+                    console.warn('Could not load company resources:', companyError);
+                    // Don't fail completely - user may not have company access
+                    setCompanyResources([]);
+                }
 
-                    // Fetch user resources
+                // Fetch user resources
+                try {
                     const userData = await ResourcesService.getUserResources(user.uid);
                     setUserResources(userData);
+                } catch (userError) {
+                    console.warn('Could not load user resources:', userError);
+                    setUserResources([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch resources:', error);
-                toast.error('Failed to load resources.');
+                // Don't show error toast for permission issues - just show empty state
             } finally {
                 setLoading(false);
             }

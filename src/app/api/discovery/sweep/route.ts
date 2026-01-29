@@ -8,8 +8,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { getAuthContext } from '@/lib/api/auth-helpers';
 import { DiscoverySweep, DiscoveredLead, TargetingCriteria } from '@/types/discovery';
 import { 
     getGooglePlacesCollector, 
@@ -26,35 +27,6 @@ import {
     getAvailableProvider,
     AI_LIMITS 
 } from '@/lib/discovery/aiAnalyzer';
-
-async function getCompanyIdFromToken(request: NextRequest): Promise<{ companyId: string; userId: string } | null> {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-        return null;
-    }
-
-    try {
-        const token = authHeader.split('Bearer ')[1];
-        const auth = getAdminAuth();
-        const decodedToken = await auth.verifyIdToken(token);
-        const userId = decodedToken.uid;
-
-        const db = getAdminDb();
-        const companiesSnap = await db.collection('companies')
-            .where('ownerId', '==', userId)
-            .limit(1)
-            .get();
-
-        if (companiesSnap.empty) {
-            return null;
-        }
-
-        return { companyId: companiesSnap.docs[0].id, userId };
-    } catch (error) {
-        console.error('Auth error:', error);
-        return null;
-    }
-}
 
 // ========================================
 // Data Collection
@@ -244,7 +216,7 @@ function convertToDiscoveredLeads(
 // ========================================
 
 export async function POST(request: NextRequest) {
-    const auth = await getCompanyIdFromToken(request);
+    const auth = await getAuthContext(request);
     if (!auth) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -456,7 +428,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-    const auth = await getCompanyIdFromToken(request);
+    const auth = await getAuthContext(request);
     if (!auth) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

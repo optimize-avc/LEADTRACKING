@@ -5,7 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { getAdminDb } from '@/lib/firebase/admin';
+import { getAuthContext } from '@/lib/api/auth-helpers';
 import {
     DiscoveryProfile,
     createDefaultDiscoveryProfile,
@@ -21,38 +22,8 @@ interface RequestBody {
     notifications?: Partial<DiscoveryNotifications>;
 }
 
-async function getCompanyIdFromToken(request: NextRequest): Promise<{ companyId: string; userId: string } | null> {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-        return null;
-    }
-
-    try {
-        const token = authHeader.split('Bearer ')[1];
-        const auth = getAdminAuth();
-        const decodedToken = await auth.verifyIdToken(token);
-        const userId = decodedToken.uid;
-
-        // Get user's company
-        const db = getAdminDb();
-        const companiesSnap = await db.collection('companies')
-            .where('ownerId', '==', userId)
-            .limit(1)
-            .get();
-
-        if (companiesSnap.empty) {
-            return null;
-        }
-
-        return { companyId: companiesSnap.docs[0].id, userId };
-    } catch (error) {
-        console.error('Auth error:', error);
-        return null;
-    }
-}
-
 export async function GET(request: NextRequest) {
-    const auth = await getCompanyIdFromToken(request);
+    const auth = await getAuthContext(request);
     if (!auth) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -78,15 +49,19 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error fetching discovery profile:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch discovery profile' },
-            { status: 500 }
-        );
+        
+        // Return default profile on error (better UX than 500)
+        const defaultProfile = createDefaultDiscoveryProfile(auth.companyId);
+        return NextResponse.json({
+            profile: { ...defaultProfile, id: 'current' },
+            isNew: true,
+            _error: 'Could not load saved profile',
+        });
     }
 }
 
 export async function POST(request: NextRequest) {
-    const auth = await getCompanyIdFromToken(request);
+    const auth = await getAuthContext(request);
     if (!auth) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

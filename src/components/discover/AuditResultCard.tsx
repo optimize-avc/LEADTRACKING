@@ -22,6 +22,7 @@ import {
     BookOpen,
     Loader2,
     PlusCircle,
+    Check,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,6 +30,7 @@ interface AuditResultCardProps {
     audit: BusinessAuditResult;
     onSaveToPipeline: (audit: BusinessAuditResult) => Promise<void>;
     isSaving?: boolean;
+    isSaved?: boolean;
 }
 
 interface CollapsibleSectionProps {
@@ -171,7 +173,12 @@ function SentimentBadge({ sentiment }: { sentiment: string }) {
     );
 }
 
-export function AuditResultCard({ audit, onSaveToPipeline, isSaving }: AuditResultCardProps) {
+export function AuditResultCard({
+    audit,
+    onSaveToPipeline,
+    isSaving,
+    isSaved,
+}: AuditResultCardProps) {
     return (
         <GlassCard className="w-full max-w-4xl mx-auto">
             {/* Header */}
@@ -454,13 +461,22 @@ export function AuditResultCard({ audit, onSaveToPipeline, isSaving }: AuditResu
                 </div>
                 <button
                     onClick={() => onSaveToPipeline(audit)}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed rounded-xl text-white font-semibold shadow-lg shadow-emerald-500/20 transition-all"
+                    disabled={isSaving || isSaved}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transition-all ${
+                        isSaved
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 cursor-default shadow-green-500/20'
+                            : 'bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed shadow-emerald-500/20'
+                    }`}
                 >
                     {isSaving ? (
                         <>
                             <Loader2 className="w-5 h-5 animate-spin" />
                             Saving...
+                        </>
+                    ) : isSaved ? (
+                        <>
+                            <Check className="w-5 h-5" />
+                            Saved to Pipeline
                         </>
                     ) : (
                         <>

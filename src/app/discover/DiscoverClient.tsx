@@ -43,6 +43,7 @@ export default function DiscoverClient() {
     const [auditResult, setAuditResult] = useState<BusinessAuditResult | null>(null);
     const [isAuditing, setIsAuditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
 
     // AI Discovered state
     const [discoveredLeads, setDiscoveredLeads] = useState<DiscoveredLead[]>([]);
@@ -132,6 +133,7 @@ export default function DiscoverClient() {
     const handleAuditStart = () => {
         setIsAuditing(true);
         setAuditResult(null);
+        setIsSaved(false); // Reset saved state for new audit
     };
 
     const handleAuditComplete = (result: BusinessAuditResult) => {
@@ -214,6 +216,7 @@ export default function DiscoverClient() {
             toast.success('Lead saved to pipeline!', {
                 description: `${audit.companyName} has been added to your leads.`,
             });
+            setIsSaved(true);
         } catch (error) {
             console.error('Failed to save lead:', error);
             toast.error('Failed to save lead');
@@ -397,6 +400,7 @@ export default function DiscoverClient() {
                             auditResult={auditResult}
                             isAuditing={isAuditing}
                             isSaving={isSaving}
+                            isSaved={isSaved}
                             userToken={userToken}
                             user={user}
                             authLoading={authLoading}
@@ -455,6 +459,7 @@ interface ManualSearchTabProps {
     auditResult: BusinessAuditResult | null;
     isAuditing: boolean;
     isSaving: boolean;
+    isSaved: boolean;
     userToken: string | null;
     user: User | null;
     authLoading: boolean;
@@ -469,6 +474,7 @@ function ManualSearchTab({
     auditResult,
     isAuditing,
     isSaving,
+    isSaved,
     userToken,
     user,
     authLoading,
@@ -543,6 +549,7 @@ function ManualSearchTab({
                             audit={auditResult}
                             onSaveToPipeline={onSaveToPipeline}
                             isSaving={isSaving}
+                            isSaved={isSaved}
                         />
                     </motion.section>
                 )}

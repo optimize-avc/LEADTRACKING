@@ -99,7 +99,7 @@ export const createLeadSchema = z.object({
     industry: z.string().max(100, 'Industry too long').optional(),
     dealValue: z.number().min(0, 'Deal value cannot be negative').optional(),
     companyId: companyIdSchema.optional(),
-    enrichmentData: enrichmentDataSchema,
+    enrichmentData: enrichmentDataSchema.optional(),
 });
 
 export const updateLeadSchema = createLeadSchema.partial().extend({

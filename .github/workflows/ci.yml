@@ -143,7 +143,7 @@ jobs:
 
             - name: Run E2E tests
               run: npm run test:e2e -- --project=chromium
-              continue-on-error: true  # E2E tests are advisory, not blocking
+              continue-on-error: true # E2E tests are advisory, not blocking
               env:
                   NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDK6-V94VNzc5pTCgXzKvY9UA00Z0oCSRc' }}
                   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'antigrav-tracking-final.firebaseapp.com' }}

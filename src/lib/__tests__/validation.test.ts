@@ -128,12 +128,11 @@ describe('Validation Schemas', () => {
             });
             expect(withUrl.website).toBe('https://example.com');
 
-            // Empty string is allowed
-            const withEmpty = createLeadSchema.parse({
+            // Undefined when not provided
+            const withoutUrl = createLeadSchema.parse({
                 businessName: 'Test',
-                website: '',
             });
-            expect(withEmpty.website).toBe('');
+            expect(withoutUrl.website).toBeUndefined();
         });
 
         it('validates dealValue is non-negative', () => {

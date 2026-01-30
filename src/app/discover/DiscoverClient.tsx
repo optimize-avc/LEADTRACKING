@@ -147,6 +147,14 @@ export default function DiscoverClient() {
 
         setIsSaving(true);
         try {
+            // Normalize website URL - ensure it has a protocol or skip it
+            const normalizeUrl = (url: string | undefined): string | undefined => {
+                if (!url) return undefined;
+                if (url.startsWith('http://') || url.startsWith('https://')) return url;
+                // Skip URLs without protocol to avoid validation errors
+                return undefined;
+            };
+
             const response = await fetch('/api/leads', {
                 method: 'POST',
                 headers: {
@@ -156,7 +164,7 @@ export default function DiscoverClient() {
                 body: JSON.stringify({
                     businessName: audit.companyName,
                     contactName: audit.overview.keyPeople[0]?.split(' - ')[0] || undefined,
-                    website: audit.overview.website || undefined,
+                    website: normalizeUrl(audit.overview.website),
                     industry: audit.overview.industry || undefined,
                     status: 'New',
                     notes: `Enriched via AI audit on ${new Date(audit.auditedAt).toLocaleDateString()}\n\nIndustry: ${audit.overview.industry}\nDescription: ${audit.overview.description}`,
@@ -206,6 +214,13 @@ export default function DiscoverClient() {
             let pipelineLeadId: string | undefined;
 
             if (action === 'pipeline') {
+                // Normalize website URL - ensure it has a protocol or skip it
+                const normalizeUrl = (url: string | undefined): string | undefined => {
+                    if (!url) return undefined;
+                    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+                    return undefined;
+                };
+
                 // First create the pipeline lead via API
                 const response = await fetch('/api/leads', {
                     method: 'POST',
@@ -218,7 +233,7 @@ export default function DiscoverClient() {
                         contactName: lead.contacts[0]?.name || undefined,
                         email: lead.contacts[0]?.email || undefined,
                         phone: lead.contacts[0]?.phone || undefined,
-                        website: lead.website || undefined,
+                        website: normalizeUrl(lead.website),
                         industry: lead.industry || undefined,
                         status: 'New',
                         notes: lead.aiAnalysis.summary,

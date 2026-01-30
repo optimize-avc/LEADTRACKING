@@ -164,7 +164,7 @@ export default function DiscoverClient() {
                 body: JSON.stringify({
                     businessName: audit.companyName,
                     contactName: audit.overview.keyPeople[0]?.split(' - ')[0] || undefined,
-                    website: normalizeUrl(audit.overview.website),
+                    website: normalizeUrl(audit.website),
                     industry: audit.overview.industry || undefined,
                     status: 'New',
                     notes: `Enriched via AI audit on ${new Date(audit.auditedAt).toLocaleDateString()}\n\nIndustry: ${audit.overview.industry}\nDescription: ${audit.overview.description}`,
@@ -233,7 +233,7 @@ export default function DiscoverClient() {
                         contactName: lead.contacts[0]?.name || undefined,
                         email: lead.contacts[0]?.email || undefined,
                         phone: lead.contacts[0]?.phone || undefined,
-                        website: normalizeUrl(lead.website),
+                        website: normalizeUrl(lead.website ?? undefined),
                         industry: lead.industry || undefined,
                         status: 'New',
                         notes: lead.aiAnalysis.summary,

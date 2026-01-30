@@ -168,6 +168,17 @@ export default function DiscoverClient() {
                     industry: audit.overview.industry || undefined,
                     status: 'New',
                     notes: `Enriched via AI audit on ${new Date(audit.auditedAt).toLocaleDateString()}\n\nIndustry: ${audit.overview.industry}\nDescription: ${audit.overview.description}`,
+                    enrichmentData: {
+                        overview: audit.overview,
+                        digitalPresence: audit.digitalPresence,
+                        aiReadiness: audit.aiReadiness,
+                        reviews: audit.reviews,
+                        painPoints: audit.painPoints,
+                        opportunities: audit.opportunities,
+                        talkingPoints: audit.talkingPoints,
+                        relevantResources: audit.relevantResources,
+                        auditedAt: audit.auditedAt,
+                    },
                 }),
             });
 

@@ -31,6 +31,59 @@ export const leadStatusSchema = z.enum([
     'Lost',
 ]);
 
+// Enrichment data schema for audit results
+export const enrichmentDataSchema = z
+    .object({
+        overview: z
+            .object({
+                description: z.string(),
+                industry: z.string(),
+                estimatedSize: z.string(),
+                keyPeople: z.array(z.string()),
+                founded: z.string().optional(),
+                headquarters: z.string().optional(),
+            })
+            .optional(),
+        digitalPresence: z
+            .object({
+                score: z.number(),
+                websiteQuality: z.string(),
+                mobileOptimized: z.boolean(),
+                seoStrength: z.string(),
+                socialProfiles: z.array(z.string()),
+            })
+            .optional(),
+        aiReadiness: z
+            .object({
+                score: z.number(),
+                currentAIUsage: z.string(),
+                opportunities: z.array(z.string()),
+            })
+            .optional(),
+        reviews: z
+            .object({
+                sentiment: z.string(),
+                averageRating: z.number().optional(),
+                keyThemes: z.array(z.string()),
+                sources: z.array(z.string()),
+            })
+            .optional(),
+        painPoints: z.array(z.string()).optional(),
+        opportunities: z.array(z.string()).optional(),
+        talkingPoints: z.array(z.string()).optional(),
+        relevantResources: z
+            .array(
+                z.object({
+                    id: z.string(),
+                    title: z.string(),
+                    relevance: z.string(),
+                })
+            )
+            .optional(),
+        auditedAt: z.number().optional(),
+    })
+    .optional();
+
 export const createLeadSchema = z.object({
     businessName: z.string().min(1, 'Business name is required').max(200, 'Business name too long'),
     contactName: z.string().max(100, 'Contact name too long').optional(),
@@ -46,6 +99,7 @@ export const createLeadSchema = z.object({
     industry: z.string().max(100, 'Industry too long').optional(),
     dealValue: z.number().min(0, 'Deal value cannot be negative').optional(),
     companyId: companyIdSchema.optional(),
+    enrichmentData: enrichmentDataSchema,
 });
 
 export const updateLeadSchema = createLeadSchema.partial().extend({

@@ -55,14 +55,15 @@ describe('API Middleware', () => {
         it('uses custom identifier when provided', () => {
             const request = createMockNextRequest();
             const customId = `custom-user-${Date.now()}-${Math.random()}`;
-            const config = { limit: 2, windowSeconds: 60 };
 
-            // First two should pass
-            expect(rateLimit(request, customId, config)).toBeNull();
-            expect(rateLimit(request, customId, config)).toBeNull();
+            // Use sensitiveAction which has limit 5
+            // First 5 should pass
+            for (let i = 0; i < 5; i++) {
+                expect(rateLimit(request, customId, RATE_LIMITS.sensitiveAction)).toBeNull();
+            }
 
-            // Third should fail
-            const result = rateLimit(request, customId, config);
+            // 6th should fail
+            const result = rateLimit(request, customId, RATE_LIMITS.sensitiveAction);
             expect(result).not.toBeNull();
             expect(result?.status).toBe(429);
         });
@@ -72,10 +73,12 @@ describe('API Middleware', () => {
             const request = createMockNextRequest({
                 'x-forwarded-for': uniqueIp,
             });
-            const config = { limit: 1, windowSeconds: 60 };
 
-            rateLimit(request, undefined, config);
-            const result = rateLimit(request, undefined, config);
+            // Use sensitiveAction which has limit 5
+            for (let i = 0; i < 5; i++) {
+                rateLimit(request, undefined, RATE_LIMITS.sensitiveAction);
+            }
+            const result = rateLimit(request, undefined, RATE_LIMITS.sensitiveAction);
 
             expect(result?.status).toBe(429);
         });
@@ -193,17 +196,18 @@ describe('API Middleware', () => {
 
         it('returns 429 when rate limit exceeded', async () => {
             const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
-            const config = { limit: 1, windowSeconds: 60 };
-            const wrapped = withRateLimit(handler, config);
+            const wrapped = withRateLimit(handler, RATE_LIMITS.sensitiveAction);
 
             const uniqueIp = `192.168.3.${Math.floor(Math.random() * 255)}`;
             const request = createMockNextRequest({
                 'x-forwarded-for': uniqueIp,
             });
 
-            // First request
-            await wrapped(request);
-            // Second request should be rate limited
+            // First 5 requests should pass
+            for (let i = 0; i < 5; i++) {
+                await wrapped(request);
+            }
+            // 6th request should be rate limited
             const response = await wrapped(request);
 
             expect(response.status).toBe(429);

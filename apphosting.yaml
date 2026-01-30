@@ -149,7 +149,7 @@ env:
     #   secret: GOOGLE_CLIENT_SECRET
     #   availability:
     #       - RUNTIME
-    
+
     # Google AI API Key (ENABLED - required for Deep Audit)
     - variable: GOOGLE_AI_API_KEY
       secret: GOOGLE_AI_API_KEY

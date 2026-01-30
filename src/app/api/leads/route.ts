@@ -174,8 +174,6 @@ export async function POST(request: NextRequest) {
             contactName: validatedData.contactName || '',
             email: validatedData.email || '',
             phone: validatedData.phone || '',
-            website: validatedData.website || undefined,
-            industry: validatedData.industry || undefined,
             value: validatedData.dealValue || 0,
             status: validatedData.status || 'New',
             source: 'Manual', // Default source
@@ -187,6 +185,14 @@ export async function POST(request: NextRequest) {
             createdAt: now,
             updatedAt: now,
         };
+
+        // Add optional fields only if they have values (Firestore doesn't like undefined)
+        if (validatedData.website) {
+            leadData.website = validatedData.website;
+        }
+        if (validatedData.industry) {
+            leadData.industry = validatedData.industry;
+        }
 
         const leadRef = await db.collection('leads').add(leadData);
 

@@ -93,7 +93,7 @@ export const createLeadSchema = z.object({
         .max(20, 'Phone number too long')
         .regex(/^[\d\s\-+()]*$/, 'Invalid phone format')
         .optional(),
-    website: z.string().url('Invalid URL').optional().or(z.literal('')),
+    website: z.string().url('Invalid URL').optional(),
     status: leadStatusSchema.default('New'),
     notes: z.string().max(5000, 'Notes too long').optional(),
     industry: z.string().max(100, 'Industry too long').optional(),

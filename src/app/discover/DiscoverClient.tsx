@@ -176,7 +176,7 @@ export default function DiscoverClient() {
                         description: 'Go to Settings to set up your company before adding leads.',
                         action: {
                             label: 'Settings',
-                            onClick: () => window.location.href = '/settings',
+                            onClick: () => (window.location.href = '/settings'),
                         },
                     });
                 } else {
@@ -234,10 +234,11 @@ export default function DiscoverClient() {
                         });
                     } else if (response.status === 400 && data.error?.includes('company')) {
                         toast.error('Please complete onboarding first', {
-                            description: 'Go to Settings to set up your company before adding leads.',
+                            description:
+                                'Go to Settings to set up your company before adding leads.',
                             action: {
                                 label: 'Settings',
-                                onClick: () => window.location.href = '/settings',
+                                onClick: () => (window.location.href = '/settings'),
                             },
                         });
                     } else {

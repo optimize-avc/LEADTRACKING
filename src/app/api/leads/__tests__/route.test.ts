@@ -67,7 +67,7 @@ vi.mock('@/lib/api-middleware', () => ({
         return new Response(JSON.stringify({ error: msg }), { status });
     }),
     getUserIdFromToken: vi.fn(() => 'test-user'),
-    handleValidationError: vi.fn((error: any) => {
+    handleValidationError: vi.fn((error: { issues: unknown[] }) => {
         return new Response(
             JSON.stringify({ 
                 error: 'Validation failed', 
@@ -95,7 +95,7 @@ import { POST, GET } from '@/app/api/leads/route';
 
 function createMockNextRequest(
     method: string,
-    body?: any,
+    body?: Record<string, unknown>,
     authHeader = 'Bearer test-token'
 ): NextRequest {
     const headers = new Headers();

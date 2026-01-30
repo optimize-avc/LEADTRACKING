@@ -26,7 +26,7 @@ vi.mock('@/lib/firebase/admin', () => ({
         getUser: mockGetUser,
     }),
     getAdminDb: () => ({
-        collection: vi.fn((name: string) => ({
+        collection: vi.fn((_name: string) => ({
             doc: vi.fn(() => ({
                 get: mockGetDoc,
             })),
@@ -57,7 +57,7 @@ import { POST, GET } from '@/app/api/admin/impersonate/route';
 
 function createMockRequest(
     method: string,
-    body?: any,
+    body?: Record<string, unknown>,
     authHeader = 'Bearer test-token'
 ): NextRequest {
     const headers = new Headers();

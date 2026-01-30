@@ -109,8 +109,10 @@ export async function POST(request: NextRequest) {
         let validatedData;
         try {
             const body = await request.json();
+            console.log('[Leads API] Received body:', JSON.stringify(body, null, 2));
             validatedData = createLeadSchema.parse(body);
         } catch (error) {
+            console.error('[Leads API] Validation error:', error);
             if (error instanceof ZodError) {
                 return handleValidationError(error);
             }

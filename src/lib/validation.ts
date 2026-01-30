@@ -36,59 +36,65 @@ export const enrichmentDataSchema = z
     .object({
         overview: z
             .object({
-                description: z.string().optional(),
-                industry: z.string().optional(),
-                estimatedSize: z.string().optional(),
-                keyPeople: z.array(z.string()).optional(),
-                founded: z.string().optional(),
-                headquarters: z.string().optional(),
+                description: z.string().nullable().optional(),
+                industry: z.string().nullable().optional(),
+                estimatedSize: z.string().nullable().optional(),
+                keyPeople: z.array(z.string()).nullable().optional(),
+                founded: z.string().nullable().optional(),
+                headquarters: z.string().nullable().optional(),
             })
             .passthrough()
+            .nullable()
             .optional(),
         digitalPresence: z
             .object({
-                score: z.number().optional(),
-                websiteQuality: z.string().optional(),
-                mobileOptimized: z.boolean().optional(),
-                seoStrength: z.string().optional(),
-                socialProfiles: z.array(z.string()).optional(),
+                score: z.number().nullable().optional(),
+                websiteQuality: z.string().nullable().optional(),
+                mobileOptimized: z.boolean().nullable().optional(),
+                seoStrength: z.string().nullable().optional(),
+                socialProfiles: z.array(z.string()).nullable().optional(),
             })
             .passthrough()
+            .nullable()
             .optional(),
         aiReadiness: z
             .object({
-                score: z.number().optional(),
-                currentAIUsage: z.string().optional(),
-                opportunities: z.array(z.string()).optional(),
+                score: z.number().nullable().optional(),
+                currentAIUsage: z.string().nullable().optional(),
+                opportunities: z.array(z.string()).nullable().optional(),
             })
             .passthrough()
+            .nullable()
             .optional(),
         reviews: z
             .object({
-                sentiment: z.string().optional(),
-                averageRating: z.number().optional(),
-                keyThemes: z.array(z.string()).optional(),
-                sources: z.array(z.string()).optional(),
+                sentiment: z.string().nullable().optional(),
+                averageRating: z.number().nullable().optional(),
+                keyThemes: z.array(z.string()).nullable().optional(),
+                sources: z.array(z.string()).nullable().optional(),
             })
             .passthrough()
+            .nullable()
             .optional(),
-        painPoints: z.array(z.string()).optional(),
-        opportunities: z.array(z.string()).optional(),
-        talkingPoints: z.array(z.string()).optional(),
+        painPoints: z.array(z.string()).nullable().optional(),
+        opportunities: z.array(z.string()).nullable().optional(),
+        talkingPoints: z.array(z.string()).nullable().optional(),
         relevantResources: z
             .array(
                 z
                     .object({
-                        id: z.string().optional(),
-                        title: z.string().optional(),
-                        relevance: z.string().optional(),
+                        id: z.string().nullable().optional(),
+                        title: z.string().nullable().optional(),
+                        relevance: z.string().nullable().optional(),
                     })
                     .passthrough()
             )
+            .nullable()
             .optional(),
-        auditedAt: z.number().optional(),
+        auditedAt: z.number().nullable().optional(),
     })
-    .passthrough() // Allow additional fields from AI
+    .passthrough()
+    .nullable()
     .optional();
 
 export const createLeadSchema = z.object({

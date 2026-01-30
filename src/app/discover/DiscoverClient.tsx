@@ -5,11 +5,10 @@ import { User } from 'firebase/auth';
 import { BusinessSearch } from '@/components/discover/BusinessSearch';
 import { AuditResultCard } from '@/components/discover/AuditResultCard';
 import { BusinessAuditResult } from '@/lib/ai/business-audit';
-import { Resource, Lead } from '@/types';
+import { Resource } from '@/types';
 import { DiscoveredLead } from '@/types/discovery';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { ResourcesService } from '@/lib/firebase/resources';
-import { LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
 import {
     Compass,
@@ -141,41 +140,51 @@ export default function DiscoverClient() {
     };
 
     const handleSaveToPipeline = async (audit: BusinessAuditResult) => {
-        if (!user?.uid) {
+        if (!user?.uid || !userToken) {
             toast.error('Please log in to save leads');
             return;
         }
 
         setIsSaving(true);
         try {
-            const leadData = {
-                companyName: audit.companyName,
-                contactName: audit.overview.keyPeople[0]?.split(' - ')[0] || 'Unknown',
-                email: '',
-                phone: '',
-                value: 0,
-                status: 'New' as const,
-                industry: audit.overview.industry,
-                source: 'Business Intelligence',
-                notes: `Enriched via AI audit on ${new Date(audit.auditedAt).toLocaleDateString()}`,
-                tags: ['ai-enriched', audit.overview.industry.toLowerCase().replace(/\s+/g, '-')],
-                enrichmentData: {
-                    overview: audit.overview,
-                    digitalPresence: audit.digitalPresence,
-                    aiReadiness: audit.aiReadiness,
-                    reviews: audit.reviews,
-                    painPoints: audit.painPoints,
-                    opportunities: audit.opportunities,
-                    talkingPoints: audit.talkingPoints,
-                    relevantResources: audit.relevantResources,
+            const response = await fetch('/api/leads', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${userToken}`,
                 },
-                enrichedAt: audit.auditedAt,
-            };
+                body: JSON.stringify({
+                    businessName: audit.companyName,
+                    contactName: audit.overview.keyPeople[0]?.split(' - ')[0] || '',
+                    email: '',
+                    phone: '',
+                    dealValue: 0,
+                    status: 'New',
+                    notes: `Enriched via AI audit on ${new Date(audit.auditedAt).toLocaleDateString()}\n\nIndustry: ${audit.overview.industry}\nDescription: ${audit.overview.description}`,
+                }),
+            });
 
-            await LeadsService.createLead(
-                user.uid,
-                leadData as Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
-            );
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (data.code === 'LIMIT_EXCEEDED') {
+                    toast.error(`${data.error}`, {
+                        description: data.upgradeMessage,
+                    });
+                } else if (response.status === 400 && data.error?.includes('company')) {
+                    toast.error('Please complete onboarding first', {
+                        description: 'Go to Settings to set up your company before adding leads.',
+                        action: {
+                            label: 'Settings',
+                            onClick: () => window.location.href = '/settings',
+                        },
+                    });
+                } else {
+                    toast.error(data.error || 'Failed to save lead');
+                }
+                return;
+            }
+
             toast.success('Lead saved to pipeline!', {
                 description: `${audit.companyName} has been added to your leads.`,
             });
@@ -198,24 +207,46 @@ export default function DiscoverClient() {
             let pipelineLeadId: string | undefined;
 
             if (action === 'pipeline') {
-                // First create the pipeline lead
-                const leadData = {
-                    companyName: lead.businessName,
-                    contactName: lead.contacts[0]?.name || 'Unknown',
-                    email: lead.contacts[0]?.email || '',
-                    phone: lead.contacts[0]?.phone || '',
-                    value: 0,
-                    status: 'New' as const,
-                    industry: lead.industry,
-                    source: 'AI Discovery',
-                    notes: lead.aiAnalysis.summary,
-                    tags: ['ai-discovered'],
-                };
-                const newLeadId = await LeadsService.createLead(
-                    user!.uid,
-                    leadData as Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
-                );
-                pipelineLeadId = newLeadId;
+                // First create the pipeline lead via API
+                const response = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${userToken}`,
+                    },
+                    body: JSON.stringify({
+                        businessName: lead.businessName,
+                        contactName: lead.contacts[0]?.name || '',
+                        email: lead.contacts[0]?.email || '',
+                        phone: lead.contacts[0]?.phone || '',
+                        dealValue: 0,
+                        status: 'New',
+                        notes: lead.aiAnalysis.summary,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (data.code === 'LIMIT_EXCEEDED') {
+                        toast.error(`${data.error}`, {
+                            description: data.upgradeMessage,
+                        });
+                    } else if (response.status === 400 && data.error?.includes('company')) {
+                        toast.error('Please complete onboarding first', {
+                            description: 'Go to Settings to set up your company before adding leads.',
+                            action: {
+                                label: 'Settings',
+                                onClick: () => window.location.href = '/settings',
+                            },
+                        });
+                    } else {
+                        toast.error(data.error || 'Failed to add lead');
+                    }
+                    return;
+                }
+
+                pipelineLeadId = data.leadId;
                 status = 'added_to_pipeline';
                 toast.success(`${lead.businessName} added to pipeline!`);
             } else if (action === 'watchlist') {

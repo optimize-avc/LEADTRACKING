@@ -35,6 +35,7 @@ export interface Lead {
     contactName: string;
     email: string;
     phone: string;
+    website?: string; // Company website URL
     value: number;
     status: LeadStatus;
     assignedTo: string; // User UID

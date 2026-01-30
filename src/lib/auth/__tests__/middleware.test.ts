@@ -78,7 +78,7 @@ describe('Auth Middleware', () => {
             mockVerifyIdToken.mockResolvedValueOnce({
                 uid: 'user-123',
                 email: 'test@example.com',
-            } as any);
+            } as unknown as Awaited<ReturnType<typeof verifyIdToken>>);
 
             const request = createMockRequest('Bearer valid-token');
             const result = await verifyAuthToken(request);
@@ -172,7 +172,7 @@ describe('Auth Middleware', () => {
             mockVerifyIdToken.mockResolvedValueOnce({
                 uid: 'user-123',
                 email: 'test@example.com',
-            } as any);
+            } as unknown as Awaited<ReturnType<typeof verifyIdToken>>);
 
             const handler = vi.fn().mockResolvedValue(new Response('OK'));
             const wrappedHandler = withAuth(handler);
@@ -187,7 +187,7 @@ describe('Auth Middleware', () => {
             mockVerifyIdToken.mockResolvedValueOnce({
                 uid: 'user-123',
                 email: 'test@example.com',
-            } as any);
+            } as unknown as Awaited<ReturnType<typeof verifyIdToken>>);
 
             const mockResponse = new Response(JSON.stringify({ data: 'test' }));
             const handler = vi.fn().mockResolvedValue(mockResponse);

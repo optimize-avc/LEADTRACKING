@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Zap, X, ArrowRight } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -38,6 +38,27 @@ export function UpgradePrompt({
   className = '',
 }: UpgradePromptProps) {
   const { tier, getUpgradeMessage, formatLimit, limits } = usePlanLimits();
+  
+  // All hooks must be called unconditionally at the top
+  const { containerRef } = useFocusTrap(variant === 'modal');
+  
+  // Handle Escape key for modal
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && onClose) {
+      onClose();
+    }
+  }, [onClose]);
+
+  useEffect(() => {
+    if (variant === 'modal') {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [variant, handleKeyDown]);
   
   const upgradeMessage = message || getUpgradeMessage(limitType);
   const currentLimit = typeof limits[limitType] === 'number' 
@@ -116,26 +137,6 @@ export function UpgradePrompt({
   }
 
   // Modal variant - blocking dialog
-  const { containerRef } = useFocusTrap(variant === 'modal');
-  
-  // Handle Escape key for modal
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && onClose) {
-      onClose();
-    }
-  }, [onClose]);
-
-  useEffect(() => {
-    if (variant === 'modal') {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [variant, handleKeyDown]);
-
   return (
     <AnimatePresence>
       <motion.div

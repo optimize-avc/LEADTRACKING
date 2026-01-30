@@ -5,10 +5,18 @@ export function middleware(request: NextRequest) {
     const response = NextResponse.next();
 
     // 1. Content Security Policy (CSP)
-    // 2025 SaaS Gold Standard: Restrictive but allows required Firebase/Sentry domains
+    // 2026 Best Practice: Remove 'unsafe-eval' in production for security
+    // Note: 'unsafe-eval' only included in development for debugging tools
+    const isDev = process.env.NODE_ENV === 'development';
+
+    // Build script-src based on environment
+    const scriptSrc = isDev
+        ? "'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.sentry.io"
+        : "'self' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.sentry.io";
+
     const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.sentry.io;
+    script-src ${scriptSrc};
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.googleusercontent.com https://*.firebaseapp.com https://*.firebasestorage.app;
     font-src 'self' https://fonts.gstatic.com;

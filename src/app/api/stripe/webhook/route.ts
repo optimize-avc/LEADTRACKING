@@ -20,14 +20,17 @@ export async function POST(req: Request) {
         return new NextResponse('Missing signature', { status: 400 });
     }
 
+    // SECURITY: Require webhook secret in production - never use a fallback
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+        console.error('[Stripe Webhook] STRIPE_WEBHOOK_SECRET not configured');
+        return new NextResponse('Server configuration error', { status: 500 });
+    }
+
     let event: Stripe.Event;
 
     try {
-        event = stripe.webhooks.constructEvent(
-            body,
-            signature,
-            process.env.STRIPE_WEBHOOK_SECRET || 'whsec_mock'
-        );
+        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('[Stripe Webhook] Signature verification failed:', message);

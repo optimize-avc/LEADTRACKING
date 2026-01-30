@@ -202,9 +202,9 @@ export default function DiscoverClient() {
                     if (data.issues) {
                         console.error('Validation issues:', data.issues);
                     }
-                    const errorMessage = data.issues 
+                    const errorMessage = data.issues
                         ? `Validation failed: ${data.issues.map((i: { path: string; message: string }) => `${i.path}: ${i.message}`).join(', ')}`
-                        : (data.error || 'Failed to save lead');
+                        : data.error || 'Failed to save lead';
                     toast.error(errorMessage);
                 }
                 return;

@@ -130,6 +130,10 @@ export function getAdminDb(): Firestore {
 
     const app = getAdminApp();
     adminDb = getFirestore(app);
+    
+    // Allow undefined values to be ignored (they won't be written to the document)
+    adminDb.settings({ ignoreUndefinedProperties: true });
+    
     return adminDb;
 }
 

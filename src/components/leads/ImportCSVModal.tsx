@@ -56,13 +56,32 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
     
     const { containerRef } = useFocusTrap(isOpen);
 
+    // Reset state helper - defined before use
+    const resetState = useCallback(() => {
+        setStep('upload');
+        setCsvData([]);
+        setHeaders([]);
+        setColumnMapping({
+            companyName: null,
+            contactName: null,
+            email: null,
+            phone: null,
+            value: null,
+            industry: null,
+            source: null,
+            status: null,
+            notes: null,
+        });
+        setError(null);
+    }, []);
+
     // Handle Escape key
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === 'Escape') {
             onClose();
             resetState();
         }
-    }, [onClose]);
+    }, [onClose, resetState]);
 
     useEffect(() => {
         if (isOpen) {
@@ -213,24 +232,6 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
         await onImport(leads);
         onClose();
         resetState();
-    };
-
-    const resetState = () => {
-        setStep('upload');
-        setCsvData([]);
-        setHeaders([]);
-        setColumnMapping({
-            companyName: null,
-            contactName: null,
-            email: null,
-            phone: null,
-            value: null,
-            industry: null,
-            source: null,
-            status: null,
-            notes: null,
-        });
-        setError(null);
     };
 
     if (!isOpen) return null;

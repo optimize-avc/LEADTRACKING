@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 /**
  * A hook that traps keyboard focus within a container element.
@@ -103,22 +103,22 @@ export function useRovingTabIndex<T extends HTMLElement>(
     items: T[],
     initialIndex: number = 0
 ) {
-    const currentIndexRef = useRef(initialIndex);
+    const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
     const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
         const { key } = event;
-        let newIndex = currentIndexRef.current;
+        let newIndex = currentIndex;
 
         switch (key) {
             case 'ArrowDown':
             case 'ArrowRight':
                 event.preventDefault();
-                newIndex = (currentIndexRef.current + 1) % items.length;
+                newIndex = (currentIndex + 1) % items.length;
                 break;
             case 'ArrowUp':
             case 'ArrowLeft':
                 event.preventDefault();
-                newIndex = (currentIndexRef.current - 1 + items.length) % items.length;
+                newIndex = (currentIndex - 1 + items.length) % items.length;
                 break;
             case 'Home':
                 event.preventDefault();
@@ -132,9 +132,9 @@ export function useRovingTabIndex<T extends HTMLElement>(
                 return;
         }
 
-        currentIndexRef.current = newIndex;
+        setCurrentIndex(newIndex);
         items[newIndex]?.focus();
-    }, [items]);
+    }, [items, currentIndex]);
 
-    return { handleKeyDown, currentIndex: currentIndexRef.current };
+    return { handleKeyDown, currentIndex };
 }

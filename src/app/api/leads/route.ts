@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
             tags: [],
             assignedTo: userId,
             aiGenerated: false,
-            enrichmentData: validatedData.enrichmentData,
+            enrichmentData: validatedData.enrichmentData as Lead['enrichmentData'],
             createdAt: now,
             updatedAt: now,
         };

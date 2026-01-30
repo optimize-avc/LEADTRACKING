@@ -36,10 +36,10 @@ export const enrichmentDataSchema = z
     .object({
         overview: z
             .object({
-                description: z.string(),
-                industry: z.string(),
-                estimatedSize: z.string(),
-                keyPeople: z.array(z.string()),
+                description: z.string().optional(),
+                industry: z.string().optional(),
+                estimatedSize: z.string().optional(),
+                keyPeople: z.array(z.string()).optional(),
                 founded: z.string().optional(),
                 headquarters: z.string().optional(),
             })
@@ -47,28 +47,28 @@ export const enrichmentDataSchema = z
             .optional(),
         digitalPresence: z
             .object({
-                score: z.number(),
-                websiteQuality: z.string(),
-                mobileOptimized: z.boolean(),
-                seoStrength: z.string(),
-                socialProfiles: z.array(z.string()),
+                score: z.number().optional(),
+                websiteQuality: z.string().optional(),
+                mobileOptimized: z.boolean().optional(),
+                seoStrength: z.string().optional(),
+                socialProfiles: z.array(z.string()).optional(),
             })
             .passthrough()
             .optional(),
         aiReadiness: z
             .object({
-                score: z.number(),
-                currentAIUsage: z.string(),
-                opportunities: z.array(z.string()),
+                score: z.number().optional(),
+                currentAIUsage: z.string().optional(),
+                opportunities: z.array(z.string()).optional(),
             })
             .passthrough()
             .optional(),
         reviews: z
             .object({
-                sentiment: z.string(),
+                sentiment: z.string().optional(),
                 averageRating: z.number().optional(),
-                keyThemes: z.array(z.string()),
-                sources: z.array(z.string()),
+                keyThemes: z.array(z.string()).optional(),
+                sources: z.array(z.string()).optional(),
             })
             .passthrough()
             .optional(),
@@ -79,9 +79,9 @@ export const enrichmentDataSchema = z
             .array(
                 z
                     .object({
-                        id: z.string(),
-                        title: z.string(),
-                        relevance: z.string(),
+                        id: z.string().optional(),
+                        title: z.string().optional(),
+                        relevance: z.string().optional(),
                     })
                     .passthrough()
             )

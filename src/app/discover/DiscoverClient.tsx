@@ -199,11 +199,12 @@ export default function DiscoverClient() {
                     });
                 } else {
                     // Log validation issues for debugging
-                    if (data.issues) {
-                        console.error('Validation issues:', data.issues);
+                    const issues = data.details?.issues || data.issues;
+                    if (issues) {
+                        console.error('Validation issues:', issues);
                     }
-                    const errorMessage = data.issues
-                        ? `Validation failed: ${data.issues.map((i: { path: string; message: string }) => `${i.path}: ${i.message}`).join(', ')}`
+                    const errorMessage = issues
+                        ? `Validation failed: ${issues.map((i: { path: string; message: string }) => `${i.path}: ${i.message}`).join(', ')}`
                         : data.error || 'Failed to save lead';
                     toast.error(errorMessage);
                 }

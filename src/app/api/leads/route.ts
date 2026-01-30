@@ -174,8 +174,8 @@ export async function POST(request: NextRequest) {
             contactName: validatedData.contactName || '',
             email: validatedData.email || '',
             phone: validatedData.phone || '',
-            website: validatedData.website || null,
-            industry: validatedData.industry || null,
+            website: validatedData.website || undefined,
+            industry: validatedData.industry || undefined,
             value: validatedData.dealValue || 0,
             status: validatedData.status || 'New',
             source: 'Manual', // Default source

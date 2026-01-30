@@ -134,21 +134,23 @@ env:
     #   availability:
     #       - RUNTIME
 
-    # Twilio Secrets
-    - variable: TWILIO_ACCOUNT_SID
-      secret: TWILIO_ACCOUNT_SID
-      availability:
-          - RUNTIME
-    - variable: TWILIO_AUTH_TOKEN
-      secret: TWILIO_AUTH_TOKEN
-      availability:
-          - RUNTIME
+    # Twilio Secrets (DISABLED - enable after adding to Secret Manager)
+    # - variable: TWILIO_ACCOUNT_SID
+    #   secret: TWILIO_ACCOUNT_SID
+    #   availability:
+    #       - RUNTIME
+    # - variable: TWILIO_AUTH_TOKEN
+    #   secret: TWILIO_AUTH_TOKEN
+    #   availability:
+    #       - RUNTIME
 
-    # Google/Firebase Secrets
-    - variable: GOOGLE_CLIENT_SECRET
-      secret: GOOGLE_CLIENT_SECRET
-      availability:
-          - RUNTIME
+    # Google OAuth Secret (DISABLED - enable after adding to Secret Manager)
+    # - variable: GOOGLE_CLIENT_SECRET
+    #   secret: GOOGLE_CLIENT_SECRET
+    #   availability:
+    #       - RUNTIME
+    
+    # Google AI API Key (ENABLED - required for Deep Audit)
     - variable: GOOGLE_AI_API_KEY
       secret: GOOGLE_AI_API_KEY
       availability:
@@ -191,11 +193,11 @@ env:
     # - GPT-4o (analysis): ~$0.10-0.20
     # Total: $0.05-0.30 per sweep
 
-    # SendGrid
-    - variable: SENDGRID_API_KEY
-      secret: SENDGRID_API_KEY
-      availability:
-          - RUNTIME
+    # SendGrid (DISABLED - enable after adding to Secret Manager)
+    # - variable: SENDGRID_API_KEY
+    #   secret: SENDGRID_API_KEY
+    #   availability:
+    #       - RUNTIME
 
     # Discord OAuth2 (Bot Studio)
     - variable: NEXT_PUBLIC_DISCORD_CLIENT_ID
@@ -207,16 +209,16 @@ env:
       value: '1464013717522874419'
       availability:
           - RUNTIME
-    # Discord Bot Token - For fetching guild channels
-    - variable: DISCORD_BOT_TOKEN
-      secret: DISCORD_BOT_TOKEN
-      availability:
-          - RUNTIME
-    # Discord secret
-    - variable: DISCORD_CLIENT_SECRET
-      secret: DISCORD_CLIENT_SECRET
-      availability:
-          - RUNTIME
+    # Discord Bot Token (DISABLED - enable after adding to Secret Manager)
+    # - variable: DISCORD_BOT_TOKEN
+    #   secret: DISCORD_BOT_TOKEN
+    #   availability:
+    #       - RUNTIME
+    # Discord secret (DISABLED - enable after adding to Secret Manager)
+    # - variable: DISCORD_CLIENT_SECRET
+    #   secret: DISCORD_CLIENT_SECRET
+    #   availability:
+    #       - RUNTIME
     - variable: DISCORD_REDIRECT_URI
       value: https://prod-lead-tracker--antigrav-tracking-final.us-central1.hosted.app/api/discord/callback
       availability:

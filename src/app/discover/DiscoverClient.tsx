@@ -198,7 +198,14 @@ export default function DiscoverClient() {
                         },
                     });
                 } else {
-                    toast.error(data.error || 'Failed to save lead');
+                    // Log validation issues for debugging
+                    if (data.issues) {
+                        console.error('Validation issues:', data.issues);
+                    }
+                    const errorMessage = data.issues 
+                        ? `Validation failed: ${data.issues.map((i: { path: string; message: string }) => `${i.path}: ${i.message}`).join(', ')}`
+                        : (data.error || 'Failed to save lead');
+                    toast.error(errorMessage);
                 }
                 return;
             }

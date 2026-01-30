@@ -18,12 +18,12 @@ This audit evaluates the LEADTRACKING codebase against 2026 best practices. Over
 
 ### Priority Summary
 
-| Priority | Count | Description |
-|----------|-------|-------------|
-| 🔴 Critical | 4 | Runtime-breaking issues |
-| 🟠 High | 12 | Security/reliability concerns |
-| 🟡 Medium | 18 | Code quality improvements |
-| 🟢 Low | 8 | Minor optimizations |
+| Priority    | Count | Description                   |
+| ----------- | ----- | ----------------------------- |
+| 🔴 Critical | 4     | Runtime-breaking issues       |
+| 🟠 High     | 12    | Security/reliability concerns |
+| 🟡 Medium   | 18    | Code quality improvements     |
+| 🟢 Low      | 8     | Minor optimizations           |
 
 ---
 
@@ -31,7 +31,8 @@ This audit evaluates the LEADTRACKING codebase against 2026 best practices. Over
 
 ### 1. Zod Schema Nullable vs Optional Handling
 
-**Files Affected:**  
+**Files Affected:**
+
 - `src/lib/validation.ts` (lines 20-75)
 - `src/lib/discovery/aiAnalyzer.ts`
 - `src/lib/ai/business-audit.ts`
@@ -49,6 +50,7 @@ overview: z.object({
 **Problem:** When AI returns `{ "overview": null }`, Zod validates it. But when AI returns `{ "overview": { "description": null, "industry": null } }`, nested validation works. However, partial objects like `{ "overview": { "description": "text" } }` without all expected keys can fail.
 
 **Fix (Recommended):**
+
 ```typescript
 // Use .default() for nested objects to provide fallbacks
 overview: z.object({
@@ -62,6 +64,7 @@ overview: z.object({
 ```
 
 Or use `.catch()` for more resilient parsing:
+
 ```typescript
 overview: z.object({...}).passthrough().nullable().catch(null),
 ```
@@ -74,14 +77,18 @@ overview: z.object({...}).passthrough().nullable().catch(null),
 
 **Issue:** JSON.parse of AI responses without type guards or validation.
 
-```typescript
+````typescript
 // Current (unsafe):
-const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-return JSON.parse(cleanText);  // ❌ Returns `any`
-```
+const cleanText = text
+    .replace(/```json/g, '')
+    .replace(/```/g, '')
+    .trim();
+return JSON.parse(cleanText); // ❌ Returns `any`
+````
 
 **Fix:**
-```typescript
+
+````typescript
 import { z } from 'zod';
 
 const PersonaSchema = z.object({
@@ -96,7 +103,10 @@ const PersonaSchema = z.object({
 
 function parseAIPersona(text: string): AIPersona | null {
     try {
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const cleanText = text
+            .replace(/```json/g, '')
+            .replace(/```/g, '')
+            .trim();
         const parsed = JSON.parse(cleanText);
         return PersonaSchema.parse(parsed);
     } catch (e) {
@@ -104,7 +114,7 @@ function parseAIPersona(text: string): AIPersona | null {
         return null;
     }
 }
-```
+````
 
 ---
 
@@ -115,6 +125,7 @@ function parseAIPersona(text: string): AIPersona | null {
 **Issue:** The main leads component has no error boundary wrapping AI enrichment operations, which can crash the entire page.
 
 **Fix:** Wrap AI-dependent sections with ErrorBoundary:
+
 ```typescript
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
@@ -141,6 +152,7 @@ fetch('/api/email/welcome', {...})
 **Issue:** If the promise rejects before `.catch()` is attached (synchronous error), it may become unhandled.
 
 **Fix:**
+
 ```typescript
 // Use async/await with try-catch
 (async () => {
@@ -159,12 +171,14 @@ fetch('/api/email/welcome', {...})
 ### 5. API Routes Missing Rate Limiting
 
 **Files Affected:**
+
 - `src/app/api/leads/[id]/enrich/route.ts` - No rate limiting
 - `src/app/api/audit/route.ts` - No rate limiting (expensive AI operation)
 - `src/app/api/discovery/parse/route.ts` - No rate limiting
 - `src/app/api/email/send/route.ts` - No rate limiting
 
 **Fix:** Add rate limiting to all API routes:
+
 ```typescript
 import { rateLimit, RATE_LIMITS } from '@/lib/api-middleware';
 
@@ -191,6 +205,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 ```
 
 **Fix:**
+
 ```typescript
 import { withAuth } from '@/lib/auth/middleware';
 
@@ -204,10 +219,12 @@ export const POST = withAuth(async (request, userId) => {
 ### 7. Sensitive Data in Console Logs
 
 **Files Affected:**
+
 - `src/app/api/leads/route.ts` (line 98): `console.log('[Leads API] Received body:', JSON.stringify(body, null, 2));`
 - `src/app/api/ai/generate/route.ts` (line 65): `console.log('[AI Route] User authenticated:', decodedToken.uid);`
 
 **Fix:** Remove or redact sensitive data in production:
+
 ```typescript
 if (process.env.NODE_ENV === 'development') {
     console.log('[Leads API] Received body:', JSON.stringify(body, null, 2));
@@ -224,12 +241,12 @@ if (process.env.NODE_ENV === 'development') {
 
 ```typescript
 // Current (problematic):
-export const app = typeof window !== 'undefined' 
-    ? getFirebaseApp() 
-    : (null as unknown as FirebaseApp);  // ❌ Type assertion hides issues
+export const app =
+    typeof window !== 'undefined' ? getFirebaseApp() : (null as unknown as FirebaseApp); // ❌ Type assertion hides issues
 ```
 
 **Fix:** Remove legacy exports or add deprecation warnings:
+
 ```typescript
 /** @deprecated Use getFirebaseApp() instead */
 export function getLegacyApp(): FirebaseApp {
@@ -253,11 +270,12 @@ export function getLegacyApp(): FirebaseApp {
 event = stripe.webhooks.constructEvent(
     body,
     signature,
-    process.env.STRIPE_WEBHOOK_SECRET || 'whsec_mock'  // ❌ Dangerous fallback
+    process.env.STRIPE_WEBHOOK_SECRET || 'whsec_mock' // ❌ Dangerous fallback
 );
 ```
 
 **Fix:**
+
 ```typescript
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 if (!webhookSecret) {
@@ -280,16 +298,16 @@ script-src 'self' 'unsafe-eval' 'unsafe-inline' ...
 ```
 
 **Fix:** Remove `'unsafe-eval'` if not strictly required:
+
 ```typescript
 script-src 'self' 'unsafe-inline' https://apis.google.com ...
 ```
 
 If needed for dev tools, use environment-specific CSP:
+
 ```typescript
 const isDev = process.env.NODE_ENV === 'development';
-const scriptSrc = isDev 
-    ? "'self' 'unsafe-eval' 'unsafe-inline'" 
-    : "'self' 'unsafe-inline'";
+const scriptSrc = isDev ? "'self' 'unsafe-eval' 'unsafe-inline'" : "'self' 'unsafe-inline'";
 ```
 
 ---
@@ -306,6 +324,7 @@ if (!to || !messageBody || !leadId) {  // ❌ Only checks presence, not format
 ```
 
 **Fix:**
+
 ```typescript
 import { z } from 'zod';
 
@@ -323,6 +342,7 @@ const validated = smsSchema.parse(body);
 ### 12. Hard-coded Admin Emails
 
 **Files Affected:**
+
 - `src/app/api/admin/impersonate/route.ts` (line 15)
 - `src/components/providers/AuthProvider.tsx` (line 12)
 
@@ -333,6 +353,7 @@ const SUPER_ADMIN_EMAILS = ['admin@avcpp.com', 'blazehaze4201980@gmail.com', 'op
 ```
 
 **Fix:** Move to environment variables or Firestore config:
+
 ```typescript
 const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS || '').split(',').filter(Boolean);
 ```
@@ -346,10 +367,11 @@ const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS || '').split(',').fil
 **Issue:** Multiple rapid auth state changes can cause race conditions.
 
 **Fix:** Add abort controller:
+
 ```typescript
 useEffect(() => {
     const abortController = new AbortController();
-    
+
     const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (currentUser) => {
         if (abortController.signal.aborted) return;
         // ... rest of logic
@@ -385,6 +407,7 @@ const maxLeads = Math.min(10, AI_LIMITS.maxLeadsToScore);
 ```
 
 **Fix:** Use config from token safety:
+
 ```typescript
 import { DEFAULT_TOKEN_SAFETY } from '@/types/discovery';
 const maxLeads = Math.min(DEFAULT_TOKEN_SAFETY.maxLeadsToAnalyze, AI_LIMITS.maxLeadsToScore);
@@ -399,6 +422,7 @@ const maxLeads = Math.min(DEFAULT_TOKEN_SAFETY.maxLeadsToAnalyze, AI_LIMITS.maxL
 **Issue:** `APP_URL` used in email links could be manipulated if env var is compromised.
 
 **Fix:** Validate URL format:
+
 ```typescript
 const APP_URL = (() => {
     const url = process.env.NEXT_PUBLIC_APP_URL || 'https://default.app';
@@ -421,15 +445,20 @@ const APP_URL = (() => {
 **File:** `src/app/leads/LeadsClient.tsx`
 
 **Issue:** Many handlers recreated on every render:
+
 - `handleExpandLead` (line 180)
 - `handleActivitySuccess` (line 195)
 - `toggleSelectLead` (line 240)
 
 **Fix:** Wrap with `useCallback`:
+
 ```typescript
-const handleExpandLead = useCallback((leadId: string) => {
-    // ...
-}, [selectedLeadIds, activities, gmailConnected, gmailHistory]);
+const handleExpandLead = useCallback(
+    (leadId: string) => {
+        // ...
+    },
+    [selectedLeadIds, activities, gmailConnected, gmailHistory]
+);
 ```
 
 ---
@@ -441,13 +470,16 @@ const handleExpandLead = useCallback((leadId: string) => {
 **Issue:** `filteredLeads` computation is memoized but `calculateLeadVelocity` inside sort is called repeatedly.
 
 **Fix:** Pre-compute velocities:
+
 ```typescript
 const velocityCache = useMemo(() => {
-    return new Map(leads.map(l => [l.id, calculateLeadVelocity(l, activities[l.id])]));
+    return new Map(leads.map((l) => [l.id, calculateLeadVelocity(l, activities[l.id])]));
 }, [leads, activities]);
 
 // Then in sort:
-result.sort((a, b) => (velocityCache.get(b.id)?.score || 0) - (velocityCache.get(a.id)?.score || 0));
+result.sort(
+    (a, b) => (velocityCache.get(b.id)?.score || 0) - (velocityCache.get(a.id)?.score || 0)
+);
 ```
 
 ---
@@ -459,6 +491,7 @@ result.sort((a, b) => (velocityCache.get(b.id)?.score || 0) - (velocityCache.get
 **Issue:** Some routes return `{ error: string }`, others return `{ error: string, details: unknown }`.
 
 **Fix:** Standardize error responses:
+
 ```typescript
 interface APIError {
     error: string;
@@ -466,7 +499,12 @@ interface APIError {
     details?: Record<string, unknown>;
 }
 
-function errorResponse(message: string, status: number, code?: string, details?: Record<string, unknown>) {
+function errorResponse(
+    message: string,
+    status: number,
+    code?: string,
+    details?: Record<string, unknown>
+) {
     return NextResponse.json({ error: message, code, details }, { status });
 }
 ```
@@ -483,23 +521,26 @@ function errorResponse(message: string, status: number, code?: string, details?:
 return snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
-})) as Lead[];  // ❌ No validation
+})) as Lead[]; // ❌ No validation
 ```
 
 **Fix:** Add runtime validation or type guard:
+
 ```typescript
 function isLead(data: unknown): data is Lead {
     return typeof data === 'object' && data !== null && 'companyName' in data;
 }
 
-return snapshot.docs.map((doc) => {
-    const data = { id: doc.id, ...doc.data() };
-    if (!isLead(data)) {
-        console.warn('Invalid lead data:', doc.id);
-        return null;
-    }
-    return data;
-}).filter((l): l is Lead => l !== null);
+return snapshot.docs
+    .map((doc) => {
+        const data = { id: doc.id, ...doc.data() };
+        if (!isLead(data)) {
+            console.warn('Invalid lead data:', doc.id);
+            return null;
+        }
+        return data;
+    })
+    .filter((l): l is Lead => l !== null);
 ```
 
 ---
@@ -511,6 +552,7 @@ return snapshot.docs.map((doc) => {
 **Issue:** No Suspense boundary for data loading states.
 
 **Fix:**
+
 ```typescript
 import { Suspense } from 'react';
 import LeadsClient from './LeadsClient';
@@ -554,12 +596,14 @@ const headersList = await headers();
 ### 24. Duplicate Code in Lead Processing
 
 **Files Affected:**
+
 - `src/app/leads/LeadsClient.tsx` (handleReaudit)
 - `src/app/leads/LeadsClient.tsx` (handleBulkEnrich)
 
 **Issue:** Almost identical enrichment logic duplicated.
 
 **Fix:** Extract to shared utility:
+
 ```typescript
 async function enrichSingleLead(user: User, lead: Lead): Promise<EnrichmentResult> {
     const token = await user.getIdToken();
@@ -581,18 +625,15 @@ async function enrichSingleLead(user: User, lead: Lead): Promise<EnrichmentResul
 **Issue:** AI API calls have no retry mechanism for transient failures.
 
 **Fix:**
+
 ```typescript
-async function callWithRetry<T>(
-    fn: () => Promise<T>,
-    maxRetries = 3,
-    delay = 1000
-): Promise<T> {
+async function callWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, delay = 1000): Promise<T> {
     for (let i = 0; i < maxRetries; i++) {
         try {
             return await fn();
         } catch (error) {
             if (i === maxRetries - 1) throw error;
-            await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+            await new Promise((r) => setTimeout(r, delay * Math.pow(2, i)));
         }
     }
     throw new Error('Unreachable');
@@ -608,9 +649,10 @@ async function callWithRetry<T>(
 **Issue:** `Lead` interface has optional `companyId` but services always expect it for multi-tenant.
 
 **Fix:** Make `companyId` required or add a `TenantLead` type:
+
 ```typescript
 export interface TenantLead extends Lead {
-    companyId: string;  // Required for multi-tenant operations
+    companyId: string; // Required for multi-tenant operations
 }
 ```
 
@@ -623,6 +665,7 @@ export interface TenantLead extends Lead {
 **Issue:** Numbers like `10000` and `100` not named.
 
 **Fix:**
+
 ```typescript
 const MAX_STORE_SIZE = 10_000;
 const DEFAULT_LIMIT = 100;
@@ -638,6 +681,7 @@ const DEFAULT_WINDOW_SECONDS = 60;
 **Issue:** Tab content changes not announced to screen readers.
 
 **Fix:**
+
 ```typescript
 <div
     className="flex-1 overflow-y-auto p-6 space-y-6"
@@ -656,6 +700,7 @@ const DEFAULT_WINDOW_SECONDS = 60;
 **Issue:** Some files use `| null`, others use `| undefined`, some use both.
 
 **Fix:** Establish convention:
+
 - Use `null` for intentionally absent values (API responses)
 - Use `undefined` for optional parameters
 - Document in CONTRIBUTING.md
@@ -679,6 +724,7 @@ const DEFAULT_WINDOW_SECONDS = 60;
 **Issue:** `cleanupExpiredEntries` only triggers when store exceeds 10,000 entries.
 
 **Fix:** Add periodic cleanup:
+
 ```typescript
 setInterval(cleanupExpiredEntries, 60_000); // Clean every minute
 ```
@@ -692,6 +738,7 @@ setInterval(cleanupExpiredEntries, 60_000); // Clean every minute
 **Issue:** Composite queries require Firestore indexes.
 
 **Fix:** Document required indexes:
+
 ```javascript
 // firestore.indexes.json
 {
@@ -717,6 +764,7 @@ setInterval(cleanupExpiredEntries, 60_000); // Clean every minute
 **Issue:** `lead.enrichmentData.painPoints.slice(0, 2)` - no check if array exists.
 
 **Fix:**
+
 ```typescript
 {(lead.enrichmentData?.painPoints ?? []).slice(0, 2).map(...)}
 ```
@@ -730,6 +778,7 @@ setInterval(cleanupExpiredEntries, 60_000); // Clean every minute
 **Issue:** `console.error` doesn't integrate with log aggregation services.
 
 **Fix:** Create structured logger:
+
 ```typescript
 import { captureError } from '@/lib/sentry';
 
@@ -761,6 +810,7 @@ function logError(message: string, error: unknown, context?: Record<string, unkn
 **Files Affected:** Most utility functions
 
 **Fix:** Add JSDoc for public APIs:
+
 ```typescript
 /**
  * Calculate lead velocity score based on activity history
@@ -768,7 +818,7 @@ function logError(message: string, error: unknown, context?: Record<string, unkn
  * @param activities - Recent activities for this lead
  * @returns Velocity metrics including score, status, and momentum
  */
-export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): VelocityResult
+export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): VelocityResult;
 ```
 
 ---
@@ -788,6 +838,7 @@ export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): Velo
 **File:** `src/app/leads/LeadsClient.tsx` (1400+ lines)
 
 **Fix:** Split into smaller components:
+
 - `LeadCard.tsx`
 - `LeadFilters.tsx`
 - `BulkActions.tsx`
@@ -802,6 +853,7 @@ export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): Velo
 **Issue:** Repeated class combinations like `"px-3 py-2 text-xs bg-slate-800/50 border border-white/10 rounded-lg"`.
 
 **Fix:** Extract to component or use `@apply`:
+
 ```css
 /* globals.css */
 @layer components {
@@ -820,13 +872,14 @@ export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): Velo
 **Issue:** Some additional strict flags could catch more errors.
 
 **Fix:**
+
 ```json
 {
     "compilerOptions": {
         "strict": true,
-        "noUncheckedIndexedAccess": true,  // Add
-        "exactOptionalPropertyTypes": true,  // Add
-        "noPropertyAccessFromIndexSignature": true  // Add
+        "noUncheckedIndexedAccess": true, // Add
+        "exactOptionalPropertyTypes": true, // Add
+        "noPropertyAccessFromIndexSignature": true // Add
     }
 }
 ```
@@ -836,6 +889,7 @@ export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): Velo
 ### 41. Test Coverage Gaps
 
 **Files Missing Tests:**
+
 - `src/lib/ai/gemini.ts`
 - `src/lib/discovery/aiAnalyzer.ts`
 - `src/lib/utils/scoring.ts`
@@ -850,6 +904,7 @@ export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): Velo
 **File:** `.prettierrc` (if exists)
 
 **Fix:** Add markdown formatting:
+
 ```json
 {
     "overrides": [
@@ -868,18 +923,21 @@ export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): Velo
 ## Recommended Next Steps
 
 ### Immediate (This Sprint)
+
 1. Fix Zod nullable handling in `enrichmentDataSchema` (Critical #1)
 2. Add authentication to `/api/leads/[id]/enrich/route.ts` (High #6)
 3. Remove `'unsafe-eval'` from CSP or make environment-specific (High #10)
 4. Fix Stripe webhook secret fallback (High #9)
 
 ### Short-term (Next 2 Sprints)
+
 5. Add rate limiting to all unprotected API routes (High #5)
 6. Implement proper type guards for AI responses (Critical #2)
 7. Standardize error response format (Medium #19)
 8. Add retry logic for AI API calls (Medium #25)
 
 ### Long-term (Tech Debt Backlog)
+
 9. Split large components into smaller modules (Low #38)
 10. Add comprehensive test coverage (Low #41)
 11. Enable additional TypeScript strict flags (Low #40)
@@ -889,22 +947,22 @@ export function calculateLeadVelocity(lead: Lead, activities?: Activity[]): Velo
 
 ## Appendix: File-by-File Summary
 
-| File | Critical | High | Medium | Low |
-|------|----------|------|--------|-----|
-| `src/lib/validation.ts` | 1 | 0 | 1 | 0 |
-| `src/lib/ai/gemini.ts` | 1 | 0 | 0 | 1 |
-| `src/app/leads/LeadsClient.tsx` | 1 | 0 | 4 | 2 |
-| `src/components/providers/AuthProvider.tsx` | 1 | 2 | 0 | 0 |
-| `src/app/api/leads/[id]/enrich/route.ts` | 0 | 2 | 0 | 0 |
-| `src/app/api/stripe/webhook/route.ts` | 0 | 1 | 0 | 0 |
-| `src/middleware.ts` | 0 | 1 | 0 | 0 |
-| `src/app/api/twilio/sms/route.ts` | 0 | 1 | 0 | 0 |
-| `src/lib/sendgrid.ts` | 0 | 1 | 1 | 0 |
-| `src/lib/firebase/services.ts` | 0 | 0 | 2 | 0 |
-| `src/lib/discovery/aiAnalyzer.ts` | 0 | 0 | 2 | 1 |
-| `src/lib/rate-limit.ts` | 0 | 0 | 2 | 0 |
-| Other files | 0 | 4 | 6 | 4 |
+| File                                        | Critical | High | Medium | Low |
+| ------------------------------------------- | -------- | ---- | ------ | --- |
+| `src/lib/validation.ts`                     | 1        | 0    | 1      | 0   |
+| `src/lib/ai/gemini.ts`                      | 1        | 0    | 0      | 1   |
+| `src/app/leads/LeadsClient.tsx`             | 1        | 0    | 4      | 2   |
+| `src/components/providers/AuthProvider.tsx` | 1        | 2    | 0      | 0   |
+| `src/app/api/leads/[id]/enrich/route.ts`    | 0        | 2    | 0      | 0   |
+| `src/app/api/stripe/webhook/route.ts`       | 0        | 1    | 0      | 0   |
+| `src/middleware.ts`                         | 0        | 1    | 0      | 0   |
+| `src/app/api/twilio/sms/route.ts`           | 0        | 1    | 0      | 0   |
+| `src/lib/sendgrid.ts`                       | 0        | 1    | 1      | 0   |
+| `src/lib/firebase/services.ts`              | 0        | 0    | 2      | 0   |
+| `src/lib/discovery/aiAnalyzer.ts`           | 0        | 0    | 2      | 1   |
+| `src/lib/rate-limit.ts`                     | 0        | 0    | 2      | 0   |
+| Other files                                 | 0        | 4    | 6      | 4   |
 
 ---
 
-*Report generated by automated code analysis. Manual review recommended for all critical and high priority items.*
+_Report generated by automated code analysis. Manual review recommended for all critical and high priority items._

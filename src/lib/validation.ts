@@ -77,11 +77,13 @@ export const enrichmentDataSchema = z
         talkingPoints: z.array(z.string()).optional(),
         relevantResources: z
             .array(
-                z.object({
-                    id: z.string(),
-                    title: z.string(),
-                    relevance: z.string(),
-                }).passthrough()
+                z
+                    .object({
+                        id: z.string(),
+                        title: z.string(),
+                        relevance: z.string(),
+                    })
+                    .passthrough()
             )
             .optional(),
         auditedAt: z.number().optional(),

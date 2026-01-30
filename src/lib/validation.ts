@@ -43,6 +43,7 @@ export const enrichmentDataSchema = z
                 founded: z.string().optional(),
                 headquarters: z.string().optional(),
             })
+            .passthrough()
             .optional(),
         digitalPresence: z
             .object({
@@ -52,6 +53,7 @@ export const enrichmentDataSchema = z
                 seoStrength: z.string(),
                 socialProfiles: z.array(z.string()),
             })
+            .passthrough()
             .optional(),
         aiReadiness: z
             .object({
@@ -59,6 +61,7 @@ export const enrichmentDataSchema = z
                 currentAIUsage: z.string(),
                 opportunities: z.array(z.string()),
             })
+            .passthrough()
             .optional(),
         reviews: z
             .object({
@@ -67,6 +70,7 @@ export const enrichmentDataSchema = z
                 keyThemes: z.array(z.string()),
                 sources: z.array(z.string()),
             })
+            .passthrough()
             .optional(),
         painPoints: z.array(z.string()).optional(),
         opportunities: z.array(z.string()).optional(),
@@ -77,11 +81,12 @@ export const enrichmentDataSchema = z
                     id: z.string(),
                     title: z.string(),
                     relevance: z.string(),
-                })
+                }).passthrough()
             )
             .optional(),
         auditedAt: z.number().optional(),
     })
+    .passthrough() // Allow additional fields from AI
     .optional();
 
 export const createLeadSchema = z.object({

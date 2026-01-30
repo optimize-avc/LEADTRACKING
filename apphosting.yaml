@@ -116,23 +116,23 @@ env:
     # Run `firebase apphosting:secrets:set <SECRET_NAME>` to add each secret
     # See header comments for full setup guide
 
-    # Stripe Secrets (enable after running firebase apphosting:secrets:set)
-    - variable: STRIPE_SECRET_KEY
-      secret: STRIPE_SECRET_KEY
-      availability:
-          - RUNTIME
-    - variable: STRIPE_WEBHOOK_SECRET
-      secret: STRIPE_WEBHOOK_SECRET
-      availability:
-          - RUNTIME
-    - variable: STRIPE_PRICE_ID_PRO
-      secret: STRIPE_PRICE_ID_PRO
-      availability:
-          - RUNTIME
-    - variable: STRIPE_PRICE_ID_VENTURE
-      secret: STRIPE_PRICE_ID_VENTURE
-      availability:
-          - RUNTIME
+    # Stripe Secrets (DISABLED - enable after running firebase apphosting:secrets:set)
+    # - variable: STRIPE_SECRET_KEY
+    #   secret: STRIPE_SECRET_KEY
+    #   availability:
+    #       - RUNTIME
+    # - variable: STRIPE_WEBHOOK_SECRET
+    #   secret: STRIPE_WEBHOOK_SECRET
+    #   availability:
+    #       - RUNTIME
+    # - variable: STRIPE_PRICE_ID_PRO
+    #   secret: STRIPE_PRICE_ID_PRO
+    #   availability:
+    #       - RUNTIME
+    # - variable: STRIPE_PRICE_ID_VENTURE
+    #   secret: STRIPE_PRICE_ID_VENTURE
+    #   availability:
+    #       - RUNTIME
 
     # Twilio Secrets
     - variable: TWILIO_ACCOUNT_SID

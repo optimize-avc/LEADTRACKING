@@ -209,11 +209,11 @@ env:
       value: '1464013717522874419'
       availability:
           - RUNTIME
-    # Discord Bot Token (DISABLED - enable after adding to Secret Manager)
-    # - variable: DISCORD_BOT_TOKEN
-    #   secret: DISCORD_BOT_TOKEN
-    #   availability:
-    #       - RUNTIME
+    # Discord Bot Token (ENABLED)
+    - variable: DISCORD_BOT_TOKEN
+      secret: DISCORD_BOT_TOKEN
+      availability:
+          - RUNTIME
     # Discord secret (DISABLED - enable after adding to Secret Manager)
     # - variable: DISCORD_CLIENT_SECRET
     #   secret: DISCORD_CLIENT_SECRET

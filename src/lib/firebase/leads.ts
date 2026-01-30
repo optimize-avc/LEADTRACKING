@@ -46,24 +46,24 @@ export const LeadsService = {
     async getLeads(userId: string, limitCount: number = 50): Promise<Lead[]> {
         // First get the user's companyId
         const companyId = await this.getUserCompanyId(userId);
-        
+
         const leadsRef = collection(getFirebaseDb(), 'leads');
         let q;
-        
+
         if (companyId) {
             // Multi-tenant: filter by company
             q = query(
-                leadsRef, 
+                leadsRef,
                 where('companyId', '==', companyId),
-                orderBy('createdAt', 'desc'), 
+                orderBy('createdAt', 'desc'),
                 limit(limitCount)
             );
         } else {
             // Fallback: filter by userId (for users without a company)
             q = query(
-                leadsRef, 
+                leadsRef,
                 where('userId', '==', userId),
-                orderBy('createdAt', 'desc'), 
+                orderBy('createdAt', 'desc'),
                 limit(limitCount)
             );
         }

@@ -1,6 +1,6 @@
 /**
  * Token Safety System for AI Lead Discovery
- * 
+ *
  * Implements hard limits and circuit breakers to prevent runaway AI costs.
  * All limits are enforced, not just suggested.
  */
@@ -37,14 +37,14 @@ export class TokenBudget {
         if (this.tokensUsed + tokens > this.config.maxTokensPerSweep) {
             throw new TokenBudgetExceededError(
                 `Sweep ${this.sweepId} would exceed token budget. ` +
-                `Used: ${this.tokensUsed}, Adding: ${tokens}, Limit: ${this.config.maxTokensPerSweep}`
+                    `Used: ${this.tokensUsed}, Adding: ${tokens}, Limit: ${this.config.maxTokensPerSweep}`
             );
         }
 
         if (this.apiCalls + 1 > this.config.maxAPICallsPerSweep) {
             throw new TokenBudgetExceededError(
                 `Sweep ${this.sweepId} would exceed API call limit. ` +
-                `Used: ${this.apiCalls}, Limit: ${this.config.maxAPICallsPerSweep}`
+                    `Used: ${this.apiCalls}, Limit: ${this.config.maxAPICallsPerSweep}`
             );
         }
 
@@ -53,7 +53,9 @@ export class TokenBudget {
         this.costUSD += costUSD;
 
         // Log for monitoring
-        console.log(`[TokenBudget:${this.sweepId}] Consumed ${tokens} tokens (${this.apiCalls}/${this.config.maxAPICallsPerSweep} calls). Total: ${this.tokensUsed}/${this.config.maxTokensPerSweep}`);
+        console.log(
+            `[TokenBudget:${this.sweepId}] Consumed ${tokens} tokens (${this.apiCalls}/${this.config.maxAPICallsPerSweep} calls). Total: ${this.tokensUsed}/${this.config.maxTokensPerSweep}`
+        );
     }
 
     /**
@@ -135,17 +137,17 @@ export class CircuitBreakerOpenError extends Error {
 // Model pricing (per 1M tokens) - Updated Jan 2026
 const MODEL_PRICING = {
     // OpenAI
-    'gpt-4o': { input: 2.50, output: 10.00 },
-    'gpt-4o-mini': { input: 0.15, output: 0.60 },
-    'gpt-4-turbo': { input: 10.00, output: 30.00 },
-    
+    'gpt-4o': { input: 2.5, output: 10.0 },
+    'gpt-4o-mini': { input: 0.15, output: 0.6 },
+    'gpt-4-turbo': { input: 10.0, output: 30.0 },
+
     // Anthropic
-    'claude-3-5-sonnet': { input: 3.00, output: 15.00 },
+    'claude-3-5-sonnet': { input: 3.0, output: 15.0 },
     'claude-3-haiku': { input: 0.25, output: 1.25 },
-    
+
     // Google
-    'gemini-2.0-flash': { input: 0.075, output: 0.30 },
-    'gemini-1.5-pro': { input: 1.25, output: 5.00 },
+    'gemini-2.0-flash': { input: 0.075, output: 0.3 },
+    'gemini-1.5-pro': { input: 1.25, output: 5.0 },
 } as const;
 
 type ModelName = keyof typeof MODEL_PRICING;
@@ -205,7 +207,7 @@ function getTodayDate(): string {
  */
 export async function getDailyUsage(): Promise<DailyUsageRecord> {
     const today = getTodayDate();
-    
+
     // Return cache if still valid
     if (dailyUsageCache && cacheDate === today) {
         return dailyUsageCache;
@@ -221,7 +223,7 @@ export async function getDailyUsage(): Promise<DailyUsageRecord> {
         byCompany: {},
     };
     cacheDate = today;
-    
+
     return dailyUsageCache;
 }
 
@@ -235,14 +237,14 @@ export async function updateDailyUsage(
 ): Promise<void> {
     const today = getTodayDate();
     const record = await getDailyUsage();
-    
+
     // Update totals
     record.totalTokens += usage.tokensUsed;
     record.totalCostUSD += usage.estimatedCostUSD;
     if (incrementSweep) {
         record.sweepCount += 1;
     }
-    
+
     // Update company-specific usage
     if (!record.byCompany[companyId]) {
         record.byCompany[companyId] = { tokens: 0, sweeps: 0, costUSD: 0 };
@@ -252,11 +254,13 @@ export async function updateDailyUsage(
     if (incrementSweep) {
         record.byCompany[companyId].sweeps += 1;
     }
-    
+
     // In production, persist to Firestore
     // await saveUsageToFirestore(record);
-    
-    console.log(`[UsageTracking] Updated daily usage: $${record.totalCostUSD.toFixed(4)} total, ${record.sweepCount} sweeps`);
+
+    console.log(
+        `[UsageTracking] Updated daily usage: $${record.totalCostUSD.toFixed(4)} total, ${record.sweepCount} sweeps`
+    );
 }
 
 /**
@@ -285,7 +289,7 @@ export async function canRunSweep(
 ): Promise<{ allowed: boolean; reason?: string }> {
     const companyUsage = await getCompanyDailyUsage(companyId);
     const dailyUsage = await getDailyUsage();
-    
+
     // Check company daily sweep limit
     if (companyUsage.sweeps >= config.maxSweepsPerCompanyPerDay) {
         return {
@@ -293,7 +297,7 @@ export async function canRunSweep(
             reason: `Daily sweep limit reached (${companyUsage.sweeps}/${config.maxSweepsPerCompanyPerDay}). Try again tomorrow.`,
         };
     }
-    
+
     // Check company daily token limit
     if (companyUsage.tokens >= config.maxTokensPerCompanyPerDay) {
         return {
@@ -301,16 +305,18 @@ export async function canRunSweep(
             reason: `Daily token limit reached for your company. Try again tomorrow.`,
         };
     }
-    
+
     // Check platform-wide cost limit (circuit breaker)
     if (dailyUsage.totalCostUSD >= config.maxDailyCostUSD) {
-        console.error(`[CIRCUIT_BREAKER] Platform daily cost limit reached: $${dailyUsage.totalCostUSD}`);
+        console.error(
+            `[CIRCUIT_BREAKER] Platform daily cost limit reached: $${dailyUsage.totalCostUSD}`
+        );
         return {
             allowed: false,
             reason: `Platform-wide daily limit reached. Please try again tomorrow.`,
         };
     }
-    
+
     // Check platform-wide token limit
     if (dailyUsage.totalTokens >= config.maxTokensPerHour) {
         return {
@@ -318,13 +324,15 @@ export async function canRunSweep(
             reason: `Platform is experiencing high usage. Please try again in a few minutes.`,
         };
     }
-    
+
     // Check if approaching alert threshold
     if (dailyUsage.totalCostUSD >= config.alertThresholdUSD) {
-        console.warn(`[COST_ALERT] Platform cost at $${dailyUsage.totalCostUSD}, threshold: $${config.alertThresholdUSD}`);
+        console.warn(
+            `[COST_ALERT] Platform cost at $${dailyUsage.totalCostUSD}, threshold: $${config.alertThresholdUSD}`
+        );
         // In production, would trigger admin alert
     }
-    
+
     return { allowed: true };
 }
 
@@ -355,11 +363,13 @@ const CIRCUIT_BREAKER_COOLDOWN = 5 * 60 * 1000; // 5 minutes
 export function recordFailure(): void {
     circuitBreaker.failureCount += 1;
     circuitBreaker.lastFailure = Date.now();
-    
+
     if (circuitBreaker.failureCount >= CIRCUIT_BREAKER_THRESHOLD) {
         circuitBreaker.isOpen = true;
         circuitBreaker.cooldownUntil = Date.now() + CIRCUIT_BREAKER_COOLDOWN;
-        console.error(`[CIRCUIT_BREAKER] Opened due to ${circuitBreaker.failureCount} failures. Cooldown until ${new Date(circuitBreaker.cooldownUntil).toISOString()}`);
+        console.error(
+            `[CIRCUIT_BREAKER] Opened due to ${circuitBreaker.failureCount} failures. Cooldown until ${new Date(circuitBreaker.cooldownUntil).toISOString()}`
+        );
     }
 }
 
@@ -376,7 +386,7 @@ export function recordSuccess(): void {
  */
 export function isCircuitClosed(): boolean {
     if (!circuitBreaker.isOpen) return true;
-    
+
     // Check if cooldown has passed
     if (Date.now() >= circuitBreaker.cooldownUntil) {
         console.log('[CIRCUIT_BREAKER] Cooldown passed, resetting');
@@ -384,7 +394,7 @@ export function isCircuitClosed(): boolean {
         circuitBreaker.failureCount = 0;
         return true;
     }
-    
+
     return false;
 }
 
@@ -405,8 +415,4 @@ export function ensureCircuitClosed(): void {
 // Exports
 // ========================================
 
-export {
-    DEFAULT_TOKEN_SAFETY,
-    MODEL_PRICING,
-    type ModelName,
-};
+export { DEFAULT_TOKEN_SAFETY, MODEL_PRICING, type ModelName };

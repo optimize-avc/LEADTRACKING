@@ -128,7 +128,7 @@ export function NotificationCenter() {
             >
                 <Bell className="w-5 h-5" aria-hidden="true" />
                 {unreadCount > 0 && (
-                    <span 
+                    <span
                         className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
                         aria-hidden="true"
                     >
@@ -139,7 +139,7 @@ export function NotificationCenter() {
 
             {/* Dropdown */}
             {isOpen && (
-                <div 
+                <div
                     id="notification-menu"
                     role="menu"
                     aria-label="Notifications"
@@ -148,7 +148,9 @@ export function NotificationCenter() {
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                        <h3 id="notification-heading" className="text-white font-semibold">Notifications</h3>
+                        <h3 id="notification-heading" className="text-white font-semibold">
+                            Notifications
+                        </h3>
                         <div className="flex items-center gap-2">
                             {unreadCount > 0 && (
                                 <button
@@ -163,7 +165,11 @@ export function NotificationCenter() {
                     </div>
 
                     {/* Notifications List */}
-                    <div className="max-h-80 overflow-y-auto" role="list" aria-labelledby="notification-heading">
+                    <div
+                        className="max-h-80 overflow-y-auto"
+                        role="list"
+                        aria-labelledby="notification-heading"
+                    >
                         {notifications.length === 0 ? (
                             <div className="p-8 text-center text-slate-500 text-sm" role="listitem">
                                 No notifications yet
@@ -221,7 +227,11 @@ export function NotificationCenter() {
                                                     className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1"
                                                     aria-label={`View ${notification.title}`}
                                                 >
-                                                    View <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                                                    View{' '}
+                                                    <ExternalLink
+                                                        className="w-3 h-3"
+                                                        aria-hidden="true"
+                                                    />
                                                 </Link>
                                             )}
                                             {!notification.read && (
@@ -230,7 +240,8 @@ export function NotificationCenter() {
                                                     className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
                                                     aria-label={`Mark "${notification.title}" as read`}
                                                 >
-                                                    <Check className="w-3 h-3" aria-hidden="true" /> Read
+                                                    <Check className="w-3 h-3" aria-hidden="true" />{' '}
+                                                    Read
                                                 </button>
                                             )}
                                             <button

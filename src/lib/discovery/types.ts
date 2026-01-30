@@ -1,6 +1,6 @@
 /**
  * Data Collector Types for AI Lead Discovery
- * 
+ *
  * Defines the interface that all data sources must implement.
  */
 
@@ -16,14 +16,14 @@ import { TargetingCriteria, DiscoveredLead, TokenUsage } from '@/types/discovery
  */
 export interface RawBusinessData {
     // Identifiers (for deduplication)
-    placeId?: string;           // Google Places ID
-    externalId?: string;        // Source-specific ID
-    
+    placeId?: string; // Google Places ID
+    externalId?: string; // Source-specific ID
+
     // Basic info
     name: string;
     industry?: string;
     website?: string;
-    
+
     // Location
     address?: string;
     city?: string;
@@ -33,23 +33,23 @@ export interface RawBusinessData {
         lat: number;
         lng: number;
     };
-    
+
     // Contact info
     phone?: string;
     email?: string;
-    
+
     // Google Places specific
-    rating?: number;            // 1-5 stars
-    reviewCount?: number;       // Total reviews
-    priceLevel?: number;        // 1-4 ($-$$$$)
-    businessStatus?: string;    // OPERATIONAL, CLOSED, etc.
-    types?: string[];           // Google place types
-    
+    rating?: number; // 1-5 stars
+    reviewCount?: number; // Total reviews
+    priceLevel?: number; // 1-4 ($-$$$$)
+    businessStatus?: string; // OPERATIONAL, CLOSED, etc.
+    types?: string[]; // Google place types
+
     // Enrichment data
-    description?: string;       // From website or directory
-    employeeCount?: number;     // If available
-    yearFounded?: number;       // If available
-    
+    description?: string; // From website or directory
+    employeeCount?: number; // If available
+    yearFounded?: number; // If available
+
     // Source tracking
     source: DataSourceType;
     sourceUrl?: string;
@@ -59,7 +59,7 @@ export interface RawBusinessData {
 /**
  * Data source types
  */
-export type DataSourceType = 
+export type DataSourceType =
     | 'google_places'
     | 'linkedin'
     | 'directory'
@@ -78,7 +78,7 @@ export type DataSourceType =
 export interface CollectorSearchOptions {
     criteria: TargetingCriteria;
     maxResults: number;
-    pageToken?: string;         // For pagination
+    pageToken?: string; // For pagination
 }
 
 /**
@@ -86,8 +86,8 @@ export interface CollectorSearchOptions {
  */
 export interface CollectorSearchResult {
     businesses: RawBusinessData[];
-    nextPageToken?: string;     // For pagination
-    totalAvailable?: number;    // If API provides total count
+    nextPageToken?: string; // For pagination
+    totalAvailable?: number; // If API provides total count
     metadata: {
         source: DataSourceType;
         searchQuery?: string;
@@ -105,22 +105,22 @@ export interface DataCollector {
      * Unique identifier for this collector
      */
     readonly sourceType: DataSourceType;
-    
+
     /**
      * Human-readable name
      */
     readonly name: string;
-    
+
     /**
      * Check if this collector is properly configured (API keys, etc.)
      */
     isConfigured(): boolean;
-    
+
     /**
      * Search for businesses matching the criteria
      */
     search(options: CollectorSearchOptions): Promise<CollectorSearchResult>;
-    
+
     /**
      * Get details for a specific business (optional, for enrichment)
      */
@@ -140,12 +140,12 @@ export function createDedupeKey(business: RawBusinessData): string {
     if (business.placeId) {
         return `places:${business.placeId}`;
     }
-    
+
     // Secondary: Name + City + State (normalized)
     const normalizedName = business.name.toLowerCase().replace(/[^a-z0-9]/g, '');
     const normalizedCity = (business.city || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const normalizedState = (business.state || '').toLowerCase().replace(/[^a-z]/g, '');
-    
+
     return `name:${normalizedName}:${normalizedCity}:${normalizedState}`;
 }
 
@@ -156,34 +156,38 @@ export function mergeBusinessData(records: RawBusinessData[]): RawBusinessData {
     if (records.length === 0) {
         throw new Error('Cannot merge empty array of business data');
     }
-    
+
     if (records.length === 1) {
         return records[0];
     }
-    
+
     // Start with the first record as base
     const merged = { ...records[0] };
-    
+
     // Merge in data from other records, preferring non-null values
     for (let i = 1; i < records.length; i++) {
         const record = records[i];
-        
+
         // Fill in missing values
         if (!merged.website && record.website) merged.website = record.website;
         if (!merged.phone && record.phone) merged.phone = record.phone;
         if (!merged.email && record.email) merged.email = record.email;
         if (!merged.industry && record.industry) merged.industry = record.industry;
         if (!merged.description && record.description) merged.description = record.description;
-        if (!merged.employeeCount && record.employeeCount) merged.employeeCount = record.employeeCount;
+        if (!merged.employeeCount && record.employeeCount)
+            merged.employeeCount = record.employeeCount;
         if (!merged.yearFounded && record.yearFounded) merged.yearFounded = record.yearFounded;
-        
+
         // Take better rating data (more reviews = more reliable)
-        if (record.reviewCount && (!merged.reviewCount || record.reviewCount > merged.reviewCount)) {
+        if (
+            record.reviewCount &&
+            (!merged.reviewCount || record.reviewCount > merged.reviewCount)
+        ) {
             merged.rating = record.rating;
             merged.reviewCount = record.reviewCount;
         }
     }
-    
+
     return merged;
 }
 
@@ -215,7 +219,7 @@ export function rawToDiscoveredLead(
         state: raw.state || 'Unknown',
         country: raw.country || 'US',
     };
-    
+
     if (raw.coordinates) {
         location.coordinates = raw.coordinates;
     }
@@ -226,13 +230,18 @@ export function rawToDiscoveredLead(
         businessName: raw.name,
         industry: raw.industry || 'Unknown',
         website: raw.website || null,
-        contacts: raw.phone || raw.email ? [{
-            name: '',
-            title: '',
-            email: raw.email || null,
-            phone: raw.phone || null,
-            linkedin: null,
-        }] : [],
+        contacts:
+            raw.phone || raw.email
+                ? [
+                      {
+                          name: '',
+                          title: '',
+                          email: raw.email || null,
+                          phone: raw.phone || null,
+                          linkedin: null,
+                      },
+                  ]
+                : [],
         location,
         verification: {
             status: 'pending',
@@ -244,15 +253,24 @@ export function rawToDiscoveredLead(
                 businessRegistered: false,
             },
         },
-        sources: [{
-            type: raw.source === 'google_places' ? 'google' : 
-                  raw.source === 'linkedin' ? 'linkedin' :
-                  raw.source === 'news' ? 'news' :
-                  raw.source === 'jobs' ? 'jobs' :
-                  raw.source === 'social' ? 'social' : 'directory',
-            url: raw.sourceUrl || '',
-            foundAt: raw.fetchedAt,
-        }],
+        sources: [
+            {
+                type:
+                    raw.source === 'google_places'
+                        ? 'google'
+                        : raw.source === 'linkedin'
+                          ? 'linkedin'
+                          : raw.source === 'news'
+                            ? 'news'
+                            : raw.source === 'jobs'
+                              ? 'jobs'
+                              : raw.source === 'social'
+                                ? 'social'
+                                : 'directory',
+                url: raw.sourceUrl || '',
+                foundAt: raw.fetchedAt,
+            },
+        ],
         status: 'new',
         sweepId,
         discoveredAt: Date.now(),
@@ -278,7 +296,7 @@ export interface CachedBusinessData {
  * Cache TTLs (in milliseconds)
  */
 export const CACHE_TTL = {
-    businessInfo: 7 * 24 * 60 * 60 * 1000,     // 7 days
-    aiAnalysis: 30 * 24 * 60 * 60 * 1000,      // 30 days
-    searchResults: 24 * 60 * 60 * 1000,         // 24 hours
+    businessInfo: 7 * 24 * 60 * 60 * 1000, // 7 days
+    aiAnalysis: 30 * 24 * 60 * 60 * 1000, // 30 days
+    searchResults: 24 * 60 * 60 * 1000, // 24 hours
 } as const;

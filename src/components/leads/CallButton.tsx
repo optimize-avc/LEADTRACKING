@@ -129,7 +129,9 @@ export function CallButton({
                     {callStatus === 'in-progress' && 'In Progress'}
                     {callStatus === 'completed' && 'Completed'}
                 </span>
-                <span className="sr-only">{getStatusDescription()} with {leadName}</span>
+                <span className="sr-only">
+                    {getStatusDescription()} with {leadName}
+                </span>
             </div>
         );
     }

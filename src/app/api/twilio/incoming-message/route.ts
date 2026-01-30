@@ -35,16 +35,20 @@ export async function POST(req: NextRequest) {
             const userId = leadData.ownerId; // Assuming ownerId exists on lead
 
             if (userId) {
-                return db.collection('users').doc(userId).collection('activities').add({
-                    type: 'social',
-                    outcome: 'connected',
-                    timestamp: Date.now(),
-                    repId: userId,
-                    leadId: leadDoc.id,
-                    notes: `Inbound Message: ${body}`,
-                    channel: 'sms',
-                    messageSid,
-                });
+                return db
+                    .collection('users')
+                    .doc(userId)
+                    .collection('activities')
+                    .add({
+                        type: 'social',
+                        outcome: 'connected',
+                        timestamp: Date.now(),
+                        repId: userId,
+                        leadId: leadDoc.id,
+                        notes: `Inbound Message: ${body}`,
+                        channel: 'sms',
+                        messageSid,
+                    });
             }
         });
 

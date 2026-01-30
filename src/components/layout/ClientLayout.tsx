@@ -466,7 +466,10 @@ function NavLink({
         >
             {/* Active Glow for Icon */}
             {isActive && !showLabel && (
-                <div className="absolute inset-0 bg-indigo-500/20 rounded-xl blur-md" aria-hidden="true"></div>
+                <div
+                    className="absolute inset-0 bg-indigo-500/20 rounded-xl blur-md"
+                    aria-hidden="true"
+                ></div>
             )}
 
             <span
@@ -490,7 +493,7 @@ function NavLink({
 
             {/* Tooltip for collapsed state (Desktop only) */}
             {!showLabel && (
-                <div 
+                <div
                     role="tooltip"
                     className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded border border-white/10 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl hidden md:block"
                 >

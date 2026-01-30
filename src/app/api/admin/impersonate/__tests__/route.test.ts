@@ -113,10 +113,14 @@ describe('Admin Impersonate API Routes', () => {
         });
 
         it('returns 403 when authorization header is missing', async () => {
-            const request = createMockRequest('POST', {
-                targetUserId: 'target-user',
-                reason: 'Testing impersonation for support',
-            }, '');
+            const request = createMockRequest(
+                'POST',
+                {
+                    targetUserId: 'target-user',
+                    reason: 'Testing impersonation for support',
+                },
+                ''
+            );
 
             const response = await POST(request);
 

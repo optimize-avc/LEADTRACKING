@@ -211,7 +211,10 @@ export default function DiscoverClient() {
                     notes: lead.aiAnalysis.summary,
                     tags: ['ai-discovered'],
                 };
-                const newLeadId = await LeadsService.createLead(user!.uid, leadData as Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>);
+                const newLeadId = await LeadsService.createLead(
+                    user!.uid,
+                    leadData as Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'assignedTo'>
+                );
                 pipelineLeadId = newLeadId;
                 status = 'added_to_pipeline';
                 toast.success(`${lead.businessName} added to pipeline!`);
@@ -250,7 +253,12 @@ export default function DiscoverClient() {
 
     const tabs = [
         { id: 'manual' as TabType, label: 'Manual Search', icon: Search },
-        { id: 'ai-discovered' as TabType, label: 'AI Discovered', icon: Bot, badge: discoveredTotal > 0 ? discoveredTotal : undefined },
+        {
+            id: 'ai-discovered' as TabType,
+            label: 'AI Discovered',
+            icon: Bot,
+            badge: discoveredTotal > 0 ? discoveredTotal : undefined,
+        },
         { id: 'watchlist' as TabType, label: 'Watchlist', icon: Bookmark },
     ];
 
@@ -268,7 +276,8 @@ export default function DiscoverClient() {
                 </h1>
 
                 <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                    Find new leads with manual search, automated AI discovery, or track businesses on your watchlist.
+                    Find new leads with manual search, automated AI discovery, or track businesses
+                    on your watchlist.
                 </p>
             </header>
 
@@ -291,9 +300,13 @@ export default function DiscoverClient() {
                                 <Icon className="w-4 h-4" />
                                 {tab.label}
                                 {tab.badge && (
-                                    <span className={`px-2 py-0.5 text-xs rounded-full ${
-                                        isActive ? 'bg-white/20' : 'bg-violet-500/30 text-violet-300'
-                                    }`}>
+                                    <span
+                                        className={`px-2 py-0.5 text-xs rounded-full ${
+                                            isActive
+                                                ? 'bg-white/20'
+                                                : 'bg-violet-500/30 text-violet-300'
+                                        }`}
+                                    >
                                         {tab.badge}
                                     </span>
                                 )}
@@ -446,7 +459,8 @@ function ManualSearchTab({
                                 Conducting Deep Audit
                             </h3>
                             <p className="text-slate-400">
-                                Searching the web, analyzing their digital presence, and generating insights...
+                                Searching the web, analyzing their digital presence, and generating
+                                insights...
                             </p>
                         </div>
                     </motion.section>
@@ -495,7 +509,8 @@ function ManualSearchTab({
             {!authLoading && !user && (
                 <div className="max-w-md mx-auto mt-12 p-6 glass-card text-center">
                     <p className="text-slate-400 mb-4">
-                        Sign in to save leads to your pipeline and use your enablement materials for context.
+                        Sign in to save leads to your pipeline and use your enablement materials for
+                        context.
                     </p>
                     <button
                         onClick={() => (window.location.href = '/login')}
@@ -521,7 +536,14 @@ interface AIDiscoveredTabProps {
     user: User | null;
 }
 
-function AIDiscoveredTab({ leads, isLoading, total, onRefresh, onAction, user }: AIDiscoveredTabProps) {
+function AIDiscoveredTab({
+    leads,
+    isLoading,
+    total,
+    onRefresh,
+    onAction,
+    user,
+}: AIDiscoveredTabProps) {
     if (!user) {
         return (
             <div className="max-w-md mx-auto p-8 glass-card text-center">
@@ -542,7 +564,9 @@ function AIDiscoveredTab({ leads, isLoading, total, onRefresh, onAction, user }:
             <div className="max-w-4xl mx-auto">
                 <div className="glass-card p-12 text-center">
                     <Loader2 className="w-12 h-12 text-violet-400 mx-auto mb-4 animate-spin" />
-                    <h3 className="text-xl font-semibold text-white mb-2">Loading Discovered Leads</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                        Loading Discovered Leads
+                    </h3>
                     <p className="text-slate-400">Fetching AI-discovered businesses...</p>
                 </div>
             </div>
@@ -555,7 +579,8 @@ function AIDiscoveredTab({ leads, isLoading, total, onRefresh, onAction, user }:
                 <Bot className="w-12 h-12 text-slate-500 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">No Leads Discovered Yet</h3>
                 <p className="text-slate-400 mb-6">
-                    Configure your targeting criteria and run a sweep to discover new leads automatically.
+                    Configure your targeting criteria and run a sweep to discover new leads
+                    automatically.
                 </p>
                 <a
                     href="/settings/discovery"
@@ -576,7 +601,9 @@ function AIDiscoveredTab({ leads, isLoading, total, onRefresh, onAction, user }:
                     <h2 className="text-lg font-semibold text-white">
                         {total} new lead{total !== 1 ? 's' : ''} discovered
                     </h2>
-                    <p className="text-sm text-slate-400">Review and add to your pipeline or watchlist</p>
+                    <p className="text-sm text-slate-400">
+                        Review and add to your pipeline or watchlist
+                    </p>
                 </div>
                 <button
                     onClick={onRefresh}
@@ -642,7 +669,8 @@ function WatchlistTab({ leads, isLoading, onRefresh, onAction, user }: Watchlist
                 <Bookmark className="w-12 h-12 text-slate-500 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">Watchlist Empty</h3>
                 <p className="text-slate-400">
-                    Save businesses from AI Discovered or Manual Search to track them here before adding to your pipeline.
+                    Save businesses from AI Discovered or Manual Search to track them here before
+                    adding to your pipeline.
                 </p>
             </div>
         );
@@ -656,7 +684,9 @@ function WatchlistTab({ leads, isLoading, onRefresh, onAction, user }: Watchlist
                     <h2 className="text-lg font-semibold text-white">
                         {leads.length} business{leads.length !== 1 ? 'es' : ''} on watchlist
                     </h2>
-                    <p className="text-sm text-slate-400">Businesses you&apos;re tracking before committing to pipeline</p>
+                    <p className="text-sm text-slate-400">
+                        Businesses you&apos;re tracking before committing to pipeline
+                    </p>
                 </div>
                 <button
                     onClick={onRefresh}
@@ -691,8 +721,8 @@ function DiscoveredLeadCard({ lead, onAction, isWatchlist }: DiscoveredLeadCardP
         lead.aiAnalysis.matchScore >= 80
             ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
             : lead.aiAnalysis.matchScore >= 60
-            ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30'
-            : 'text-slate-400 bg-slate-500/10 border-slate-500/30';
+              ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30'
+              : 'text-slate-400 bg-slate-500/10 border-slate-500/30';
 
     return (
         <div className="glass-card p-6 hover:bg-slate-800/60 transition-colors">
@@ -720,7 +750,9 @@ function DiscoveredLeadCard({ lead, onAction, isWatchlist }: DiscoveredLeadCardP
                         </div>
 
                         {/* Match Score */}
-                        <div className={`px-3 py-1.5 rounded-full border ${matchColor} text-sm font-medium`}>
+                        <div
+                            className={`px-3 py-1.5 rounded-full border ${matchColor} text-sm font-medium`}
+                        >
                             {lead.aiAnalysis.matchScore}% match
                         </div>
                     </div>
@@ -745,9 +777,7 @@ function DiscoveredLeadCard({ lead, onAction, isWatchlist }: DiscoveredLeadCardP
                     {/* Contact & Actions */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700/50">
                         <div className="flex items-center gap-4 text-sm text-slate-400">
-                            {lead.contacts[0] && (
-                                <span>{lead.contacts[0].name}</span>
-                            )}
+                            {lead.contacts[0] && <span>{lead.contacts[0].name}</span>}
                             {lead.website && (
                                 <a
                                     href={lead.website}

@@ -9,7 +9,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 // Mock Firebase Admin SDK - use vi.hoisted for proper hoisting
-const { mockVerifyIdToken, mockGetDoc, mockAdd, mockUpdate, mockOrderBy, mockLimit, mockWhere, mockGetDocs } = vi.hoisted(() => ({
+const {
+    mockVerifyIdToken,
+    mockGetDoc,
+    mockAdd,
+    mockUpdate,
+    mockOrderBy,
+    mockLimit,
+    mockWhere,
+    mockGetDocs,
+} = vi.hoisted(() => ({
     mockVerifyIdToken: vi.fn(),
     mockGetDoc: vi.fn(),
     mockAdd: vi.fn(),
@@ -69,9 +78,9 @@ vi.mock('@/lib/api-middleware', () => ({
     getUserIdFromToken: vi.fn(() => 'test-user'),
     handleValidationError: vi.fn((error: { issues: unknown[] }) => {
         return new Response(
-            JSON.stringify({ 
-                error: 'Validation failed', 
-                details: { issues: error.issues } 
+            JSON.stringify({
+                error: 'Validation failed',
+                details: { issues: error.issues },
             }),
             { status: 400 }
         );
@@ -158,9 +167,13 @@ describe('Leads API Routes', () => {
             mockVerifyIdToken.mockRejectedValueOnce(new Error('Invalid token'));
 
             // Create request without auth header
-            const request = createMockNextRequest('POST', {
-                businessName: 'Test Business',
-            }, '');
+            const request = createMockNextRequest(
+                'POST',
+                {
+                    businessName: 'Test Business',
+                },
+                ''
+            );
 
             const response = await POST(request);
 

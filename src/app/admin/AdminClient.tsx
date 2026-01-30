@@ -184,32 +184,35 @@ export default function AdminDashboard() {
     const [metricsError, setMetricsError] = useState<string | null>(null);
 
     // Check if user is a super admin (check profile role or email)
-    const isSuperAdmin = profile?.role === 'superAdmin' || 
-        profile?.email === 'admin@avcpp.com' || 
+    const isSuperAdmin =
+        profile?.role === 'superAdmin' ||
+        profile?.email === 'admin@avcpp.com' ||
         profile?.email === 'blazehaze4201980@gmail.com' ||
         profile?.email === 'optimize@avcpp.com';
 
     // Fetch metrics from API
     const fetchMetrics = useCallback(async () => {
         if (!user) return;
-        
+
         setMetricsLoading(true);
         setMetricsError(null);
-        
+
         try {
             const auth = getAuth();
             const token = await auth.currentUser?.getIdToken();
-            
+
             const response = await fetch('/api/admin/metrics', {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
-            
+
             if (!response.ok) {
-                throw new Error(response.status === 403 ? 'Access denied' : 'Failed to fetch metrics');
+                throw new Error(
+                    response.status === 403 ? 'Access denied' : 'Failed to fetch metrics'
+                );
             }
-            
+
             const data = await response.json();
             setMetrics(data);
         } catch (err) {

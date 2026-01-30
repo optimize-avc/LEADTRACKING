@@ -38,11 +38,14 @@ export interface DailyUsageRecord {
     totalTokens: number;
     totalCostUSD: number;
     sweepCount: number;
-    byCompany: Record<string, {
-        tokens: number;
-        sweeps: number;
-        costUSD: number;
-    }>;
+    byCompany: Record<
+        string,
+        {
+            tokens: number;
+            sweeps: number;
+            costUSD: number;
+        }
+    >;
 }
 
 // ========================================
@@ -309,8 +312,8 @@ export const DEFAULT_TOKEN_SAFETY: TokenSafetyConfig = {
     maxConcurrentSweeps: 5,
 
     // Cost circuit breaker
-    maxDailyCostUSD: 50.00,
-    alertThresholdUSD: 25.00,
+    maxDailyCostUSD: 50.0,
+    alertThresholdUSD: 25.0,
 };
 
 export const DEFAULT_TARGETING_CRITERIA: TargetingCriteria = {

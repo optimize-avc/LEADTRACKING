@@ -5,12 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-    checkRateLimit,
-    getClientIP,
-    rateLimitResponse,
-    RATE_LIMITS,
-} from '../rate-limit';
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../rate-limit';
 
 // Create a mock Request with headers
 function createMockRequest(headers: Record<string, string> = {}): Request {

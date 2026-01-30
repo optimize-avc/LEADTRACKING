@@ -35,7 +35,7 @@ async function tryAdminOperation<T>(operation: () => Promise<T>): Promise<T | nu
  * POST /api/team/invite
  * Create a team invite and send email notification
  * Uses Firebase Admin SDK when available, with fallback for local development
- * 
+ *
  * Security: Rate limited to prevent invite spam
  */
 export async function POST(request: NextRequest) {
@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
     if (rateLimitResult) {
         return rateLimitResult;
     }
-    
+
     try {
         const body = await request.json();
-        
+
         // Validate input with Zod
         let validatedData;
         try {
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
             }
             return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
         }
-        
+
         const { companyId, companyName, email, role, invitedBy, invitedByName } = validatedData;
 
         let inviteId: string | null = null;
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         if (firestoreResult?.inviteId) {
             inviteId = firestoreResult.inviteId;
             firestorePersisted = true;
-            
+
             // Audit log the invite
             try {
                 await ServerAuditService.logTeamInvite(

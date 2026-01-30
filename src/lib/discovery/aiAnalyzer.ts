@@ -1,18 +1,14 @@
 /**
  * AI Lead Analyzer Service
- * 
+ *
  * Two-stage AI analysis for cost optimization:
  * 1. Stage 3: Cheap scoring with GPT-4o-mini / Gemini Flash (batch all leads)
  * 2. Stage 4: Smart analysis with GPT-4o / Claude Sonnet (only high-scoring leads)
- * 
+ *
  * @see SPEC-AI-LEAD-DISCOVERY.md sections 6.1, 8.1-8.3
  */
 
-import { 
-    TargetingCriteria, 
-    DiscoveredLeadAIAnalysis,
-    TokenUsage 
-} from '@/types/discovery';
+import { TargetingCriteria, DiscoveredLeadAIAnalysis, TokenUsage } from '@/types/discovery';
 import { RawBusinessData } from './types';
 
 // ========================================
@@ -23,10 +19,10 @@ import { RawBusinessData } from './types';
  * Cost limits per spec section 8.2
  */
 const AI_LIMITS = {
-    maxLeadsToScore: 50,        // Max leads through cheap scoring
-    maxLeadsToAnalyze: 15,      // Max leads through deep analysis
-    scoreThreshold: 70,         // Only analyze leads scoring >= this
-    maxTokensPerSweep: 50_000,  // Hard cap per sweep
+    maxLeadsToScore: 50, // Max leads through cheap scoring
+    maxLeadsToAnalyze: 15, // Max leads through deep analysis
+    scoreThreshold: 70, // Only analyze leads scoring >= this
+    maxTokensPerSweep: 50_000, // Hard cap per sweep
 } as const;
 
 /**
@@ -38,26 +34,26 @@ const MODELS = {
     scoring: {
         gemini: {
             name: 'gemini-1.5-flash',
-            inputPrice: 0.075,   // $0.075 per 1M input tokens
-            outputPrice: 0.30,   // $0.30 per 1M output tokens
+            inputPrice: 0.075, // $0.075 per 1M input tokens
+            outputPrice: 0.3, // $0.30 per 1M output tokens
         },
         openai: {
             name: 'gpt-4o-mini',
-            inputPrice: 0.15,    // $0.15 per 1M input tokens
-            outputPrice: 0.60,   // $0.60 per 1M output tokens
+            inputPrice: 0.15, // $0.15 per 1M input tokens
+            outputPrice: 0.6, // $0.60 per 1M output tokens
         },
     },
     // Smart models for deep analysis
     analysis: {
         gemini: {
             name: 'gemini-1.5-pro',
-            inputPrice: 1.25,    // $1.25 per 1M input tokens
-            outputPrice: 5.00,   // $5.00 per 1M output tokens
+            inputPrice: 1.25, // $1.25 per 1M input tokens
+            outputPrice: 5.0, // $5.00 per 1M output tokens
         },
         openai: {
             name: 'gpt-4o',
-            inputPrice: 2.50,    // $2.50 per 1M input tokens
-            outputPrice: 10.00,  // $10.00 per 1M output tokens
+            inputPrice: 2.5, // $2.50 per 1M input tokens
+            outputPrice: 10.0, // $10.00 per 1M output tokens
         },
     },
 } as const;
@@ -144,7 +140,11 @@ function estimateTokens(text: string): number {
 function calculateCost(
     inputTokens: number,
     outputTokens: number,
-    model: typeof MODELS.scoring.gemini | typeof MODELS.scoring.openai | typeof MODELS.analysis.gemini | typeof MODELS.analysis.openai
+    model:
+        | typeof MODELS.scoring.gemini
+        | typeof MODELS.scoring.openai
+        | typeof MODELS.analysis.gemini
+        | typeof MODELS.analysis.openai
 ): number {
     const inputCost = (inputTokens / 1_000_000) * model.inputPrice;
     const outputCost = (outputTokens / 1_000_000) * model.outputPrice;
@@ -159,10 +159,7 @@ function calculateCost(
  * Build batch scoring prompt
  * All leads in one call for efficiency
  */
-function buildScoringPrompt(
-    leads: RawBusinessData[],
-    criteria: TargetingCriteria
-): string {
+function buildScoringPrompt(leads: RawBusinessData[], criteria: TargetingCriteria): string {
     const leadsJson = leads.map((lead, index) => ({
         index,
         name: lead.name,
@@ -204,10 +201,7 @@ Respond with ONLY valid JSON array, no other text:
 /**
  * Build deep analysis prompt for high-scoring leads
  */
-function buildAnalysisPrompt(
-    leads: RawBusinessData[],
-    criteria: TargetingCriteria
-): string {
+function buildAnalysisPrompt(leads: RawBusinessData[], criteria: TargetingCriteria): string {
     const leadsJson = leads.map((lead, index) => ({
         index,
         name: lead.name,
@@ -275,7 +269,7 @@ async function callGemini(
     model: string
 ): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
     const apiKey = getApiKey('gemini');
-    
+
     const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
@@ -286,7 +280,7 @@ async function callGemini(
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    temperature: 0.1,  // Low temp for consistent scoring
+                    temperature: 0.1, // Low temp for consistent scoring
                     topP: 0.95,
                     maxOutputTokens: 4096,
                 },
@@ -302,7 +296,7 @@ async function callGemini(
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const usageMetadata = data.usageMetadata || {};
-    
+
     return {
         text,
         inputTokens: usageMetadata.promptTokenCount || estimateTokens(prompt),
@@ -318,17 +312,17 @@ async function callOpenAI(
     model: string
 ): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
     const apiKey = getApiKey('openai');
-    
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
             model,
             messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,  // Low temp for consistent scoring
+            temperature: 0.1, // Low temp for consistent scoring
             response_format: { type: 'json_object' },
         }),
     });
@@ -341,7 +335,7 @@ async function callOpenAI(
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content || '';
     const usage = data.usage || {};
-    
+
     return {
         text,
         inputTokens: usage.prompt_tokens || estimateTokens(prompt),
@@ -368,7 +362,7 @@ function parseJsonResponse<T>(text: string): T {
         cleaned = cleaned.slice(0, -3);
     }
     cleaned = cleaned.trim();
-    
+
     return JSON.parse(cleaned);
 }
 
@@ -379,19 +373,17 @@ function parseJsonResponse<T>(text: string): T {
 /**
  * Fallback scoring when no AI is available
  */
-function ruleBasedScoring(
-    leads: RawBusinessData[],
-    criteria: TargetingCriteria
-): ScoringResult {
+function ruleBasedScoring(leads: RawBusinessData[], criteria: TargetingCriteria): ScoringResult {
     const scores: LeadScore[] = leads.map((lead, index) => {
         let score = 50; // Base score
         const reasons: string[] = [];
 
         // Industry match: +20
         if (criteria.industries.length > 0 && lead.industry) {
-            const industryMatch = criteria.industries.some(ind =>
-                lead.industry!.toLowerCase().includes(ind.toLowerCase()) ||
-                ind.toLowerCase().includes(lead.industry!.toLowerCase())
+            const industryMatch = criteria.industries.some(
+                (ind) =>
+                    lead.industry!.toLowerCase().includes(ind.toLowerCase()) ||
+                    ind.toLowerCase().includes(lead.industry!.toLowerCase())
             );
             if (industryMatch) {
                 score += 20;
@@ -401,8 +393,8 @@ function ruleBasedScoring(
 
         // City match: +15
         if (criteria.geography.cities.length > 0 && lead.city) {
-            const cityMatch = criteria.geography.cities.some(city =>
-                city.toLowerCase() === lead.city!.toLowerCase()
+            const cityMatch = criteria.geography.cities.some(
+                (city) => city.toLowerCase() === lead.city!.toLowerCase()
             );
             if (cityMatch) {
                 score += 15;
@@ -412,8 +404,8 @@ function ruleBasedScoring(
 
         // State match: +10
         if (criteria.geography.states.length > 0 && lead.state) {
-            const stateMatch = criteria.geography.states.some(state =>
-                state.toLowerCase() === lead.state!.toLowerCase()
+            const stateMatch = criteria.geography.states.some(
+                (state) => state.toLowerCase() === lead.state!.toLowerCase()
             );
             if (stateMatch) {
                 score += 10;
@@ -467,19 +459,25 @@ function ruleBasedAnalysis(
     criteria: TargetingCriteria
 ): AnalysisResult {
     const analyses: LeadAnalysis[] = leads.map((lead, index) => {
-        const scoreData = scores.find(s => s.leadIndex === index);
+        const scoreData = scores.find((s) => s.leadIndex === index);
         const score = scoreData?.score || 50;
-        
+
         // Generate match reasons
         const matchReasons: string[] = [];
-        if (lead.industry && criteria.industries.some(ind => 
-            lead.industry!.toLowerCase().includes(ind.toLowerCase())
-        )) {
+        if (
+            lead.industry &&
+            criteria.industries.some((ind) =>
+                lead.industry!.toLowerCase().includes(ind.toLowerCase())
+            )
+        ) {
             matchReasons.push(`In target industry (${lead.industry})`);
         }
-        if (lead.city && criteria.geography.cities.some(city =>
-            city.toLowerCase() === lead.city!.toLowerCase()
-        )) {
+        if (
+            lead.city &&
+            criteria.geography.cities.some(
+                (city) => city.toLowerCase() === lead.city!.toLowerCase()
+            )
+        ) {
             matchReasons.push(`Located in target city (${lead.city})`);
         }
         if (lead.rating && lead.rating >= 4.0) {
@@ -507,7 +505,9 @@ function ruleBasedAnalysis(
         // Generate summary
         const location = [lead.city, lead.state].filter(Boolean).join(', ');
         const summary = `${lead.name} is a${lead.industry ? ` ${lead.industry}` : ''} business in ${location || 'the target area'}. ${
-            lead.rating ? `They have ${lead.rating}★ rating` : 'They have an active business presence'
+            lead.rating
+                ? `They have ${lead.rating}★ rating`
+                : 'They have an active business presence'
         }${lead.reviewCount ? ` from ${lead.reviewCount} reviews` : ''}. Shows alignment with your targeting criteria.`;
 
         return {
@@ -539,7 +539,7 @@ function ruleBasedAnalysis(
 
 /**
  * Stage 3: Batch score all leads with cheap AI model
- * 
+ *
  * @param leads Raw business data to score
  * @param criteria Targeting criteria to match against
  * @returns Scores for each lead with token usage
@@ -550,7 +550,7 @@ export async function scoreBatch(
 ): Promise<ScoringResult> {
     // Enforce max leads limit
     const leadsToScore = leads.slice(0, AI_LIMITS.maxLeadsToScore);
-    
+
     if (leadsToScore.length === 0) {
         return {
             scores: [],
@@ -574,19 +574,21 @@ export async function scoreBatch(
     try {
         const prompt = buildScoringPrompt(leadsToScore, criteria);
         const modelConfig = MODELS.scoring[provider];
-        
+
         console.log(`[AI Analyzer] Scoring ${leadsToScore.length} leads with ${modelConfig.name}`);
-        
-        const { text, inputTokens, outputTokens } = provider === 'gemini'
-            ? await callGemini(prompt, modelConfig.name)
-            : await callOpenAI(prompt, modelConfig.name);
-        
-        const scores = parseJsonResponse<Array<{ index: number; score: number; reasoning: string }>>(text);
-        
+
+        const { text, inputTokens, outputTokens } =
+            provider === 'gemini'
+                ? await callGemini(prompt, modelConfig.name)
+                : await callOpenAI(prompt, modelConfig.name);
+
+        const scores =
+            parseJsonResponse<Array<{ index: number; score: number; reasoning: string }>>(text);
+
         const cost = calculateCost(inputTokens, outputTokens, modelConfig);
-        
+
         return {
-            scores: scores.map(s => ({
+            scores: scores.map((s) => ({
                 leadIndex: s.index,
                 score: Math.min(100, Math.max(0, s.score)),
                 reasoning: s.reasoning,
@@ -610,7 +612,7 @@ export async function scoreBatch(
 
 /**
  * Stage 4: Deep analysis for high-scoring leads only
- * 
+ *
  * @param leads Raw business data (already filtered to high scorers)
  * @param scores Scores from scoreBatch (to include in results)
  * @param criteria Targeting criteria for context
@@ -623,7 +625,7 @@ export async function analyzeLeads(
 ): Promise<AnalysisResult> {
     // Enforce max leads limit
     const leadsToAnalyze = leads.slice(0, AI_LIMITS.maxLeadsToAnalyze);
-    
+
     if (leadsToAnalyze.length === 0) {
         return {
             analyses: [],
@@ -647,27 +649,32 @@ export async function analyzeLeads(
     try {
         const prompt = buildAnalysisPrompt(leadsToAnalyze, criteria);
         const modelConfig = MODELS.analysis[provider];
-        
-        console.log(`[AI Analyzer] Analyzing ${leadsToAnalyze.length} leads with ${modelConfig.name}`);
-        
-        const { text, inputTokens, outputTokens } = provider === 'gemini'
-            ? await callGemini(prompt, modelConfig.name)
-            : await callOpenAI(prompt, modelConfig.name);
-        
-        const analyses = parseJsonResponse<Array<{
-            index: number;
-            matchReasons: string[];
-            painPointsIdentified: string[];
-            buyingSignals: string[];
-            summary: string;
-        }>>(text);
-        
+
+        console.log(
+            `[AI Analyzer] Analyzing ${leadsToAnalyze.length} leads with ${modelConfig.name}`
+        );
+
+        const { text, inputTokens, outputTokens } =
+            provider === 'gemini'
+                ? await callGemini(prompt, modelConfig.name)
+                : await callOpenAI(prompt, modelConfig.name);
+
+        const analyses = parseJsonResponse<
+            Array<{
+                index: number;
+                matchReasons: string[];
+                painPointsIdentified: string[];
+                buyingSignals: string[];
+                summary: string;
+            }>
+        >(text);
+
         const cost = calculateCost(inputTokens, outputTokens, modelConfig);
-        
+
         // Merge with scores
         return {
-            analyses: analyses.map(a => {
-                const scoreData = scores.find(s => s.leadIndex === a.index);
+            analyses: analyses.map((a) => {
+                const scoreData = scores.find((s) => s.leadIndex === a.index);
                 return {
                     leadIndex: a.index,
                     score: scoreData?.score || 50,
@@ -696,9 +703,9 @@ export async function analyzeLeads(
 
 /**
  * Full AI analysis pipeline (both stages)
- * 
+ *
  * This is the main entry point for the sweep route.
- * 
+ *
  * @param leads All raw business data from collectors
  * @param criteria Targeting criteria
  * @returns AI analysis for each lead plus combined token usage
@@ -709,7 +716,7 @@ export async function analyzeAllLeads(
 ): Promise<FullAnalysisResult> {
     const warnings: string[] = [];
     const leadAnalyses = new Map<number, DiscoveredLeadAIAnalysis>();
-    
+
     // Initialize token tracking
     let totalTokens = 0;
     let totalCost = 0;
@@ -719,38 +726,44 @@ export async function analyzeAllLeads(
 
     // Stage 3: Batch scoring
     const scoringResult = await scoreBatch(leads, criteria);
-    
+
     totalTokens += scoringResult.tokenUsage.tokensUsed;
     totalCost += scoringResult.tokenUsage.estimatedCostUSD;
     totalApiCalls += scoringResult.tokenUsage.apiCalls;
-    
+
     if (scoringResult.warning) {
         warnings.push(scoringResult.warning);
     }
-    
-    console.log(`[AI Analyzer] Scoring complete. Model: ${scoringResult.model}, Tokens: ${scoringResult.tokenUsage.tokensUsed}`);
+
+    console.log(
+        `[AI Analyzer] Scoring complete. Model: ${scoringResult.model}, Tokens: ${scoringResult.tokenUsage.tokensUsed}`
+    );
 
     // Find high-scoring leads for deep analysis
-    const highScorers = scoringResult.scores.filter(s => s.score >= AI_LIMITS.scoreThreshold);
-    const highScoringLeads = highScorers.map(s => leads[s.leadIndex]);
+    const highScorers = scoringResult.scores.filter((s) => s.score >= AI_LIMITS.scoreThreshold);
+    const highScoringLeads = highScorers.map((s) => leads[s.leadIndex]);
     const highScoringScores = highScorers;
-    
-    console.log(`[AI Analyzer] ${highScorers.length} leads scored >= ${AI_LIMITS.scoreThreshold} for deep analysis`);
+
+    console.log(
+        `[AI Analyzer] ${highScorers.length} leads scored >= ${AI_LIMITS.scoreThreshold} for deep analysis`
+    );
 
     // Stage 4: Deep analysis (only for high scorers)
     let analysisResult: AnalysisResult;
     if (highScoringLeads.length > 0) {
         analysisResult = await analyzeLeads(highScoringLeads, highScoringScores, criteria);
-        
+
         totalTokens += analysisResult.tokenUsage.tokensUsed;
         totalCost += analysisResult.tokenUsage.estimatedCostUSD;
         totalApiCalls += analysisResult.tokenUsage.apiCalls;
-        
+
         if (analysisResult.warning) {
             warnings.push(analysisResult.warning);
         }
-        
-        console.log(`[AI Analyzer] Analysis complete. Model: ${analysisResult.model}, Tokens: ${analysisResult.tokenUsage.tokensUsed}`);
+
+        console.log(
+            `[AI Analyzer] Analysis complete. Model: ${analysisResult.model}, Tokens: ${analysisResult.tokenUsage.tokensUsed}`
+        );
     } else {
         analysisResult = {
             analyses: [],
@@ -761,16 +774,17 @@ export async function analyzeAllLeads(
 
     // Build analysis map for all leads
     for (let i = 0; i < leads.length; i++) {
-        const scoreData = scoringResult.scores.find(s => s.leadIndex === i);
+        const scoreData = scoringResult.scores.find((s) => s.leadIndex === i);
         const score = scoreData?.score || 50;
-        
+
         // Check if this lead got deep analysis
         // Need to find the analysis by mapping back through the high scorer index
-        const highScorerIndex = highScorers.findIndex(hs => hs.leadIndex === i);
-        const analysis = highScorerIndex >= 0 
-            ? analysisResult.analyses.find(a => a.leadIndex === highScorerIndex)
-            : null;
-        
+        const highScorerIndex = highScorers.findIndex((hs) => hs.leadIndex === i);
+        const analysis =
+            highScorerIndex >= 0
+                ? analysisResult.analyses.find((a) => a.leadIndex === highScorerIndex)
+                : null;
+
         if (analysis) {
             // Use deep analysis results
             leadAnalyses.set(i, {
@@ -793,7 +807,9 @@ export async function analyzeAllLeads(
         }
     }
 
-    console.log(`[AI Analyzer] Complete. Total tokens: ${totalTokens}, Cost: $${totalCost.toFixed(4)}`);
+    console.log(
+        `[AI Analyzer] Complete. Total tokens: ${totalTokens}, Cost: $${totalCost.toFixed(4)}`
+    );
 
     return {
         leadAnalyses,
@@ -813,16 +829,16 @@ export async function analyzeAllLeads(
 function generateBasicSummary(lead: RawBusinessData, score: number): string {
     const strength = score >= 70 ? 'strong' : score >= 50 ? 'moderate' : 'weak';
     const location = [lead.city, lead.state].filter(Boolean).join(', ');
-    
+
     let summary = `${lead.name} is a${lead.industry ? ` ${lead.industry}` : ''} business`;
     if (location) summary += ` in ${location}`;
-    
+
     if (lead.rating && lead.reviewCount) {
         summary += ` with ${lead.rating}★ rating from ${lead.reviewCount} reviews`;
     }
-    
+
     summary += `. Shows ${strength} alignment with targeting criteria.`;
-    
+
     return summary;
 }
 

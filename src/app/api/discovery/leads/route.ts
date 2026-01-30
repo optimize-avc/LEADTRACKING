@@ -19,12 +19,13 @@ export async function GET(request: NextRequest) {
     try {
         const db = getAdminDb();
         const { searchParams } = new URL(request.url);
-        
+
         const status = searchParams.get('status') as DiscoveredLeadStatus | null;
         const limitParam = parseInt(searchParams.get('limit') || '50');
         const offsetParam = parseInt(searchParams.get('offset') || '0');
 
-        const collectionRef = db.collection('companies')
+        const collectionRef = db
+            .collection('companies')
             .doc(auth.companyId)
             .collection('discoveredLeads');
 
@@ -50,8 +51,8 @@ export async function GET(request: NextRequest) {
         // Apply pagination
         const snapshot = await query.limit(limitParam + offsetParam).get();
         const allDocs = snapshot.docs.slice(offsetParam, offsetParam + limitParam);
-        
-        const leads = allDocs.map(doc => ({
+
+        const leads = allDocs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
         })) as DiscoveredLead[];
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error fetching discovered leads:', error);
-        
+
         // Return empty state instead of 500 for most errors
         // This provides better UX for edge cases
         return NextResponse.json({
@@ -103,7 +104,8 @@ export async function PATCH(request: NextRequest) {
         }
 
         const db = getAdminDb();
-        const leadRef = db.collection('companies')
+        const leadRef = db
+            .collection('companies')
             .doc(auth.companyId)
             .collection('discoveredLeads')
             .doc(leadId);
@@ -131,7 +133,8 @@ export async function PATCH(request: NextRequest) {
 
         // Update profile stats (with error handling - don't fail if profile doesn't exist)
         try {
-            const profileRef = db.collection('companies')
+            const profileRef = db
+                .collection('companies')
                 .doc(auth.companyId)
                 .collection('discoveryProfile')
                 .doc('current');
@@ -160,9 +163,6 @@ export async function PATCH(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error updating lead:', error);
-        return NextResponse.json(
-            { error: 'Failed to update lead' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to update lead' }, { status: 500 });
     }
 }

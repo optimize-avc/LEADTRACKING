@@ -32,15 +32,18 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
     const [shareWithTeam, setShareWithTeam] = useState(false); // Default private
     const [isSaving, setIsSaving] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    
+
     const { containerRef } = useFocusTrap(isOpen);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -132,32 +135,37 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="log-call-title"
         >
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+            <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
             {/* Modal */}
-            <div 
+            <div
                 ref={containerRef}
                 className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl"
             >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-lg" aria-hidden="true">
+                        <div
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-lg"
+                            aria-hidden="true"
+                        >
                             📞
                         </div>
                         <div>
-                            <h2 id="log-call-title" className="text-xl font-bold text-white">Log Call</h2>
+                            <h2 id="log-call-title" className="text-xl font-bold text-white">
+                                Log Call
+                            </h2>
                             <p className="text-sm text-slate-400">
                                 {lead.companyName} • {lead.contactName}
                             </p>
@@ -169,7 +177,7 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                 <div className="p-6 space-y-5">
                     {/* Timer */}
                     <div className="text-center">
-                        <div 
+                        <div
                             className="text-5xl font-mono font-bold text-white mb-3"
                             role="timer"
                             aria-live="polite"
@@ -195,7 +203,10 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
 
                     {/* Manual Duration Input */}
                     <div>
-                        <label htmlFor="call-duration" className="block text-sm text-slate-400 mb-2">
+                        <label
+                            htmlFor="call-duration"
+                            className="block text-sm text-slate-400 mb-2"
+                        >
                             Duration (minutes)
                         </label>
                         <input
@@ -212,7 +223,11 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                     {/* Outcome */}
                     <fieldset>
                         <legend className="block text-sm text-slate-400 mb-2">Outcome</legend>
-                        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Call outcome">
+                        <div
+                            className="grid grid-cols-2 gap-2"
+                            role="radiogroup"
+                            aria-label="Call outcome"
+                        >
                             {OUTCOMES.map((o) => (
                                 <button
                                     key={o.value}
@@ -225,7 +240,9 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
                                     role="radio"
                                     aria-checked={outcome === o.value}
                                 >
-                                    <span className="mr-2" aria-hidden="true">{o.icon}</span>
+                                    <span className="mr-2" aria-hidden="true">
+                                        {o.icon}
+                                    </span>
                                     <span className="text-sm">{o.label}</span>
                                 </button>
                             ))}
@@ -234,7 +251,9 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
 
                     {/* Notes */}
                     <div>
-                        <label htmlFor="call-notes" className="block text-sm text-slate-400 mb-2">Notes</label>
+                        <label htmlFor="call-notes" className="block text-sm text-slate-400 mb-2">
+                            Notes
+                        </label>
                         <textarea
                             id="call-notes"
                             value={notes}
@@ -246,7 +265,12 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
 
                     {/* Next Step */}
                     <div>
-                        <label htmlFor="call-next-step" className="block text-sm text-slate-400 mb-2">Next Step</label>
+                        <label
+                            htmlFor="call-next-step"
+                            className="block text-sm text-slate-400 mb-2"
+                        >
+                            Next Step
+                        </label>
                         <input
                             id="call-next-step"
                             type="text"

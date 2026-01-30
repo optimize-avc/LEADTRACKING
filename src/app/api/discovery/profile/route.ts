@@ -30,8 +30,11 @@ export async function GET(request: NextRequest) {
 
     try {
         const db = getAdminDb();
-        const profileRef = db.collection('companies').doc(auth.companyId)
-            .collection('discoveryProfile').doc('current');
+        const profileRef = db
+            .collection('companies')
+            .doc(auth.companyId)
+            .collection('discoveryProfile')
+            .doc('current');
         const profileSnap = await profileRef.get();
 
         if (!profileSnap.exists) {
@@ -49,7 +52,7 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error fetching discovery profile:', error);
-        
+
         // Return default profile on error (better UX than 500)
         const defaultProfile = createDefaultDiscoveryProfile(auth.companyId);
         return NextResponse.json({
@@ -69,8 +72,11 @@ export async function POST(request: NextRequest) {
     try {
         const body: RequestBody = await request.json();
         const db = getAdminDb();
-        const profileRef = db.collection('companies').doc(auth.companyId)
-            .collection('discoveryProfile').doc('current');
+        const profileRef = db
+            .collection('companies')
+            .doc(auth.companyId)
+            .collection('discoveryProfile')
+            .doc('current');
 
         const existing = await profileRef.get();
         const now = Date.now();
@@ -173,9 +179,6 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error saving discovery profile:', error);
-        return NextResponse.json(
-            { error: 'Failed to save discovery profile' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to save discovery profile' }, { status: 500 });
     }
 }

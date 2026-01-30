@@ -57,7 +57,7 @@ export default function ResourcesClient() {
         async function fetchResources() {
             // Don't fetch until auth is resolved
             if (authLoading) return;
-            
+
             // No user = not authenticated, stop loading
             if (!user?.uid) {
                 setLoading(false);

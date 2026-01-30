@@ -34,7 +34,9 @@ test.describe('Login Flow', () => {
 
             // Should either open popup or show login modal
             const hasPopup = page.context().pages().length > 1;
-            const hasModal = await page.locator('[role="dialog"], .modal, [data-testid="login-modal"]').isVisible();
+            const hasModal = await page
+                .locator('[role="dialog"], .modal, [data-testid="login-modal"]')
+                .isVisible();
             const urlChanged = page.url() !== 'http://localhost:3000/';
 
             expect(hasPopup || hasModal || urlChanged).toBeTruthy();

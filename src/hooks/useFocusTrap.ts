@@ -13,7 +13,7 @@ export function useFocusTrap(isActive: boolean = true) {
 
     const getFocusableElements = useCallback(() => {
         if (!containerRef.current) return [];
-        
+
         const focusableSelectors = [
             'button:not([disabled])',
             'a[href]',
@@ -31,29 +31,32 @@ export function useFocusTrap(isActive: boolean = true) {
         });
     }, []);
 
-    const handleKeyDown = useCallback((event: KeyboardEvent) => {
-        if (event.key !== 'Tab' || !containerRef.current) return;
+    const handleKeyDown = useCallback(
+        (event: KeyboardEvent) => {
+            if (event.key !== 'Tab' || !containerRef.current) return;
 
-        const focusableElements = getFocusableElements();
-        if (focusableElements.length === 0) return;
+            const focusableElements = getFocusableElements();
+            if (focusableElements.length === 0) return;
 
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
 
-        // Shift + Tab - go to previous element
-        if (event.shiftKey) {
-            if (document.activeElement === firstElement) {
-                event.preventDefault();
-                lastElement.focus();
+            // Shift + Tab - go to previous element
+            if (event.shiftKey) {
+                if (document.activeElement === firstElement) {
+                    event.preventDefault();
+                    lastElement.focus();
+                }
+            } else {
+                // Tab - go to next element
+                if (document.activeElement === lastElement) {
+                    event.preventDefault();
+                    firstElement.focus();
+                }
             }
-        } else {
-            // Tab - go to next element
-            if (document.activeElement === lastElement) {
-                event.preventDefault();
-                firstElement.focus();
-            }
-        }
-    }, [getFocusableElements]);
+        },
+        [getFocusableElements]
+    );
 
     const handleEscape = useCallback((event: KeyboardEvent) => {
         if (event.key === 'Escape') {
@@ -86,7 +89,10 @@ export function useFocusTrap(isActive: boolean = true) {
             document.removeEventListener('keydown', handleEscape);
 
             // Restore focus to previously focused element
-            if (previousActiveElement.current && typeof previousActiveElement.current.focus === 'function') {
+            if (
+                previousActiveElement.current &&
+                typeof previousActiveElement.current.focus === 'function'
+            ) {
                 previousActiveElement.current.focus();
             }
         };
@@ -99,42 +105,42 @@ export function useFocusTrap(isActive: boolean = true) {
  * A hook for managing focus within a component with roving tabindex.
  * Useful for toolbars, menus, and other composite widgets.
  */
-export function useRovingTabIndex<T extends HTMLElement>(
-    items: T[],
-    initialIndex: number = 0
-) {
+export function useRovingTabIndex<T extends HTMLElement>(items: T[], initialIndex: number = 0) {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-    const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-        const { key } = event;
-        let newIndex = currentIndex;
+    const handleKeyDown = useCallback(
+        (event: React.KeyboardEvent) => {
+            const { key } = event;
+            let newIndex = currentIndex;
 
-        switch (key) {
-            case 'ArrowDown':
-            case 'ArrowRight':
-                event.preventDefault();
-                newIndex = (currentIndex + 1) % items.length;
-                break;
-            case 'ArrowUp':
-            case 'ArrowLeft':
-                event.preventDefault();
-                newIndex = (currentIndex - 1 + items.length) % items.length;
-                break;
-            case 'Home':
-                event.preventDefault();
-                newIndex = 0;
-                break;
-            case 'End':
-                event.preventDefault();
-                newIndex = items.length - 1;
-                break;
-            default:
-                return;
-        }
+            switch (key) {
+                case 'ArrowDown':
+                case 'ArrowRight':
+                    event.preventDefault();
+                    newIndex = (currentIndex + 1) % items.length;
+                    break;
+                case 'ArrowUp':
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    newIndex = (currentIndex - 1 + items.length) % items.length;
+                    break;
+                case 'Home':
+                    event.preventDefault();
+                    newIndex = 0;
+                    break;
+                case 'End':
+                    event.preventDefault();
+                    newIndex = items.length - 1;
+                    break;
+                default:
+                    return;
+            }
 
-        setCurrentIndex(newIndex);
-        items[newIndex]?.focus();
-    }, [items, currentIndex]);
+            setCurrentIndex(newIndex);
+            items[newIndex]?.focus();
+        },
+        [items, currentIndex]
+    );
 
     return { handleKeyDown, currentIndex };
 }

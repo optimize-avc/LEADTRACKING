@@ -60,15 +60,18 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
         nextStep: '',
     });
     const [isSaving, setIsSaving] = useState(false);
-    
+
     const { containerRef } = useFocusTrap(isOpen && !!lead);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -131,19 +134,21 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
             aria-labelledby="quick-edit-title"
         >
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
             {/* Modal */}
-            <div 
+            <div
                 ref={containerRef}
                 className="relative bg-slate-900 border border-slate-700 rounded-2xl p-5 w-full max-w-md shadow-2xl"
             >
                 <div className="flex items-center justify-between mb-4">
-                    <h2 id="quick-edit-title" className="text-xl font-bold text-white">Quick Edit</h2>
+                    <h2 id="quick-edit-title" className="text-xl font-bold text-white">
+                        Quick Edit
+                    </h2>
                     <button
                         onClick={onClose}
                         className="p-1 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
@@ -157,7 +162,12 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                     {/* Company & Contact */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label htmlFor="qe-company" className="block text-xs text-slate-500 mb-1">Company</label>
+                            <label
+                                htmlFor="qe-company"
+                                className="block text-xs text-slate-500 mb-1"
+                            >
+                                Company
+                            </label>
                             <input
                                 id="qe-company"
                                 type="text"
@@ -169,7 +179,12 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                             />
                         </div>
                         <div>
-                            <label htmlFor="qe-contact" className="block text-xs text-slate-500 mb-1">Contact</label>
+                            <label
+                                htmlFor="qe-contact"
+                                className="block text-xs text-slate-500 mb-1"
+                            >
+                                Contact
+                            </label>
                             <input
                                 id="qe-contact"
                                 type="text"
@@ -185,7 +200,9 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                     {/* Email & Phone */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label htmlFor="qe-email" className="block text-xs text-slate-500 mb-1">Email</label>
+                            <label htmlFor="qe-email" className="block text-xs text-slate-500 mb-1">
+                                Email
+                            </label>
                             <input
                                 id="qe-email"
                                 type="email"
@@ -197,7 +214,9 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                             />
                         </div>
                         <div>
-                            <label htmlFor="qe-phone" className="block text-xs text-slate-500 mb-1">Phone</label>
+                            <label htmlFor="qe-phone" className="block text-xs text-slate-500 mb-1">
+                                Phone
+                            </label>
                             <input
                                 id="qe-phone"
                                 type="tel"
@@ -213,7 +232,9 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                     {/* Value & Status */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label htmlFor="qe-value" className="block text-xs text-slate-500 mb-1">Value ($)</label>
+                            <label htmlFor="qe-value" className="block text-xs text-slate-500 mb-1">
+                                Value ($)
+                            </label>
                             <input
                                 id="qe-value"
                                 type="number"
@@ -225,7 +246,12 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                             />
                         </div>
                         <div>
-                            <label htmlFor="qe-status" className="block text-xs text-slate-500 mb-1">Status</label>
+                            <label
+                                htmlFor="qe-status"
+                                className="block text-xs text-slate-500 mb-1"
+                            >
+                                Status
+                            </label>
                             <select
                                 id="qe-status"
                                 value={formData.status}
@@ -249,7 +275,12 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                     {/* Industry & Source */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label htmlFor="qe-industry" className="block text-xs text-slate-500 mb-1">Industry</label>
+                            <label
+                                htmlFor="qe-industry"
+                                className="block text-xs text-slate-500 mb-1"
+                            >
+                                Industry
+                            </label>
                             <select
                                 id="qe-industry"
                                 value={formData.industry}
@@ -267,7 +298,12 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="qe-source" className="block text-xs text-slate-500 mb-1">Source</label>
+                            <label
+                                htmlFor="qe-source"
+                                className="block text-xs text-slate-500 mb-1"
+                            >
+                                Source
+                            </label>
                             <select
                                 id="qe-source"
                                 value={formData.source}
@@ -288,7 +324,9 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
 
                     {/* Next Step */}
                     <div>
-                        <label htmlFor="qe-nextstep" className="block text-xs text-slate-500 mb-1">Next Step</label>
+                        <label htmlFor="qe-nextstep" className="block text-xs text-slate-500 mb-1">
+                            Next Step
+                        </label>
                         <input
                             id="qe-nextstep"
                             type="text"
@@ -301,7 +339,9 @@ export function QuickEditModal({ lead, isOpen, onClose, onSave }: QuickEditModal
 
                     {/* Notes */}
                     <div>
-                        <label htmlFor="qe-notes" className="block text-xs text-slate-500 mb-1">Notes</label>
+                        <label htmlFor="qe-notes" className="block text-xs text-slate-500 mb-1">
+                            Notes
+                        </label>
                         <textarea
                             id="qe-notes"
                             value={formData.notes}

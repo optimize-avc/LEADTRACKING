@@ -5,7 +5,17 @@ import { useSearchParams } from 'next/navigation';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Badge } from '@/components/ui/Badge';
-import { Bot, Link2, Unlink, Settings, MessageSquare, Save, ChevronLeft, RefreshCw, Hash } from 'lucide-react';
+import {
+    Bot,
+    Link2,
+    Unlink,
+    Settings,
+    MessageSquare,
+    Save,
+    ChevronLeft,
+    RefreshCw,
+    Hash,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { CompanyService } from '@/lib/firebase/company';
 import type { Company, CompanySettings, ChannelMapping, DiscordChannel } from '@/types/company';
@@ -17,12 +27,17 @@ const DISCORD_REDIRECT_URI =
     typeof window !== 'undefined' ? `${window.location.origin}/api/discord/callback` : '';
 
 // Channel mapping configuration
-const CHANNEL_MAPPING_OPTIONS: { key: keyof ChannelMapping; label: string; description: string }[] = [
-    { key: 'newLeads', label: 'New Leads', description: 'Notifications when new leads are discovered' },
-    { key: 'wins', label: 'Closed Won', description: 'Celebrate when deals are closed' },
-    { key: 'triage', label: 'Lead Triage', description: 'Leads needing review or assignment' },
-    { key: 'digest', label: 'Daily Digest', description: 'Daily summary of pipeline activity' },
-];
+const CHANNEL_MAPPING_OPTIONS: { key: keyof ChannelMapping; label: string; description: string }[] =
+    [
+        {
+            key: 'newLeads',
+            label: 'New Leads',
+            description: 'Notifications when new leads are discovered',
+        },
+        { key: 'wins', label: 'Closed Won', description: 'Celebrate when deals are closed' },
+        { key: 'triage', label: 'Lead Triage', description: 'Leads needing review or assignment' },
+        { key: 'digest', label: 'Daily Digest', description: 'Daily summary of pipeline activity' },
+    ];
 
 export default function BotStudioClient() {
     const { user, loading: authLoading } = useAuth();
@@ -47,7 +62,7 @@ export default function BotStudioClient() {
     useEffect(() => {
         const success = searchParams.get('success');
         const error = searchParams.get('error');
-        
+
         if (success === 'connected') {
             toast.success('🎉 Discord server connected successfully!');
             // Clean URL and reload to fetch channels
@@ -118,7 +133,8 @@ export default function BotStudioClient() {
             } else {
                 const error = await response.json();
                 console.error('Failed to load channels:', error);
-                if (response.status !== 400) { // Don't show error for "not connected"
+                if (response.status !== 400) {
+                    // Don't show error for "not connected"
                     toast.error('Failed to load Discord channels');
                 }
             }
@@ -210,7 +226,10 @@ export default function BotStudioClient() {
 
         setIsSavingChannels(true);
         try {
-            await CompanyService.updateChannelMapping(company.id, channelMapping as Record<string, string>);
+            await CompanyService.updateChannelMapping(
+                company.id,
+                channelMapping as Record<string, string>
+            );
 
             setCompany({
                 ...company,
@@ -365,7 +384,10 @@ export default function BotStudioClient() {
                                 disabled={isLoadingChannels}
                                 className="flex items-center gap-1 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
                             >
-                                <RefreshCw size={12} className={isLoadingChannels ? 'animate-spin' : ''} />
+                                <RefreshCw
+                                    size={12}
+                                    className={isLoadingChannels ? 'animate-spin' : ''}
+                                />
                                 Refresh
                             </button>
                         </div>
@@ -376,7 +398,10 @@ export default function BotStudioClient() {
                             </div>
                         ) : discordChannels.length === 0 ? (
                             <div className="text-sm text-slate-500 py-4 text-center">
-                                <p>No channels found. Make sure the bot has permission to view channels.</p>
+                                <p>
+                                    No channels found. Make sure the bot has permission to view
+                                    channels.
+                                </p>
                                 <button
                                     onClick={loadDiscordChannels}
                                     className="mt-2 text-indigo-400 hover:text-indigo-300"
@@ -387,17 +412,24 @@ export default function BotStudioClient() {
                         ) : (
                             <div className="space-y-4">
                                 {CHANNEL_MAPPING_OPTIONS.map((option) => (
-                                    <div key={option.key} className="flex items-center justify-between">
+                                    <div
+                                        key={option.key}
+                                        className="flex items-center justify-between"
+                                    >
                                         <div className="flex-1">
                                             <label className="block text-sm font-medium text-slate-300">
                                                 {option.label}
                                             </label>
-                                            <p className="text-xs text-slate-500">{option.description}</p>
+                                            <p className="text-xs text-slate-500">
+                                                {option.description}
+                                            </p>
                                         </div>
                                         <div className="w-48">
                                             <select
                                                 value={channelMapping[option.key] || ''}
-                                                onChange={(e) => handleChannelChange(option.key, e.target.value)}
+                                                onChange={(e) =>
+                                                    handleChannelChange(option.key, e.target.value)
+                                                }
                                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
                                             >
                                                 <option value="">None</option>
@@ -544,9 +576,7 @@ export default function BotStudioClient() {
                                 <Hash size={20} className="text-white" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-white">
-                                    Bot Commands
-                                </h3>
+                                <h3 className="text-lg font-semibold text-white">Bot Commands</h3>
                                 <p className="text-sm text-slate-400">
                                     Available slash commands in your Discord server
                                 </p>
@@ -556,27 +586,39 @@ export default function BotStudioClient() {
                         <div className="space-y-3 text-sm">
                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                                 <code className="text-indigo-400 font-mono">/lead create</code>
-                                <span className="text-slate-400">Create a new lead with auto-assignment</span>
+                                <span className="text-slate-400">
+                                    Create a new lead with auto-assignment
+                                </span>
                             </div>
                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                                 <code className="text-indigo-400 font-mono">/lead update</code>
-                                <span className="text-slate-400">Update lead stage, value, or assignee</span>
+                                <span className="text-slate-400">
+                                    Update lead stage, value, or assignee
+                                </span>
                             </div>
                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                                 <code className="text-indigo-400 font-mono">/pipeline view</code>
-                                <span className="text-slate-400">View your current pipeline by stage</span>
+                                <span className="text-slate-400">
+                                    View your current pipeline by stage
+                                </span>
                             </div>
                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                                 <code className="text-indigo-400 font-mono">/genleads</code>
-                                <span className="text-slate-400">AI-generate leads based on your industry</span>
+                                <span className="text-slate-400">
+                                    AI-generate leads based on your industry
+                                </span>
                             </div>
                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                                 <code className="text-indigo-400 font-mono">/remind set</code>
-                                <span className="text-slate-400">Set follow-up reminders for leads</span>
+                                <span className="text-slate-400">
+                                    Set follow-up reminders for leads
+                                </span>
                             </div>
                             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                                 <code className="text-indigo-400 font-mono">/team list</code>
-                                <span className="text-slate-400">View team members and their capacity</span>
+                                <span className="text-slate-400">
+                                    View team members and their capacity
+                                </span>
                             </div>
                         </div>
                     </GlassCard>

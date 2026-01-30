@@ -1,6 +1,6 @@
 /**
  * Server-side Audit Service
- * 
+ *
  * Uses Firebase Admin SDK for logging audit events from API routes.
  */
 

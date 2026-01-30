@@ -2,7 +2,7 @@
 
 /**
  * Error Boundary Component
- * 
+ *
  * Catches React errors and displays a fallback UI.
  * Integrates with Sentry for error reporting.
  */
@@ -34,11 +34,11 @@ export class ErrorBoundary extends Component<Props, State> {
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         // Log to console
         console.error('Error caught by boundary:', error, errorInfo);
-        
+
         // Report to Sentry
         captureError(error, {
             action: 'ErrorBoundary.componentDidCatch',
-            metadata: { componentStack: errorInfo.componentStack }
+            metadata: { componentStack: errorInfo.componentStack },
         });
     }
 
@@ -73,7 +73,7 @@ export class ErrorBoundary extends Component<Props, State> {
                                 Try Again
                             </button>
                             <button
-                                onClick={() => window.location.href = '/'}
+                                onClick={() => (window.location.href = '/')}
                                 className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
                             >
                                 Go Home
@@ -126,12 +126,10 @@ export function PageErrorBoundary({ children }: { children: ReactNode }) {
                         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center">
                             <AlertTriangle className="w-10 h-10 text-red-400" />
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-3">
-                            Page Error
-                        </h1>
+                        <h1 className="text-2xl font-bold text-white mb-3">Page Error</h1>
                         <p className="text-slate-400 mb-8">
-                            This page encountered an error and couldn&apos;t load properly. 
-                            Please try refreshing the page or return to the dashboard.
+                            This page encountered an error and couldn&apos;t load properly. Please
+                            try refreshing the page or return to the dashboard.
                         </p>
                         <div className="flex gap-4 justify-center">
                             <button

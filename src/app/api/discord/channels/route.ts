@@ -4,7 +4,7 @@ import { getAdminDb, verifyIdToken } from '@/lib/firebase/admin';
 /**
  * GET /api/discord/channels
  * Fetches text channels from a connected Discord guild
- * 
+ *
  * Requires: Authorization header with Firebase ID token
  * Returns: Array of { id, name, type } for text channels
  */

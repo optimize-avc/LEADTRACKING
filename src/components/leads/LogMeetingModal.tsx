@@ -45,15 +45,18 @@ export function LogMeetingModal({
     const [meetingTime, setMeetingTime] = useState('');
     const [shareWithTeam, setShareWithTeam] = useState(false); // Default private
     const [isSaving, setIsSaving] = useState(false);
-    
+
     const { containerRef } = useFocusTrap(isOpen);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -122,32 +125,37 @@ export function LogMeetingModal({
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="log-meeting-title"
         >
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+            <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
             {/* Modal */}
-            <div 
+            <div
                 ref={containerRef}
                 className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl"
             >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-lg" aria-hidden="true">
+                        <div
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-lg"
+                            aria-hidden="true"
+                        >
                             📅
                         </div>
                         <div>
-                            <h2 id="log-meeting-title" className="text-xl font-bold text-white">Log Meeting</h2>
+                            <h2 id="log-meeting-title" className="text-xl font-bold text-white">
+                                Log Meeting
+                            </h2>
                             <p className="text-sm text-slate-400">
                                 {lead.companyName} • {lead.contactName}
                             </p>
@@ -160,7 +168,12 @@ export function LogMeetingModal({
                     {/* Date & Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="meeting-date" className="block text-sm text-slate-400 mb-2">Date</label>
+                            <label
+                                htmlFor="meeting-date"
+                                className="block text-sm text-slate-400 mb-2"
+                            >
+                                Date
+                            </label>
                             <input
                                 id="meeting-date"
                                 type="date"
@@ -170,7 +183,12 @@ export function LogMeetingModal({
                             />
                         </div>
                         <div>
-                            <label htmlFor="meeting-time" className="block text-sm text-slate-400 mb-2">Time</label>
+                            <label
+                                htmlFor="meeting-time"
+                                className="block text-sm text-slate-400 mb-2"
+                            >
+                                Time
+                            </label>
                             <input
                                 id="meeting-time"
                                 type="time"
@@ -197,7 +215,9 @@ export function LogMeetingModal({
                                     role="radio"
                                     aria-checked={meetingType === type.value}
                                 >
-                                    <div className="text-xl mb-1" aria-hidden="true">{type.icon}</div>
+                                    <div className="text-xl mb-1" aria-hidden="true">
+                                        {type.icon}
+                                    </div>
                                     <div className="text-xs">{type.label}</div>
                                 </button>
                             ))}
@@ -207,7 +227,11 @@ export function LogMeetingModal({
                     {/* Duration */}
                     <fieldset>
                         <legend className="block text-sm text-slate-400 mb-2">Duration</legend>
-                        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Meeting duration">
+                        <div
+                            className="flex flex-wrap gap-2"
+                            role="radiogroup"
+                            aria-label="Meeting duration"
+                        >
                             {DURATION_OPTIONS.map((mins) => (
                                 <button
                                     key={mins}
@@ -228,7 +252,12 @@ export function LogMeetingModal({
 
                     {/* Outcome */}
                     <div>
-                        <label htmlFor="meeting-outcome" className="block text-sm text-slate-400 mb-2">Outcome</label>
+                        <label
+                            htmlFor="meeting-outcome"
+                            className="block text-sm text-slate-400 mb-2"
+                        >
+                            Outcome
+                        </label>
                         <select
                             id="meeting-outcome"
                             value={outcome}
@@ -245,7 +274,12 @@ export function LogMeetingModal({
 
                     {/* Notes */}
                     <div>
-                        <label htmlFor="meeting-notes" className="block text-sm text-slate-400 mb-2">Notes</label>
+                        <label
+                            htmlFor="meeting-notes"
+                            className="block text-sm text-slate-400 mb-2"
+                        >
+                            Notes
+                        </label>
                         <textarea
                             id="meeting-notes"
                             value={notes}

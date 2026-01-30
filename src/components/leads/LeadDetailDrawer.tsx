@@ -51,15 +51,18 @@ export function LeadDetailDrawer({
     const [activeTab, setActiveTab] = useState<'overview' | 'intelligence' | 'activity'>(
         'overview'
     );
-    
+
     const { containerRef } = useFocusTrap(isOpen && !!lead);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -132,10 +135,19 @@ export function LeadDetailDrawer({
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <Building2 className="text-blue-400" size={24} aria-hidden="true" />
+                                        <Building2
+                                            className="text-blue-400"
+                                            size={24}
+                                            aria-hidden="true"
+                                        />
                                         {isEditing ? (
                                             <>
-                                                <label htmlFor="edit-company-name" className="sr-only">Company name</label>
+                                                <label
+                                                    htmlFor="edit-company-name"
+                                                    className="sr-only"
+                                                >
+                                                    Company name
+                                                </label>
                                                 <input
                                                     id="edit-company-name"
                                                     value={editedLead.companyName || ''}
@@ -149,7 +161,10 @@ export function LeadDetailDrawer({
                                                 />
                                             </>
                                         ) : (
-                                            <h2 id="lead-detail-title" className="text-xl font-bold text-white">
+                                            <h2
+                                                id="lead-detail-title"
+                                                className="text-xl font-bold text-white"
+                                            >
                                                 {lead.companyName}
                                             </h2>
                                         )}
@@ -209,7 +224,11 @@ export function LeadDetailDrawer({
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex gap-1 mt-4 bg-slate-800/50 rounded-lg p-1" role="tablist" aria-label="Lead detail sections">
+                            <div
+                                className="flex gap-1 mt-4 bg-slate-800/50 rounded-lg p-1"
+                                role="tablist"
+                                aria-label="Lead detail sections"
+                            >
                                 {(['overview', 'intelligence', 'activity'] as const).map((tab) => (
                                     <button
                                         key={tab}
@@ -231,7 +250,7 @@ export function LeadDetailDrawer({
                         </div>
 
                         {/* Content */}
-                        <div 
+                        <div
                             className="flex-1 overflow-y-auto p-6 space-y-6"
                             role="tabpanel"
                             id={`tabpanel-${activeTab}`}

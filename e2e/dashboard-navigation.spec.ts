@@ -20,7 +20,9 @@ test.describe('Dashboard Navigation', () => {
         const expectedLinks = ['Dashboard', 'Leads', 'Activities'];
 
         for (const linkText of expectedLinks) {
-            const link = page.locator(`a:has-text("${linkText}"), [role="link"]:has-text("${linkText}")`).first();
+            const link = page
+                .locator(`a:has-text("${linkText}"), [role="link"]:has-text("${linkText}")`)
+                .first();
             await expect(link).toBeVisible({ timeout: 5000 });
         }
     });
@@ -107,17 +109,20 @@ test.describe('Dashboard Content', () => {
         await page.waitForLoadState('networkidle');
 
         // Should show either metrics cards or welcome/getting started content
-        const hasMetrics = await page.locator(
-            '[data-testid*="metric"], [data-testid*="stat"], .stat-card, .metric-card'
-        ).first().isVisible();
+        const hasMetrics = await page
+            .locator('[data-testid*="metric"], [data-testid*="stat"], .stat-card, .metric-card')
+            .first()
+            .isVisible();
 
-        const hasWelcome = await page.locator(
-            'text=Welcome, text=Get Started, text=Dashboard'
-        ).first().isVisible();
+        const hasWelcome = await page
+            .locator('text=Welcome, text=Get Started, text=Dashboard')
+            .first()
+            .isVisible();
 
-        const hasCharts = await page.locator(
-            '[data-testid*="chart"], canvas, svg.recharts'
-        ).first().isVisible();
+        const hasCharts = await page
+            .locator('[data-testid*="chart"], canvas, svg.recharts')
+            .first()
+            .isVisible();
 
         expect(hasMetrics || hasWelcome || hasCharts).toBeTruthy();
     });
@@ -141,9 +146,11 @@ test.describe('Mobile Navigation', () => {
         await page.waitForLoadState('networkidle');
 
         // Look for hamburger menu button
-        const menuButton = page.locator(
-            'button[aria-label*="menu"], button[aria-label*="Menu"], [data-testid="mobile-menu-button"], button:has(svg)'
-        ).first();
+        const menuButton = page
+            .locator(
+                'button[aria-label*="menu"], button[aria-label*="Menu"], [data-testid="mobile-menu-button"], button:has(svg)'
+            )
+            .first();
 
         // Either menu button is visible or sidebar is always visible
         const sidebarVisible = await page.locator('aside').isVisible();
@@ -157,9 +164,11 @@ test.describe('Mobile Navigation', () => {
         await page.waitForLoadState('networkidle');
 
         // Try to open mobile menu if exists
-        const menuButton = page.locator(
-            'button[aria-label*="menu"], button[aria-label*="Menu"], [data-testid="mobile-menu-button"]'
-        ).first();
+        const menuButton = page
+            .locator(
+                'button[aria-label*="menu"], button[aria-label*="Menu"], [data-testid="mobile-menu-button"]'
+            )
+            .first();
 
         if (await menuButton.isVisible()) {
             await menuButton.click();

@@ -1,6 +1,6 @@
 /**
  * PWA Icon Generator
- * 
+ *
  * Generates all required PWA icon sizes from a base SVG
  * Run with: npx ts-node scripts/generate-pwa-icons.ts
  */
@@ -58,36 +58,30 @@ const LOGO_SVG = `
 `;
 
 async function generateIcons() {
-  // Ensure output directory exists
-  if (!fs.existsSync(OUTPUT_DIR)) {
-    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  }
+    // Ensure output directory exists
+    if (!fs.existsSync(OUTPUT_DIR)) {
+        fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+    }
 
-  console.log('🎨 Generating PWA icons...\n');
+    console.log('🎨 Generating PWA icons...\n');
 
-  // Convert SVG to buffer
-  const svgBuffer = Buffer.from(LOGO_SVG);
+    // Convert SVG to buffer
+    const svgBuffer = Buffer.from(LOGO_SVG);
 
-  for (const size of ICON_SIZES) {
-    const outputPath = path.join(OUTPUT_DIR, `icon-${size}x${size}.png`);
-    
-    await sharp(svgBuffer)
-      .resize(size, size)
-      .png()
-      .toFile(outputPath);
-    
-    console.log(`✅ Generated: icon-${size}x${size}.png`);
-  }
+    for (const size of ICON_SIZES) {
+        const outputPath = path.join(OUTPUT_DIR, `icon-${size}x${size}.png`);
 
-  // Also generate favicon.ico (32x32)
-  const faviconPath = path.join(__dirname, '../public/favicon.ico');
-  await sharp(svgBuffer)
-    .resize(32, 32)
-    .png()
-    .toFile(faviconPath.replace('.ico', '.png'));
-  console.log('✅ Generated: favicon.png (rename to .ico if needed)');
+        await sharp(svgBuffer).resize(size, size).png().toFile(outputPath);
 
-  console.log('\n🎉 PWA icon generation complete!');
+        console.log(`✅ Generated: icon-${size}x${size}.png`);
+    }
+
+    // Also generate favicon.ico (32x32)
+    const faviconPath = path.join(__dirname, '../public/favicon.ico');
+    await sharp(svgBuffer).resize(32, 32).png().toFile(faviconPath.replace('.ico', '.png'));
+    console.log('✅ Generated: favicon.png (rename to .ico if needed)');
+
+    console.log('\n🎉 PWA icon generation complete!');
 }
 
 generateIcons().catch(console.error);

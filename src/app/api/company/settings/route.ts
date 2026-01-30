@@ -6,7 +6,7 @@
  *
  * PATCH /api/company/settings
  * Body: { companyId: string, settings: Partial<CompanySettings> }
- * 
+ *
  * Supports updating:
  * - channelMapping
  * - industry
@@ -59,10 +59,13 @@ export async function PATCH(request: NextRequest) {
         }
 
         const userData = userDoc.data();
-        
+
         // Check user belongs to the company
         if (userData?.companyId !== companyId) {
-            return NextResponse.json({ error: 'User does not belong to this company' }, { status: 403 });
+            return NextResponse.json(
+                { error: 'User does not belong to this company' },
+                { status: 403 }
+            );
         }
 
         // Check user is admin or owner
@@ -78,7 +81,10 @@ export async function PATCH(request: NextRequest) {
         const isAdmin = userData?.role === 'admin';
 
         if (!isOwner && !isAdmin) {
-            return NextResponse.json({ error: 'Only admins can update company settings' }, { status: 403 });
+            return NextResponse.json(
+                { error: 'Only admins can update company settings' },
+                { status: 403 }
+            );
         }
 
         // 4. Merge settings
@@ -88,12 +94,12 @@ export async function PATCH(request: NextRequest) {
         // Merge each setting individually to preserve nested objects
         const allowedSettings = [
             'channelMapping',
-            'industry', 
+            'industry',
             'persona',
             'qualificationRules',
             'emailConfig',
             'twilioConfig',
-            'prompts'
+            'prompts',
         ];
 
         for (const key of allowedSettings) {
@@ -115,7 +121,7 @@ export async function PATCH(request: NextRequest) {
         });
 
         // 6. Audit log the settings change
-        const changedKeys = Object.keys(settings).filter(k => allowedSettings.includes(k));
+        const changedKeys = Object.keys(settings).filter((k) => allowedSettings.includes(k));
         try {
             await AuditService.logAction(
                 companyId,
@@ -176,7 +182,10 @@ export async function GET(request: NextRequest) {
         const companyId = userData?.companyId;
 
         if (!companyId) {
-            return NextResponse.json({ error: 'User does not belong to a company' }, { status: 404 });
+            return NextResponse.json(
+                { error: 'User does not belong to a company' },
+                { status: 404 }
+            );
         }
 
         // 3. Get company settings

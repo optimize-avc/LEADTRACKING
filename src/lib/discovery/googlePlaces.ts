@@ -1,14 +1,14 @@
 /**
  * Google Places API Integration for AI Lead Discovery
- * 
+ *
  * Uses Google Places API (Text Search) to find businesses matching targeting criteria.
  * Implements the DataCollector interface.
- * 
+ *
  * Cost notes (as of Jan 2026):
  * - Text Search: $32 per 1000 requests (Basic), $35 (Advanced), $40 (Preferred)
  * - Place Details: $17 per 1000 requests
  * - We use Basic fields to minimize costs
- * 
+ *
  * Setup required:
  * 1. Enable Places API in Google Cloud Console
  * 2. Create API key with Places API restriction
@@ -39,7 +39,7 @@ interface GoogleTextSearchResponse {
 }
 
 interface GooglePlace {
-    id: string;                          // Place ID
+    id: string; // Place ID
     displayName?: {
         text: string;
         languageCode?: string;
@@ -52,12 +52,12 @@ interface GooglePlace {
     };
     rating?: number;
     userRatingCount?: number;
-    priceLevel?: string;                 // PRICE_LEVEL_FREE, PRICE_LEVEL_INEXPENSIVE, etc.
+    priceLevel?: string; // PRICE_LEVEL_FREE, PRICE_LEVEL_INEXPENSIVE, etc.
     websiteUri?: string;
     nationalPhoneNumber?: string;
     internationalPhoneNumber?: string;
     types?: string[];
-    businessStatus?: string;             // OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY
+    businessStatus?: string; // OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY
     primaryType?: string;
     primaryTypeDisplayName?: {
         text: string;
@@ -75,15 +75,21 @@ interface AddressComponent {
 // In-Memory Cache (simple, for cost savings)
 // ========================================
 
-const searchCache = new Map<string, {
-    result: CollectorSearchResult;
-    expiresAt: number;
-}>();
+const searchCache = new Map<
+    string,
+    {
+        result: CollectorSearchResult;
+        expiresAt: number;
+    }
+>();
 
-const detailsCache = new Map<string, {
-    data: RawBusinessData;
-    expiresAt: number;
-}>();
+const detailsCache = new Map<
+    string,
+    {
+        data: RawBusinessData;
+        expiresAt: number;
+    }
+>();
 
 function getCacheKey(options: CollectorSearchOptions): string {
     const { criteria, maxResults, pageToken } = options;
@@ -103,34 +109,34 @@ function getCacheKey(options: CollectorSearchOptions): string {
 export class GooglePlacesCollector implements DataCollector {
     readonly sourceType: DataSourceType = 'google_places';
     readonly name = 'Google Places';
-    
+
     private apiKey: string | null = null;
     private readonly apiBase = 'https://places.googleapis.com/v1/places:searchText';
-    
+
     constructor() {
         // Try to get API key from environment
         this.apiKey = process.env.GOOGLE_PLACES_API_KEY || null;
     }
-    
+
     /**
      * Check if the collector is properly configured
      */
     isConfigured(): boolean {
         return !!this.apiKey;
     }
-    
+
     /**
      * Search for businesses matching the criteria
      */
     async search(options: CollectorSearchOptions): Promise<CollectorSearchResult> {
         const { criteria, maxResults, pageToken } = options;
-        
+
         // Check configuration
         if (!this.isConfigured()) {
             console.warn('[GooglePlaces] API key not configured, returning empty results');
             return this.emptyResult();
         }
-        
+
         // Check cache
         const cacheKey = getCacheKey(options);
         const cached = searchCache.get(cacheKey);
@@ -138,32 +144,38 @@ export class GooglePlacesCollector implements DataCollector {
             console.log('[GooglePlaces] Returning cached search results');
             return cached.result;
         }
-        
+
         // Build search queries based on criteria
         const searchQueries = this.buildSearchQueries(criteria);
-        
+
         if (searchQueries.length === 0) {
             console.warn('[GooglePlaces] No valid search queries could be built');
             return this.emptyResult();
         }
-        
+
         // Execute searches (limited to control costs)
         const allBusinesses: RawBusinessData[] = [];
         let apiCalls = 0;
         const maxQueries = Math.min(searchQueries.length, 3); // Max 3 queries per sweep
-        
+
         for (let i = 0; i < maxQueries && allBusinesses.length < maxResults; i++) {
             const query = searchQueries[i];
-            
+
             try {
-                const response = await this.executeSearch(query, maxResults - allBusinesses.length, pageToken);
+                const response = await this.executeSearch(
+                    query,
+                    maxResults - allBusinesses.length,
+                    pageToken
+                );
                 apiCalls++;
-                
+
                 if (response.places) {
-                    const converted = response.places.map(place => this.convertPlace(place, query));
+                    const converted = response.places.map((place) =>
+                        this.convertPlace(place, query)
+                    );
                     allBusinesses.push(...converted);
                 }
-                
+
                 // Respect rate limits
                 if (i < maxQueries - 1) {
                     await this.delay(100); // 100ms between requests
@@ -173,7 +185,7 @@ export class GooglePlacesCollector implements DataCollector {
                 // Continue with other queries
             }
         }
-        
+
         const result: CollectorSearchResult = {
             businesses: allBusinesses.slice(0, maxResults),
             metadata: {
@@ -183,17 +195,19 @@ export class GooglePlacesCollector implements DataCollector {
                 timestamp: Date.now(),
             },
         };
-        
+
         // Cache the result
         searchCache.set(cacheKey, {
             result,
             expiresAt: Date.now() + CACHE_TTL.searchResults,
         });
-        
-        console.log(`[GooglePlaces] Found ${result.businesses.length} businesses with ${apiCalls} API calls`);
+
+        console.log(
+            `[GooglePlaces] Found ${result.businesses.length} businesses with ${apiCalls} API calls`
+        );
         return result;
     }
-    
+
     /**
      * Get details for a specific place (for enrichment)
      */
@@ -201,48 +215,49 @@ export class GooglePlacesCollector implements DataCollector {
         if (!this.isConfigured()) {
             return null;
         }
-        
+
         // Check cache
         const cached = detailsCache.get(placeId);
         if (cached && Date.now() < cached.expiresAt) {
             return cached.data;
         }
-        
+
         try {
             const url = `https://places.googleapis.com/v1/places/${placeId}`;
             const response = await fetch(url, {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Goog-Api-Key': this.apiKey!,
-                    'X-Goog-FieldMask': 'id,displayName,formattedAddress,addressComponents,location,rating,userRatingCount,websiteUri,nationalPhoneNumber,types,businessStatus,primaryType',
+                    'X-Goog-FieldMask':
+                        'id,displayName,formattedAddress,addressComponents,location,rating,userRatingCount,websiteUri,nationalPhoneNumber,types,businessStatus,primaryType',
                 },
             });
-            
+
             if (!response.ok) {
                 console.error(`[GooglePlaces] Details fetch failed: ${response.status}`);
                 return null;
             }
-            
+
             const place: GooglePlace = await response.json();
             const data = this.convertPlace(place);
-            
+
             // Cache the result
             detailsCache.set(placeId, {
                 data,
                 expiresAt: Date.now() + CACHE_TTL.businessInfo,
             });
-            
+
             return data;
         } catch (error) {
             console.error(`[GooglePlaces] Error fetching details for ${placeId}:`, error);
             return null;
         }
     }
-    
+
     // ========================================
     // Private Methods
     // ========================================
-    
+
     /**
      * Build search queries from targeting criteria
      * Creates queries like "plumbing company in Houston, TX"
@@ -250,30 +265,32 @@ export class GooglePlacesCollector implements DataCollector {
     private buildSearchQueries(criteria: TargetingCriteria): string[] {
         const queries: string[] = [];
         const { industries, geography } = criteria;
-        
+
         // Build location strings
         const locations: string[] = [];
-        
+
         // Cities have highest priority
         if (geography.cities.length > 0) {
             // Combine city with state if available
-            for (const city of geography.cities.slice(0, 3)) { // Max 3 cities
+            for (const city of geography.cities.slice(0, 3)) {
+                // Max 3 cities
                 const state = geography.states.length > 0 ? geography.states[0] : '';
                 locations.push(state ? `${city}, ${state}` : city);
             }
         } else if (geography.states.length > 0) {
             // Just states
-            for (const state of geography.states.slice(0, 3)) { // Max 3 states
+            for (const state of geography.states.slice(0, 3)) {
+                // Max 3 states
                 locations.push(state);
             }
         }
-        
+
         // If no geography specified, skip (too broad)
         if (locations.length === 0) {
             console.warn('[GooglePlaces] No geography specified, queries will be too broad');
             return [];
         }
-        
+
         // Build queries: industry + location combinations
         if (industries.length === 0) {
             // No industries specified - use "businesses" as fallback
@@ -282,16 +299,17 @@ export class GooglePlacesCollector implements DataCollector {
             }
         } else {
             // Create industry + location combinations
-            for (const industry of industries.slice(0, 5)) { // Max 5 industries
+            for (const industry of industries.slice(0, 5)) {
+                // Max 5 industries
                 for (const location of locations) {
                     queries.push(`${industry} in ${location}`);
                 }
             }
         }
-        
+
         return queries;
     }
-    
+
     /**
      * Execute a single search request
      */
@@ -305,11 +323,11 @@ export class GooglePlacesCollector implements DataCollector {
             pageSize: Math.min(maxResults, 20), // API max is 20 per request
             languageCode: 'en',
         };
-        
+
         if (pageToken) {
             requestBody.pageToken = pageToken;
         }
-        
+
         const response = await fetch(this.apiBase, {
             method: 'POST',
             headers: {
@@ -335,15 +353,15 @@ export class GooglePlacesCollector implements DataCollector {
             },
             body: JSON.stringify(requestBody),
         });
-        
+
         if (!response.ok) {
             const error = await response.text();
             throw new Error(`Google Places API error (${response.status}): ${error}`);
         }
-        
+
         return response.json();
     }
-    
+
     /**
      * Convert Google Place to RawBusinessData
      */
@@ -352,7 +370,7 @@ export class GooglePlacesCollector implements DataCollector {
         let city = '';
         let state = '';
         let country = 'US';
-        
+
         if (place.addressComponents) {
             for (const component of place.addressComponents) {
                 if (component.types.includes('locality')) {
@@ -364,10 +382,14 @@ export class GooglePlacesCollector implements DataCollector {
                 }
             }
         }
-        
+
         // Infer industry from types
-        const industry = this.inferIndustry(place.types || [], place.primaryType, place.primaryTypeDisplayName?.text);
-        
+        const industry = this.inferIndustry(
+            place.types || [],
+            place.primaryType,
+            place.primaryTypeDisplayName?.text
+        );
+
         return {
             placeId: place.id,
             name: place.displayName?.text || 'Unknown Business',
@@ -377,10 +399,12 @@ export class GooglePlacesCollector implements DataCollector {
             city,
             state,
             country,
-            coordinates: place.location ? {
-                lat: place.location.latitude,
-                lng: place.location.longitude,
-            } : undefined,
+            coordinates: place.location
+                ? {
+                      lat: place.location.latitude,
+                      lng: place.location.longitude,
+                  }
+                : undefined,
             phone: place.nationalPhoneNumber,
             rating: place.rating,
             reviewCount: place.userRatingCount,
@@ -391,52 +415,56 @@ export class GooglePlacesCollector implements DataCollector {
             fetchedAt: Date.now(),
         };
     }
-    
+
     /**
      * Infer industry from Google Place types
      */
-    private inferIndustry(types: string[], primaryType?: string, primaryTypeDisplay?: string): string {
+    private inferIndustry(
+        types: string[],
+        primaryType?: string,
+        primaryTypeDisplay?: string
+    ): string {
         // Use primary type display name if available
         if (primaryTypeDisplay) {
             return primaryTypeDisplay;
         }
-        
+
         // Map common Google types to industries
         const typeToIndustry: Record<string, string> = {
-            'plumber': 'Plumbing',
-            'electrician': 'Electrical',
-            'hvac_contractor': 'HVAC',
-            'roofing_contractor': 'Roofing',
-            'general_contractor': 'Construction',
-            'restaurant': 'Restaurant',
-            'store': 'Retail',
-            'health': 'Healthcare',
-            'doctor': 'Healthcare',
-            'dentist': 'Healthcare',
-            'car_dealer': 'Automotive',
-            'car_repair': 'Automotive',
-            'lawyer': 'Legal Services',
-            'accounting': 'Financial Services',
-            'bank': 'Financial Services',
-            'real_estate_agency': 'Real Estate',
-            'insurance_agency': 'Insurance',
-            'moving_company': 'Moving & Logistics',
-            'storage': 'Moving & Logistics',
-            'gym': 'Fitness',
-            'spa': 'Wellness',
-            'hotel': 'Hospitality',
-            'travel_agency': 'Travel',
-            'school': 'Education',
-            'university': 'Education',
-            'church': 'Religious',
-            'park': 'Recreation',
+            plumber: 'Plumbing',
+            electrician: 'Electrical',
+            hvac_contractor: 'HVAC',
+            roofing_contractor: 'Roofing',
+            general_contractor: 'Construction',
+            restaurant: 'Restaurant',
+            store: 'Retail',
+            health: 'Healthcare',
+            doctor: 'Healthcare',
+            dentist: 'Healthcare',
+            car_dealer: 'Automotive',
+            car_repair: 'Automotive',
+            lawyer: 'Legal Services',
+            accounting: 'Financial Services',
+            bank: 'Financial Services',
+            real_estate_agency: 'Real Estate',
+            insurance_agency: 'Insurance',
+            moving_company: 'Moving & Logistics',
+            storage: 'Moving & Logistics',
+            gym: 'Fitness',
+            spa: 'Wellness',
+            hotel: 'Hospitality',
+            travel_agency: 'Travel',
+            school: 'Education',
+            university: 'Education',
+            church: 'Religious',
+            park: 'Recreation',
         };
-        
+
         // Check primary type first
         if (primaryType && typeToIndustry[primaryType]) {
             return typeToIndustry[primaryType];
         }
-        
+
         // Check all types
         for (const type of types) {
             const normalizedType = type.toLowerCase().replace(/_/g, ' ');
@@ -450,15 +478,15 @@ export class GooglePlacesCollector implements DataCollector {
                 }
             }
         }
-        
+
         // Default based on first type
         if (types.length > 0) {
-            return types[0].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            return types[0].replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         }
-        
+
         return 'General Business';
     }
-    
+
     /**
      * Return empty result
      */
@@ -472,12 +500,12 @@ export class GooglePlacesCollector implements DataCollector {
             },
         };
     }
-    
+
     /**
      * Simple delay helper
      */
     private delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }
 

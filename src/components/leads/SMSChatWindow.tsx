@@ -127,7 +127,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
     };
 
     return (
-        <div 
+        <div
             className="flex flex-col h-[600px] w-full max-w-md bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden"
             role="region"
             aria-label={`SMS conversation with ${leadName}`}
@@ -135,7 +135,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
             {/* Header - Smartphone style */}
             <div className="bg-slate-800/80 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/5 z-10">
                 <div className="flex items-center gap-3">
-                    <div 
+                    <div
                         className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold"
                         aria-hidden="true"
                     >
@@ -223,7 +223,9 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
             {/* Input Area */}
             <div className="p-4 bg-slate-800/50 border-t border-white/5">
                 <div className="flex items-end gap-2 bg-slate-900/50 p-2 rounded-xl border border-white/5 focus-within:border-indigo-500/50 transition-colors">
-                    <label htmlFor="sms-message-input" className="sr-only">Type a message</label>
+                    <label htmlFor="sms-message-input" className="sr-only">
+                        Type a message
+                    </label>
                     <textarea
                         id="sms-message-input"
                         value={newMessage}

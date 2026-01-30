@@ -80,17 +80,17 @@ export default function TeamManagementClient() {
         try {
             // First, try to get company from profile's companyId (faster, works offline)
             let company = null;
-            
+
             if (profile?.companyId) {
                 // User already has a company - fetch it directly
                 company = await CompanyService.getCompany(profile.companyId);
             }
-            
+
             // Fallback: try server-side lookup (requires Admin SDK)
             if (!company) {
                 company = await CompanyService.getCompanyByUser(user.uid);
             }
-            
+
             if (company) {
                 setCompanyId(company.id);
                 setCompanyName(company.name);
@@ -176,7 +176,7 @@ export default function TeamManagementClient() {
             };
 
             setTeam([...team, newMember]);
-            
+
             if (sendEmail && data.emailSent) {
                 toast.success(`Invitation sent to ${inviteEmail}`);
             } else if (sendEmail && !data.emailSent) {
@@ -191,7 +191,7 @@ export default function TeamManagementClient() {
             setIsSending(false);
         }
     };
-    
+
     const handleGenerateLinkOnly = (e: React.MouseEvent) => {
         e.preventDefault();
         handleInvite(e as unknown as React.FormEvent, false);
@@ -199,7 +199,7 @@ export default function TeamManagementClient() {
 
     const handleCopyLink = async () => {
         if (!generatedLink) return;
-        
+
         try {
             await navigator.clipboard.writeText(generatedLink);
             setLinkCopied(true);
@@ -327,14 +327,28 @@ export default function TeamManagementClient() {
                                     <div className="flex items-center gap-2 text-emerald-400">
                                         <Check className="w-5 h-5" />
                                         <span className="font-medium">
-                                            {lastInviteEmailSent ? 'Invitation Sent!' : 'Invitation Created!'}
+                                            {lastInviteEmailSent
+                                                ? 'Invitation Sent!'
+                                                : 'Invitation Created!'}
                                         </span>
                                     </div>
                                     <p className="text-sm text-slate-400">
                                         {lastInviteEmailSent ? (
-                                            <>Email sent to <strong className="text-white">{inviteEmail}</strong>. You can also share this link:</>
+                                            <>
+                                                Email sent to{' '}
+                                                <strong className="text-white">
+                                                    {inviteEmail}
+                                                </strong>
+                                                . You can also share this link:
+                                            </>
                                         ) : (
-                                            <>Share this link with <strong className="text-white">{inviteEmail}</strong> to let them join your team:</>
+                                            <>
+                                                Share this link with{' '}
+                                                <strong className="text-white">
+                                                    {inviteEmail}
+                                                </strong>{' '}
+                                                to let them join your team:
+                                            </>
                                         )}
                                     </p>
                                     <div className="flex items-center gap-2">
@@ -409,16 +423,21 @@ export default function TeamManagementClient() {
                                                 value={inviteRole}
                                                 onChange={(e) =>
                                                     setInviteRole(
-                                                        e.target.value as 'admin' | 'manager' | 'rep'
+                                                        e.target.value as
+                                                            | 'admin'
+                                                            | 'manager'
+                                                            | 'rep'
                                                     )
                                                 }
                                                 className="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                                             >
-                                                {Object.entries(ROLE_CONFIG).map(([key, config]) => (
-                                                    <option key={key} value={key}>
-                                                        {config.label}
-                                                    </option>
-                                                ))}
+                                                {Object.entries(ROLE_CONFIG).map(
+                                                    ([key, config]) => (
+                                                        <option key={key} value={key}>
+                                                            {config.label}
+                                                        </option>
+                                                    )
+                                                )}
                                             </select>
                                         </div>
                                     </div>

@@ -233,11 +233,7 @@ export function BillingSettings() {
                     </div>
                 ) : usage ? (
                     <div className="space-y-6">
-                        <UsageMeter
-                            label="Leads"
-                            current={usage.leadCount}
-                            limit={limits.leads}
-                        />
+                        <UsageMeter label="Leads" current={usage.leadCount} limit={limits.leads} />
                         <UsageMeter
                             label="Team Members"
                             current={usage.teamMemberCount}

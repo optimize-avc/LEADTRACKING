@@ -176,7 +176,7 @@ env:
     #   secret: GOOGLE_AI_API_KEY
     #   availability:
     #       - RUNTIME
-    # 
+    #
     # Option 2: OpenAI
     # firebase apphosting:secrets:set OPENAI_API_KEY
     # - variable: OPENAI_API_KEY

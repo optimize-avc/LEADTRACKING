@@ -58,15 +58,18 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
         notes: '',
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
-    
+
     const { containerRef } = useFocusTrap(isOpen);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -125,26 +128,28 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
     };
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-50 flex items-center justify-center"
             role="dialog"
             aria-modal="true"
             aria-labelledby="add-lead-title"
         >
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
             {/* Modal */}
-            <div 
+            <div
                 ref={containerRef}
                 className="relative bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl"
             >
                 <div className="flex items-center justify-between mb-6">
-                    <h2 id="add-lead-title" className="text-2xl font-bold text-white">Add New Lead</h2>
+                    <h2 id="add-lead-title" className="text-2xl font-bold text-white">
+                        Add New Lead
+                    </h2>
                     <button
                         type="button"
                         onClick={onClose}
@@ -159,8 +164,14 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                     {/* Company & Contact */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="companyName" className="block text-sm text-slate-400 mb-1">
-                                Company Name <span className="text-red-400" aria-hidden="true">*</span>
+                            <label
+                                htmlFor="companyName"
+                                className="block text-sm text-slate-400 mb-1"
+                            >
+                                Company Name{' '}
+                                <span className="text-red-400" aria-hidden="true">
+                                    *
+                                </span>
                                 <span className="sr-only">(required)</span>
                             </label>
                             <input
@@ -173,15 +184,29 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                                 className="glass-input w-full"
                                 placeholder="Acme Corp"
                                 aria-invalid={!!errors.companyName}
-                                aria-describedby={errors.companyName ? 'companyName-error' : undefined}
+                                aria-describedby={
+                                    errors.companyName ? 'companyName-error' : undefined
+                                }
                             />
                             {errors.companyName && (
-                                <p id="companyName-error" className="text-red-400 text-xs mt-1" role="alert">{errors.companyName}</p>
+                                <p
+                                    id="companyName-error"
+                                    className="text-red-400 text-xs mt-1"
+                                    role="alert"
+                                >
+                                    {errors.companyName}
+                                </p>
                             )}
                         </div>
                         <div>
-                            <label htmlFor="contactName" className="block text-sm text-slate-400 mb-1">
-                                Contact Name <span className="text-red-400" aria-hidden="true">*</span>
+                            <label
+                                htmlFor="contactName"
+                                className="block text-sm text-slate-400 mb-1"
+                            >
+                                Contact Name{' '}
+                                <span className="text-red-400" aria-hidden="true">
+                                    *
+                                </span>
                                 <span className="sr-only">(required)</span>
                             </label>
                             <input
@@ -194,10 +219,18 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                                 className="glass-input w-full"
                                 placeholder="John Doe"
                                 aria-invalid={!!errors.contactName}
-                                aria-describedby={errors.contactName ? 'contactName-error' : undefined}
+                                aria-describedby={
+                                    errors.contactName ? 'contactName-error' : undefined
+                                }
                             />
                             {errors.contactName && (
-                                <p id="contactName-error" className="text-red-400 text-xs mt-1" role="alert">{errors.contactName}</p>
+                                <p
+                                    id="contactName-error"
+                                    className="text-red-400 text-xs mt-1"
+                                    role="alert"
+                                >
+                                    {errors.contactName}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -206,7 +239,10 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="email" className="block text-sm text-slate-400 mb-1">
-                                Email <span className="text-red-400" aria-hidden="true">*</span>
+                                Email{' '}
+                                <span className="text-red-400" aria-hidden="true">
+                                    *
+                                </span>
                                 <span className="sr-only">(required)</span>
                             </label>
                             <input
@@ -222,11 +258,19 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                                 aria-describedby={errors.email ? 'email-error' : undefined}
                             />
                             {errors.email && (
-                                <p id="email-error" className="text-red-400 text-xs mt-1" role="alert">{errors.email}</p>
+                                <p
+                                    id="email-error"
+                                    className="text-red-400 text-xs mt-1"
+                                    role="alert"
+                                >
+                                    {errors.email}
+                                </p>
                             )}
                         </div>
                         <div>
-                            <label htmlFor="phone" className="block text-sm text-slate-400 mb-1">Phone</label>
+                            <label htmlFor="phone" className="block text-sm text-slate-400 mb-1">
+                                Phone
+                            </label>
                             <input
                                 id="phone"
                                 type="tel"
@@ -258,7 +302,9 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                             />
                         </div>
                         <div>
-                            <label htmlFor="industry" className="block text-sm text-slate-400 mb-1">Industry</label>
+                            <label htmlFor="industry" className="block text-sm text-slate-400 mb-1">
+                                Industry
+                            </label>
                             <select
                                 id="industry"
                                 value={formData.industry}
@@ -280,7 +326,9 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                     {/* Status & Source */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="status" className="block text-sm text-slate-400 mb-1">Status</label>
+                            <label htmlFor="status" className="block text-sm text-slate-400 mb-1">
+                                Status
+                            </label>
                             <select
                                 id="status"
                                 value={formData.status}
@@ -300,7 +348,9 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="source" className="block text-sm text-slate-400 mb-1">Lead Source</label>
+                            <label htmlFor="source" className="block text-sm text-slate-400 mb-1">
+                                Lead Source
+                            </label>
                             <select
                                 id="source"
                                 value={formData.source}
@@ -323,7 +373,9 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
 
                     {/* Notes */}
                     <div>
-                        <label htmlFor="notes" className="block text-sm text-slate-400 mb-1">Notes</label>
+                        <label htmlFor="notes" className="block text-sm text-slate-400 mb-1">
+                            Notes
+                        </label>
                         <textarea
                             id="notes"
                             value={formData.notes}

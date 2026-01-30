@@ -1,6 +1,6 @@
 /**
  * Admin Metrics API
- * 
+ *
  * Returns platform-wide metrics for super admins.
  * Protected: Only accessible by users with superAdmin role.
  */
@@ -12,11 +12,7 @@ import { RATE_LIMITS } from '@/lib/rate-limit';
 import { Timestamp } from 'firebase-admin/firestore';
 
 // Super admin emails - in production, this would come from environment or database
-const SUPER_ADMIN_EMAILS = [
-    'admin@avcpp.com',
-    'blazehaze4201980@gmail.com',
-    'optimize@avcpp.com',
-];
+const SUPER_ADMIN_EMAILS = ['admin@avcpp.com', 'blazehaze4201980@gmail.com', 'optimize@avcpp.com'];
 
 interface AdminMetrics {
     totalCompanies: number;
@@ -76,7 +72,9 @@ function toDate(value: Timestamp | Date | undefined): Date | undefined {
 /**
  * Verify user is a super admin
  */
-async function verifySuperAdmin(authHeader: string | null): Promise<{ uid: string; email: string } | null> {
+async function verifySuperAdmin(
+    authHeader: string | null
+): Promise<{ uid: string; email: string } | null> {
     if (!authHeader?.startsWith('Bearer ')) {
         return null;
     }
@@ -119,9 +117,9 @@ export async function GET(request: NextRequest) {
 
         // Get all companies
         const companiesSnapshot = await db.collection('companies').get();
-        const companies: FirestoreCompany[] = companiesSnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
+        const companies: FirestoreCompany[] = companiesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
         }));
 
         // Calculate metrics
@@ -132,9 +130,9 @@ export async function GET(request: NextRequest) {
 
         // Get users collection for activity tracking
         const usersSnapshot = await db.collection('users').get();
-        const users: FirestoreUser[] = usersSnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
+        const users: FirestoreUser[] = usersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
         }));
 
         let activeUsersDaily = 0;
@@ -186,14 +184,15 @@ export async function GET(request: NextRequest) {
 
         // Calculate MRR (Monthly Recurring Revenue)
         // Pro = $49/month, Enterprise = $199/month (estimate)
-        const mrr = (planBreakdown.pro * 49) + (planBreakdown.enterprise * 199);
+        const mrr = planBreakdown.pro * 49 + planBreakdown.enterprise * 199;
 
         // For demo purposes, estimate MRR change and churn rate
         // In production, you'd track these over time
         const mrrChange = 8.5; // Would calculate from historical data
-        const churnRate = companies.length > 0 
-            ? ((companies.length - activeCompanies) / companies.length * 100)
-            : 0;
+        const churnRate =
+            companies.length > 0
+                ? ((companies.length - activeCompanies) / companies.length) * 100
+                : 0;
         const churnRateChange = -0.4; // Would calculate from historical data
 
         const metrics: AdminMetrics = {

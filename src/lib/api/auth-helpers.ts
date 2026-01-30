@@ -1,6 +1,6 @@
 /**
  * Shared API Auth Helpers
- * 
+ *
  * Centralized authentication and company lookup for API routes.
  * Handles both company owners AND team members.
  */
@@ -19,7 +19,7 @@ export interface AuthContext {
 /**
  * Extract and validate auth token, then resolve user's company.
  * Works for both company owners and team members.
- * 
+ *
  * @param request - NextRequest with Authorization header
  * @returns AuthContext or null if unauthorized
  */
@@ -39,7 +39,8 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContext 
         const db = getAdminDb();
 
         // Strategy 1: Check if user owns a company
-        const ownedCompaniesSnap = await db.collection('companies')
+        const ownedCompaniesSnap = await db
+            .collection('companies')
             .where('ownerId', '==', userId)
             .limit(1)
             .get();
@@ -48,7 +49,7 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContext 
             // Get user name from user doc if available
             const userDoc = await db.collection('users').doc(userId).get();
             const userName = userDoc.exists ? userDoc.data()?.name : undefined;
-            
+
             return {
                 userId,
                 companyId: ownedCompaniesSnap.docs[0].id,
@@ -112,7 +113,7 @@ export function isManagerOrAbove(context: AuthContext): boolean {
  */
 export class AuthError extends Error {
     status: number;
-    
+
     constructor(message: string, status: number = 401) {
         super(message);
         this.name = 'AuthError';

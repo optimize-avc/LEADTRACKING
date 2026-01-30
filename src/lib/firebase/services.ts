@@ -42,27 +42,23 @@ export const LeadsService = {
     async getLeads(userId: string, companyId?: string): Promise<Lead[]> {
         const leadsRef = collection(getFirebaseDb(), 'leads');
         let q;
-        
+
         // If no companyId provided, look it up from user profile
-        const effectiveCompanyId = companyId || await this.getUserCompanyId(userId);
-        
+        const effectiveCompanyId = companyId || (await this.getUserCompanyId(userId));
+
         if (effectiveCompanyId) {
             // Multi-tenant query: only return leads for this company
             q = query(
-                leadsRef, 
+                leadsRef,
                 where('companyId', '==', effectiveCompanyId),
                 orderBy('createdAt', 'desc')
             );
         } else {
             // No company - filter by userId as fallback
             console.warn('[LeadsService] No companyId found - filtering by userId');
-            q = query(
-                leadsRef, 
-                where('userId', '==', userId),
-                orderBy('createdAt', 'desc')
-            );
+            q = query(leadsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
         }
-        
+
         const snapshot = await getDocs(q);
         return snapshot.docs.map((doc) => {
             const data = doc.data();
@@ -89,8 +85,8 @@ export const LeadsService = {
         companyId?: string
     ): Promise<string> {
         // If no companyId provided, look it up from user profile
-        const effectiveCompanyId = companyId || await this.getUserCompanyId(userId);
-        
+        const effectiveCompanyId = companyId || (await this.getUserCompanyId(userId));
+
         const leadsRef = collection(getFirebaseDb(), 'leads');
         const now = Date.now();
         const docRef = await addDoc(leadsRef, {

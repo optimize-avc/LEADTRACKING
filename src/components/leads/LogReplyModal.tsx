@@ -19,15 +19,18 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
     const [sentiment, setSentiment] = useState<'positive' | 'neutral' | 'negative'>('positive');
     const [nextStep, setNextStep] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-    
+
     const { containerRef } = useFocusTrap(isOpen);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -102,32 +105,37 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="log-reply-title"
         >
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+            <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
             {/* Modal */}
-            <div 
+            <div
                 ref={containerRef}
                 className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl"
             >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-lg" aria-hidden="true">
+                        <div
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-lg"
+                            aria-hidden="true"
+                        >
                             📩
                         </div>
                         <div>
-                            <h2 id="log-reply-title" className="text-xl font-bold text-white">Log Email Reply</h2>
+                            <h2 id="log-reply-title" className="text-xl font-bold text-white">
+                                Log Email Reply
+                            </h2>
                             <p className="text-sm text-slate-400">
                                 {lead.companyName} • {lead.contactName}
                             </p>
@@ -139,7 +147,9 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
                 <div className="p-6 space-y-5">
                     {/* Sentiment */}
                     <fieldset>
-                        <legend className="block text-sm text-slate-400 mb-2">Reply Sentiment</legend>
+                        <legend className="block text-sm text-slate-400 mb-2">
+                            Reply Sentiment
+                        </legend>
                         <div className="flex gap-2" role="radiogroup" aria-label="Reply sentiment">
                             {[
                                 {
@@ -182,7 +192,9 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
                                     role="radio"
                                     aria-checked={sentiment === s.value}
                                 >
-                                    <div className="text-xl mb-1" aria-hidden="true">{s.icon}</div>
+                                    <div className="text-xl mb-1" aria-hidden="true">
+                                        {s.icon}
+                                    </div>
                                     <div className="text-xs">{s.label}</div>
                                 </button>
                             ))}
@@ -191,7 +203,10 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
 
                     {/* Reply Content */}
                     <div>
-                        <label htmlFor="reply-content" className="block text-sm text-slate-400 mb-2">
+                        <label
+                            htmlFor="reply-content"
+                            className="block text-sm text-slate-400 mb-2"
+                        >
                             Reply Content or Summary
                         </label>
                         <textarea
@@ -209,7 +224,12 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
 
                     {/* Next Step */}
                     <div>
-                        <label htmlFor="reply-next-step" className="block text-sm text-slate-400 mb-2">Next Step</label>
+                        <label
+                            htmlFor="reply-next-step"
+                            className="block text-sm text-slate-400 mb-2"
+                        >
+                            Next Step
+                        </label>
                         <input
                             id="reply-next-step"
                             type="text"

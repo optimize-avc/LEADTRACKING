@@ -15,9 +15,9 @@ interface SkipToContentProps {
  * to allow keyboard users to skip navigation and jump directly to
  * the main content.
  */
-export function SkipToContent({ 
+export function SkipToContent({
     mainContentId = 'main-content',
-    label = 'Skip to main content'
+    label = 'Skip to main content',
 }: SkipToContentProps) {
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
@@ -54,11 +54,7 @@ export function SkipToContent({
  * without cluttering the visual interface.
  */
 export function VisuallyHidden({ children }: { children: React.ReactNode }) {
-    return (
-        <span className="sr-only">
-            {children}
-        </span>
-    );
+    return <span className="sr-only">{children}</span>;
 }
 
 /**
@@ -66,22 +62,17 @@ export function VisuallyHidden({ children }: { children: React.ReactNode }) {
  * Useful for dynamic content updates like form validation errors,
  * loading states, or action confirmations.
  */
-export function LiveRegion({ 
-    message, 
+export function LiveRegion({
+    message,
     politeness = 'polite',
-    atomic = true 
-}: { 
+    atomic = true,
+}: {
     message: string;
     politeness?: 'polite' | 'assertive';
     atomic?: boolean;
 }) {
     return (
-        <div
-            role="status"
-            aria-live={politeness}
-            aria-atomic={atomic}
-            className="sr-only"
-        >
+        <div role="status" aria-live={politeness} aria-atomic={atomic} className="sr-only">
             {message}
         </div>
     );

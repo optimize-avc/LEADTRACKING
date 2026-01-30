@@ -53,7 +53,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
         notes: null,
     });
     const [error, setError] = useState<string | null>(null);
-    
+
     const { containerRef } = useFocusTrap(isOpen);
 
     // Reset state helper - defined before use
@@ -76,12 +76,15 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
     }, []);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-            resetState();
-        }
-    }, [onClose, resetState]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+                resetState();
+            }
+        },
+        [onClose, resetState]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -241,26 +244,32 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
         columnMapping.companyName && columnMapping.contactName && columnMapping.email;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-50 flex items-center justify-center"
             role="dialog"
             aria-modal="true"
             aria-labelledby="import-csv-title"
         >
-            <div 
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
-            <div 
+            <div
                 ref={containerRef}
                 className="relative bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[80vh] overflow-auto"
             >
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <FileSpreadsheet className="text-emerald-400" size={24} aria-hidden="true" />
-                        <h2 id="import-csv-title" className="text-xl font-bold text-white">Import Leads from CSV</h2>
+                        <FileSpreadsheet
+                            className="text-emerald-400"
+                            size={24}
+                            aria-hidden="true"
+                        />
+                        <h2 id="import-csv-title" className="text-xl font-bold text-white">
+                            Import Leads from CSV
+                        </h2>
                     </div>
                     <button
                         onClick={() => {
@@ -275,7 +284,7 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
                 </div>
 
                 {error && (
-                    <div 
+                    <div
                         className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm"
                         role="alert"
                     >
@@ -293,7 +302,11 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
                         role="region"
                         aria-label="File upload area"
                     >
-                        <Upload className="mx-auto mb-4 text-slate-500" size={48} aria-hidden="true" />
+                        <Upload
+                            className="mx-auto mb-4 text-slate-500"
+                            size={48}
+                            aria-hidden="true"
+                        />
                         <p className="text-slate-300 mb-2">Drag & drop your CSV file here</p>
                         <p className="text-slate-500 text-sm mb-4">or</p>
                         <label className="glass-button cursor-pointer inline-block">
@@ -318,26 +331,35 @@ export function ImportCSVModal({ isOpen, onClose, onImport }: ImportCSVModalProp
                         <p className="text-slate-400 text-sm mb-4" id="mapping-description">
                             Map your CSV columns to lead fields. Required fields marked with *.
                         </p>
-                        <div 
+                        <div
                             className="space-y-3 max-h-[300px] overflow-auto"
                             role="group"
                             aria-describedby="mapping-description"
                         >
                             {LEAD_FIELDS.map((field) => (
                                 <div key={field.key} className="flex items-center gap-3">
-                                    <label 
+                                    <label
                                         htmlFor={`mapping-${field.key}`}
                                         className="text-slate-300 text-sm w-32 flex-shrink-0"
                                     >
                                         {field.label}
                                         {field.required && (
                                             <>
-                                                <span className="text-red-400 ml-0.5" aria-hidden="true">*</span>
+                                                <span
+                                                    className="text-red-400 ml-0.5"
+                                                    aria-hidden="true"
+                                                >
+                                                    *
+                                                </span>
                                                 <span className="sr-only">(required)</span>
                                             </>
                                         )}
                                     </label>
-                                    <ArrowRight size={14} className="text-slate-600" aria-hidden="true" />
+                                    <ArrowRight
+                                        size={14}
+                                        className="text-slate-600"
+                                        aria-hidden="true"
+                                    />
                                     <select
                                         id={`mapping-${field.key}`}
                                         value={columnMapping[field.key] || ''}

@@ -19,10 +19,7 @@ import {
 import { RATE_LIMITS } from '../rate-limit';
 
 // Mock NextRequest
-function createMockNextRequest(
-    headers: Record<string, string> = {},
-    ip?: string
-): NextRequest {
+function createMockNextRequest(headers: Record<string, string> = {}, ip?: string): NextRequest {
     const headersInstance = new Headers();
     Object.entries(headers).forEach(([key, value]) => {
         headersInstance.set(key, value);

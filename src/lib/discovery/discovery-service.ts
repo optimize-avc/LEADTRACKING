@@ -1,6 +1,6 @@
 /**
  * Discovery Service - Core business logic for AI Lead Discovery
- * 
+ *
  * Handles:
  * - Discovery profile CRUD
  * - Discovered lead management
@@ -115,12 +115,12 @@ export async function deleteDiscoveryProfile(companyId: string): Promise<void> {
     // Delete all discovered leads (in production, would need pagination)
     const leadsRef = collection(db, 'companies', companyId, 'discoveredLeads');
     const leadsSnap = await getDocs(query(leadsRef, firestoreLimit(500)));
-    leadsSnap.forEach(doc => batch.delete(doc.ref));
+    leadsSnap.forEach((doc) => batch.delete(doc.ref));
 
     // Delete all sweeps
     const sweepsRef = collection(db, 'companies', companyId, 'discoverySweeps');
     const sweepsSnap = await getDocs(query(sweepsRef, firestoreLimit(500)));
-    sweepsSnap.forEach(doc => batch.delete(doc.ref));
+    sweepsSnap.forEach((doc) => batch.delete(doc.ref));
 
     await batch.commit();
 }
@@ -201,7 +201,7 @@ export async function getDiscoveredLeads(
     }
 
     const snapshot = await getDocs(q);
-    const leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiscoveredLead));
+    const leads = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as DiscoveredLead);
 
     // For total count, we'd need a separate count query or maintain a counter
     // For now, return the fetched count
@@ -395,16 +395,13 @@ export async function getSweepHistory(
     const q = query(sweepsRef, orderBy('startedAt', 'desc'), firestoreLimit(limitCount));
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiscoverySweep));
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as DiscoverySweep);
 }
 
 /**
  * Get a single sweep
  */
-export async function getSweep(
-    companyId: string,
-    sweepId: string
-): Promise<DiscoverySweep | null> {
+export async function getSweep(companyId: string, sweepId: string): Promise<DiscoverySweep | null> {
     const db = getFirebaseDb();
     const sweepRef = doc(db, 'companies', companyId, 'discoverySweeps', sweepId);
     const sweepSnap = await getDoc(sweepRef);
@@ -422,7 +419,7 @@ export async function getSweep(
 
 /**
  * Execute a discovery sweep
- * 
+ *
  * This is the main orchestration function that:
  * 1. Validates limits
  * 2. Creates sweep record
@@ -438,11 +435,17 @@ export async function executeSweep(
     // 1. Get profile
     const profile = await getDiscoveryProfile(companyId);
     if (!profile) {
-        return { success: false, error: 'Discovery profile not found. Please configure discovery settings first.' };
+        return {
+            success: false,
+            error: 'Discovery profile not found. Please configure discovery settings first.',
+        };
     }
 
     if (!profile.businessDescription || profile.targetingCriteria.industries.length === 0) {
-        return { success: false, error: 'Please complete your discovery profile with business description and targeting criteria.' };
+        return {
+            success: false,
+            error: 'Please complete your discovery profile with business description and targeting criteria.',
+        };
     }
 
     // 2. Check limits
@@ -459,7 +462,12 @@ export async function executeSweep(
     }
 
     // 4. Create sweep record
-    const sweepId = await createSweep(companyId, profile.id, userId ? 'manual' : 'schedule', userId);
+    const sweepId = await createSweep(
+        companyId,
+        profile.id,
+        userId ? 'manual' : 'schedule',
+        userId
+    );
 
     try {
         // 5. Update sweep to running
@@ -603,7 +611,9 @@ function generateMockLeads(
                 matchReasons: [
                     `In target industry (${industry})`,
                     `Located in target geography (${city}, TX)`,
-                    matchScore > 85 ? 'Strong buying signals detected' : 'Moderate fit based on profile',
+                    matchScore > 85
+                        ? 'Strong buying signals detected'
+                        : 'Moderate fit based on profile',
                 ],
                 painPointsIdentified: [painPoints[Math.floor(Math.random() * painPoints.length)]],
                 buyingSignals: matchScore > 85 ? ['Recent expansion', 'Hiring for new roles'] : [],

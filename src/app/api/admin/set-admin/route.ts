@@ -6,16 +6,14 @@ import { getAdminDb, getAdminAuth } from '@/lib/firebase/admin';
 const PERMANENT_ADMINS = ['optimize@avcpp.com'];
 
 // Super admins who can call this endpoint
-const SUPER_ADMIN_EMAILS = [
-    'admin@avcpp.com',
-    'blazehaze4201980@gmail.com',
-    'optimize@avcpp.com',
-];
+const SUPER_ADMIN_EMAILS = ['admin@avcpp.com', 'blazehaze4201980@gmail.com', 'optimize@avcpp.com'];
 
 /**
  * Verify user is a super admin
  */
-async function verifySuperAdmin(authHeader: string | null): Promise<{ uid: string; email: string } | null> {
+async function verifySuperAdmin(
+    authHeader: string | null
+): Promise<{ uid: string; email: string } | null> {
     if (!authHeader?.startsWith('Bearer ')) {
         return null;
     }

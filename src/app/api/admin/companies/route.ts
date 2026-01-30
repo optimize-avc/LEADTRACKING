@@ -1,6 +1,6 @@
 /**
  * Admin Companies API
- * 
+ *
  * CRUD operations for managing companies (tenants).
  * Protected: Only accessible by super admins.
  */
@@ -13,11 +13,7 @@ import { ServerAuditService } from '@/lib/firebase/server-audit';
 import { Timestamp } from 'firebase-admin/firestore';
 
 // Super admin emails
-const SUPER_ADMIN_EMAILS = [
-    'admin@avcpp.com',
-    'blazehaze4201980@gmail.com',
-    'optimize@avcpp.com',
-];
+const SUPER_ADMIN_EMAILS = ['admin@avcpp.com', 'blazehaze4201980@gmail.com', 'optimize@avcpp.com'];
 
 interface CompanyListItem {
     id: string;
@@ -57,7 +53,9 @@ function toDate(value: Timestamp | Date | undefined): Date | undefined {
 /**
  * Verify user is a super admin
  */
-async function verifySuperAdmin(authHeader: string | null): Promise<{ uid: string; email: string } | null> {
+async function verifySuperAdmin(
+    authHeader: string | null
+): Promise<{ uid: string; email: string } | null> {
     if (!authHeader?.startsWith('Bearer ')) {
         return null;
     }
@@ -101,13 +99,13 @@ export async function GET(request: NextRequest) {
         const offset = parseInt(searchParams.get('offset') || '0');
 
         const query = db.collection('companies').orderBy('createdAt', 'desc');
-        
+
         const snapshot = await query.get();
         let companies: CompanyListItem[] = [];
 
         for (const doc of snapshot.docs) {
             const data = doc.data() as FirestoreCompany;
-            
+
             // Apply search filter
             if (search && !data.name?.toLowerCase().includes(search)) {
                 continue;
@@ -130,7 +128,7 @@ export async function GET(request: NextRequest) {
                 .get();
 
             const createdAt = toDate(data.createdAt);
-            
+
             companies.push({
                 id: doc.id,
                 name: data.name || 'Unknown',
@@ -208,12 +206,10 @@ export async function PATCH(request: NextRequest) {
         await companyRef.update(updates);
 
         // Log the admin action
-        await ServerAuditService.logAdminAction(
-            companyId,
-            admin.uid,
-            'company_updated',
-            { updates, adminEmail: admin.email }
-        );
+        await ServerAuditService.logAdminAction(companyId, admin.uid, 'company_updated', {
+            updates,
+            adminEmail: admin.email,
+        });
 
         return NextResponse.json({
             success: true,

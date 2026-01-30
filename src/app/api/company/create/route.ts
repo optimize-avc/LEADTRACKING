@@ -55,7 +55,10 @@ export async function POST(request: NextRequest) {
 
         if (userDoc.exists && userDoc.data()?.companyId) {
             return NextResponse.json(
-                { error: 'User already belongs to a company', companyId: userDoc.data()?.companyId },
+                {
+                    error: 'User already belongs to a company',
+                    companyId: userDoc.data()?.companyId,
+                },
                 { status: 400 }
             );
         }

@@ -2,7 +2,7 @@
  * Discovery Sweep API
  * POST - Trigger a manual discovery sweep
  * GET - Get sweep history
- * 
+ *
  * Phase 3: Now includes AI-powered lead scoring and analysis
  * @see SPEC-AI-LEAD-DISCOVERY.md sections 6.1, 8.1-8.3
  */
@@ -12,21 +12,14 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getAuthContext } from '@/lib/api/auth-helpers';
 import { DiscoverySweep, DiscoveredLead, TargetingCriteria } from '@/types/discovery';
-import { 
-    getGooglePlacesCollector, 
-    isGooglePlacesConfigured 
-} from '@/lib/discovery/googlePlaces';
+import { getGooglePlacesCollector, isGooglePlacesConfigured } from '@/lib/discovery/googlePlaces';
 import {
     RawBusinessData,
     createDedupeKey,
     mergeBusinessData,
     rawToDiscoveredLead,
 } from '@/lib/discovery/types';
-import { 
-    analyzeAllLeads, 
-    getAvailableProvider,
-    AI_LIMITS 
-} from '@/lib/discovery/aiAnalyzer';
+import { analyzeAllLeads, getAvailableProvider, AI_LIMITS } from '@/lib/discovery/aiAnalyzer';
 
 // ========================================
 // Data Collection
@@ -48,16 +41,16 @@ async function collectBusinessData(
     if (isGooglePlacesConfigured()) {
         console.log('[Sweep] Using Google Places for data collection');
         const collector = getGooglePlacesCollector();
-        
+
         try {
             const result = await collector.search({
                 criteria,
                 maxResults: maxLeads,
             });
-            
+
             allBusinesses.push(...result.businesses);
             totalApiCalls += result.metadata.apiCalls;
-            
+
             console.log(`[Sweep] Google Places returned ${result.businesses.length} businesses`);
         } catch (error) {
             console.error('[Sweep] Google Places error:', error);
@@ -70,16 +63,21 @@ async function collectBusinessData(
     // If we didn't get enough data, fall back to mock data (development/testing)
     if (allBusinesses.length < 3) {
         console.log('[Sweep] Insufficient data from APIs, generating mock data');
-        const mockData = generateMockBusinessData(criteria, Math.max(3, maxLeads - allBusinesses.length));
+        const mockData = generateMockBusinessData(
+            criteria,
+            Math.max(3, maxLeads - allBusinesses.length)
+        );
         allBusinesses.push(...mockData);
         usedMockData = true;
     }
 
     // Deduplicate
     const deduped = deduplicateBusinesses(allBusinesses);
-    
-    console.log(`[Sweep] Collected ${allBusinesses.length} total, ${deduped.length} after dedup, ${totalApiCalls} API calls`);
-    
+
+    console.log(
+        `[Sweep] Collected ${allBusinesses.length} total, ${deduped.length} after dedup, ${totalApiCalls} API calls`
+    );
+
     return {
         businesses: deduped.slice(0, maxLeads),
         apiCalls: totalApiCalls,
@@ -92,7 +90,7 @@ async function collectBusinessData(
  */
 function deduplicateBusinesses(businesses: RawBusinessData[]): RawBusinessData[] {
     const byKey = new Map<string, RawBusinessData[]>();
-    
+
     for (const business of businesses) {
         const key = createDedupeKey(business);
         if (!byKey.has(key)) {
@@ -100,9 +98,9 @@ function deduplicateBusinesses(businesses: RawBusinessData[]): RawBusinessData[]
         }
         byKey.get(key)!.push(business);
     }
-    
+
     // Merge duplicates
-    return Array.from(byKey.values()).map(records => 
+    return Array.from(byKey.values()).map((records) =>
         records.length === 1 ? records[0] : mergeBusinessData(records)
     );
 }
@@ -115,21 +113,18 @@ function deduplicateBusinesses(businesses: RawBusinessData[]): RawBusinessData[]
  * Generate mock business data when APIs aren't available
  * This is for development/testing only
  */
-function generateMockBusinessData(
-    criteria: TargetingCriteria,
-    count: number
-): RawBusinessData[] {
-    const industries = criteria.industries.length > 0 
-        ? criteria.industries 
-        : ['Manufacturing', 'Healthcare', 'Technology', 'Retail', 'Construction'];
-    
-    const cities = criteria.geography.cities.length > 0 
-        ? criteria.geography.cities 
-        : ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth'];
-    
-    const state = criteria.geography.states.length > 0 
-        ? criteria.geography.states[0] 
-        : 'TX';
+function generateMockBusinessData(criteria: TargetingCriteria, count: number): RawBusinessData[] {
+    const industries =
+        criteria.industries.length > 0
+            ? criteria.industries
+            : ['Manufacturing', 'Healthcare', 'Technology', 'Retail', 'Construction'];
+
+    const cities =
+        criteria.geography.cities.length > 0
+            ? criteria.geography.cities
+            : ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth'];
+
+    const state = criteria.geography.states.length > 0 ? criteria.geography.states[0] : 'TX';
 
     const businesses: RawBusinessData[] = [];
 
@@ -167,7 +162,7 @@ function generateMockBusinessData(
 
 /**
  * Convert raw business data to discovered leads with AI analysis
- * 
+ *
  * @param businesses Raw business data from collectors
  * @param aiAnalyses AI analysis results (indexed by business position)
  * @param companyId Company ID
@@ -193,7 +188,7 @@ function convertToDiscoveredLeads(
         };
 
         const baseLead = rawToDiscoveredLead(business, companyId, profileId, sweepId);
-        
+
         return {
             ...baseLead,
             aiAnalysis,
@@ -225,25 +220,30 @@ export async function POST(request: NextRequest) {
 
     try {
         // Check if profile exists and is configured
-        const profileRef = db.collection('companies')
+        const profileRef = db
+            .collection('companies')
             .doc(auth.companyId)
             .collection('discoveryProfile')
             .doc('current');
-        
+
         const profileSnap = await profileRef.get();
-        
+
         if (!profileSnap.exists) {
             return NextResponse.json(
-                { error: 'Discovery profile not found. Please configure discovery settings first.' },
+                {
+                    error: 'Discovery profile not found. Please configure discovery settings first.',
+                },
                 { status: 400 }
             );
         }
 
         const profile = profileSnap.data()!;
-        
+
         if (!profile.businessDescription || profile.targetingCriteria?.industries?.length === 0) {
             return NextResponse.json(
-                { error: 'Please complete your discovery profile with business description and targeting criteria.' },
+                {
+                    error: 'Please complete your discovery profile with business description and targeting criteria.',
+                },
                 { status: 400 }
             );
         }
@@ -251,7 +251,8 @@ export async function POST(request: NextRequest) {
         // Check daily sweep limit
         const today = new Date().toISOString().split('T')[0];
         const startOfDay = new Date(today).getTime();
-        const todaySweepsSnap = await db.collection('companies')
+        const todaySweepsSnap = await db
+            .collection('companies')
             .doc(auth.companyId)
             .collection('discoverySweeps')
             .where('startedAt', '>=', startOfDay)
@@ -265,7 +266,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Create sweep record
-        const sweepRef = db.collection('companies')
+        const sweepRef = db
+            .collection('companies')
             .doc(auth.companyId)
             .collection('discoverySweeps')
             .doc();
@@ -306,29 +308,32 @@ export async function POST(request: NextRequest) {
         // ========================================
         // PHASE 2: Real Data Collection
         // ========================================
-        
+
         const maxLeads = Math.min(10, AI_LIMITS.maxLeadsToScore); // Stay within cost limits
         const criteria = profile.targetingCriteria as TargetingCriteria;
-        
+
         // Collect business data from configured sources
-        const { businesses, apiCalls, usedMockData } = await collectBusinessData(criteria, maxLeads);
-        
+        const { businesses, apiCalls, usedMockData } = await collectBusinessData(
+            criteria,
+            maxLeads
+        );
+
         // ========================================
         // PHASE 3: AI Analysis
         // ========================================
-        
+
         console.log(`[Sweep] Starting AI analysis for ${businesses.length} businesses`);
         const aiProvider = getAvailableProvider();
         console.log(`[Sweep] AI Provider: ${aiProvider || 'none (using rule-based fallback)'}`);
-        
+
         // Run two-stage AI analysis
         const analysisResult = await analyzeAllLeads(businesses, criteria);
-        
+
         // Log any warnings
         if (analysisResult.warnings.length > 0) {
             console.log(`[Sweep] AI Analysis warnings:`, analysisResult.warnings);
         }
-        
+
         // Convert to discovered leads with AI analysis
         const leads = convertToDiscoveredLeads(
             businesses,
@@ -341,9 +346,10 @@ export async function POST(request: NextRequest) {
         // Save leads
         const batch = db.batch();
         const leadIds: string[] = [];
-        
+
         for (const lead of leads) {
-            const leadRef = db.collection('companies')
+            const leadRef = db
+                .collection('companies')
                 .doc(auth.companyId)
                 .collection('discoveredLeads')
                 .doc();
@@ -372,7 +378,7 @@ export async function POST(request: NextRequest) {
                 afterVerification: leads.length,
                 finalLeadsCount: leads.length,
             },
-            errors: analysisResult.warnings.map(w => ({
+            errors: analysisResult.warnings.map((w) => ({
                 source: 'ai_analyzer',
                 error: w,
                 timestamp: Date.now(),
@@ -389,16 +395,16 @@ export async function POST(request: NextRequest) {
         await batch.commit();
 
         // Build response message
-        let message = usedMockData 
+        let message = usedMockData
             ? `Sweep completed with mock data. Found ${leads.length} leads.`
             : `Sweep completed! Found ${leads.length} new leads.`;
-        
+
         if (!aiProvider) {
             message += ' (No AI key configured - using rule-based scoring)';
         } else {
             message += ` AI-scored with ${aiProvider === 'gemini' ? 'Gemini' : 'OpenAI'}.`;
         }
-        
+
         if (!isGooglePlacesConfigured() && !usedMockData) {
             message += ' Configure GOOGLE_PLACES_API_KEY for real data.';
         }
@@ -420,10 +426,7 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error running sweep:', error);
-        return NextResponse.json(
-            { error: 'Failed to run discovery sweep' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to run discovery sweep' }, { status: 500 });
     }
 }
 
@@ -438,14 +441,15 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const limitParam = parseInt(searchParams.get('limit') || '10');
 
-        const sweepsSnap = await db.collection('companies')
+        const sweepsSnap = await db
+            .collection('companies')
             .doc(auth.companyId)
             .collection('discoverySweeps')
             .orderBy('startedAt', 'desc')
             .limit(limitParam)
             .get();
 
-        const sweeps = sweepsSnap.docs.map(doc => ({
+        const sweeps = sweepsSnap.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
         })) as DiscoverySweep[];
@@ -453,9 +457,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ sweeps });
     } catch (error) {
         console.error('Error fetching sweep history:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch sweep history' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to fetch sweep history' }, { status: 500 });
     }
 }

@@ -16,11 +16,14 @@ export function SMSModal({ isOpen, onClose, leadId, leadName, leadPhone }: SMSMo
     const { containerRef } = useFocusTrap(isOpen);
 
     // Handle Escape key
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        },
+        [onClose]
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -36,25 +39,27 @@ export function SMSModal({ isOpen, onClose, leadId, leadName, leadPhone }: SMSMo
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="sms-chat-title"
         >
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" 
+            <div
+                className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
             {/* Chat Window Container */}
-            <div 
+            <div
                 ref={containerRef}
                 className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-200"
             >
-                <h2 id="sms-chat-title" className="sr-only">SMS Chat with {leadName}</h2>
+                <h2 id="sms-chat-title" className="sr-only">
+                    SMS Chat with {leadName}
+                </h2>
                 <SMSChatWindow
                     leadId={leadId}
                     leadName={leadName}

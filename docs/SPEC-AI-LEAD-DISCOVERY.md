@@ -9,9 +9,11 @@
 ## 1. Overview
 
 ### What It Does
+
 An AI-powered automated prospecting system that continuously discovers potential leads based on user-defined targeting criteria, verifies them, and delivers qualified prospects to both the app and connected Discord servers.
 
 ### Value Proposition
+
 - **Save hours** of manual prospecting
 - **Never miss** a potential customer
 - **AI-verified** leads with real contact info
@@ -67,67 +69,67 @@ An AI-powered automated prospecting system that continuously discovers potential
 // Collection: companies/{companyId}/discoveryProfile
 
 interface DiscoveryProfile {
-  id: string;
-  companyId: string;
-  
-  // Raw user input
-  businessDescription: string;  // Plain English description
-  
-  // AI-parsed targeting criteria
-  targetingCriteria: {
-    industries: string[];           // ["HVAC", "Plumbing", "Electrical"]
-    companySize: {
-      min: number;                  // 10
-      max: number;                  // 500
+    id: string;
+    companyId: string;
+
+    // Raw user input
+    businessDescription: string; // Plain English description
+
+    // AI-parsed targeting criteria
+    targetingCriteria: {
+        industries: string[]; // ["HVAC", "Plumbing", "Electrical"]
+        companySize: {
+            min: number; // 10
+            max: number; // 500
+        };
+        geography: {
+            countries: string[]; // ["US"]
+            states: string[]; // ["TX", "OK", "LA"]
+            cities: string[]; // ["Houston", "Dallas"]
+            radius?: number; // miles from a point
+        };
+        painPoints: string[]; // ["outdated equipment", "high energy costs"]
+        buyingSignals: string[]; // ["hiring", "expanding", "funding"]
+        excludeKeywords: string[]; // ["residential", "DIY"]
+        idealCustomerProfile: string; // AI-generated summary
     };
-    geography: {
-      countries: string[];          // ["US"]
-      states: string[];             // ["TX", "OK", "LA"]
-      cities: string[];             // ["Houston", "Dallas"]
-      radius?: number;              // miles from a point
+
+    // Schedule settings
+    schedule: {
+        enabled: boolean;
+        frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
+        customDays?: number; // If custom, run every N days
+        preferredTime: string; // "09:00" UTC
+        lastRunAt: number | null; // Timestamp
+        nextRunAt: number | null; // Timestamp
     };
-    painPoints: string[];           // ["outdated equipment", "high energy costs"]
-    buyingSignals: string[];        // ["hiring", "expanding", "funding"]
-    excludeKeywords: string[];      // ["residential", "DIY"]
-    idealCustomerProfile: string;   // AI-generated summary
-  };
-  
-  // Schedule settings
-  schedule: {
-    enabled: boolean;
-    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
-    customDays?: number;            // If custom, run every N days
-    preferredTime: string;          // "09:00" UTC
-    lastRunAt: number | null;       // Timestamp
-    nextRunAt: number | null;       // Timestamp
-  };
-  
-  // Notification settings
-  notifications: {
-    discord: {
-      enabled: boolean;
-      channelId: string | null;     // Which channel to post to
-      mentionRole: string | null;   // @sales-team etc
+
+    // Notification settings
+    notifications: {
+        discord: {
+            enabled: boolean;
+            channelId: string | null; // Which channel to post to
+            mentionRole: string | null; // @sales-team etc
+        };
+        email: {
+            enabled: boolean;
+            recipients: string[];
+        };
+        inApp: {
+            enabled: boolean; // Always true basically
+        };
     };
-    email: {
-      enabled: boolean;
-      recipients: string[];
+
+    // Stats
+    stats: {
+        totalLeadsFound: number;
+        leadsAddedToPipeline: number;
+        leadsDismissed: number;
+        lastSweepLeadsCount: number;
     };
-    inApp: {
-      enabled: boolean;             // Always true basically
-    };
-  };
-  
-  // Stats
-  stats: {
-    totalLeadsFound: number;
-    leadsAddedToPipeline: number;
-    leadsDismissed: number;
-    lastSweepLeadsCount: number;
-  };
-  
-  createdAt: number;
-  updatedAt: number;
+
+    createdAt: number;
+    updatedAt: number;
 }
 ```
 
@@ -137,74 +139,74 @@ interface DiscoveryProfile {
 // Collection: companies/{companyId}/discoveredLeads
 
 interface DiscoveredLead {
-  id: string;
-  companyId: string;
-  discoveryProfileId: string;
-  
-  // Business info
-  businessName: string;
-  industry: string;
-  website: string | null;
-  
-  // Contact info
-  contacts: {
-    name: string;
-    title: string;
-    email: string | null;
-    phone: string | null;
-    linkedin: string | null;
-  }[];
-  
-  // Location
-  location: {
-    address: string | null;
-    city: string;
-    state: string;
-    country: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
+    id: string;
+    companyId: string;
+    discoveryProfileId: string;
+
+    // Business info
+    businessName: string;
+    industry: string;
+    website: string | null;
+
+    // Contact info
+    contacts: {
+        name: string;
+        title: string;
+        email: string | null;
+        phone: string | null;
+        linkedin: string | null;
+    }[];
+
+    // Location
+    location: {
+        address: string | null;
+        city: string;
+        state: string;
+        country: string;
+        coordinates?: {
+            lat: number;
+            lng: number;
+        };
     };
-  };
-  
-  // AI analysis
-  aiAnalysis: {
-    matchScore: number;             // 0-100, how well they match criteria
-    matchReasons: string[];         // ["In target industry", "Recently funded"]
-    painPointsIdentified: string[]; // ["Mentioned equipment issues in review"]
-    buyingSignals: string[];        // ["Hiring 3 sales reps", "New location"]
-    summary: string;                // AI-generated 2-3 sentence summary
-  };
-  
-  // Verification
-  verification: {
-    status: 'pending' | 'verified' | 'failed';
-    verifiedAt: number | null;
-    checks: {
-      websiteExists: boolean;
-      phoneValid: boolean;
-      emailValid: boolean;
-      businessRegistered: boolean;  // If we can check
+
+    // AI analysis
+    aiAnalysis: {
+        matchScore: number; // 0-100, how well they match criteria
+        matchReasons: string[]; // ["In target industry", "Recently funded"]
+        painPointsIdentified: string[]; // ["Mentioned equipment issues in review"]
+        buyingSignals: string[]; // ["Hiring 3 sales reps", "New location"]
+        summary: string; // AI-generated 2-3 sentence summary
     };
-  };
-  
-  // Sources where we found them
-  sources: {
-    type: 'linkedin' | 'google' | 'directory' | 'news' | 'jobs' | 'social';
-    url: string;
-    foundAt: number;
-  }[];
-  
-  // Status
-  status: 'new' | 'reviewed' | 'added_to_pipeline' | 'dismissed';
-  dismissReason?: string;           // If dismissed, why (for AI learning)
-  pipelineLeadId?: string;          // If added, link to pipeline lead
-  
-  // Sweep info
-  sweepId: string;                  // Which sweep found this
-  discoveredAt: number;
-  reviewedAt: number | null;
-  reviewedBy: string | null;        // userId
+
+    // Verification
+    verification: {
+        status: 'pending' | 'verified' | 'failed';
+        verifiedAt: number | null;
+        checks: {
+            websiteExists: boolean;
+            phoneValid: boolean;
+            emailValid: boolean;
+            businessRegistered: boolean; // If we can check
+        };
+    };
+
+    // Sources where we found them
+    sources: {
+        type: 'linkedin' | 'google' | 'directory' | 'news' | 'jobs' | 'social';
+        url: string;
+        foundAt: number;
+    }[];
+
+    // Status
+    status: 'new' | 'reviewed' | 'added_to_pipeline' | 'dismissed';
+    dismissReason?: string; // If dismissed, why (for AI learning)
+    pipelineLeadId?: string; // If added, link to pipeline lead
+
+    // Sweep info
+    sweepId: string; // Which sweep found this
+    discoveredAt: number;
+    reviewedAt: number | null;
+    reviewedBy: string | null; // userId
 }
 ```
 
@@ -214,40 +216,40 @@ interface DiscoveredLead {
 // Collection: companies/{companyId}/discoverySweeps
 
 interface DiscoverySweep {
-  id: string;
-  companyId: string;
-  discoveryProfileId: string;
-  
-  // Execution
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  startedAt: number;
-  completedAt: number | null;
-  
-  // Results
-  results: {
-    sourcesSearched: number;
-    rawResultsFound: number;
-    afterDeduplication: number;
-    afterVerification: number;
-    finalLeadsCount: number;
-  };
-  
-  // Errors if any
-  errors: {
-    source: string;
-    error: string;
-    timestamp: number;
-  }[];
-  
-  // Notifications sent
-  notificationsSent: {
-    discord: boolean;
-    email: boolean;
-  };
-  
-  // Trigger
-  triggeredBy: 'schedule' | 'manual';
-  triggeredByUserId?: string;
+    id: string;
+    companyId: string;
+    discoveryProfileId: string;
+
+    // Execution
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    startedAt: number;
+    completedAt: number | null;
+
+    // Results
+    results: {
+        sourcesSearched: number;
+        rawResultsFound: number;
+        afterDeduplication: number;
+        afterVerification: number;
+        finalLeadsCount: number;
+    };
+
+    // Errors if any
+    errors: {
+        source: string;
+        error: string;
+        timestamp: number;
+    }[];
+
+    // Notifications sent
+    notificationsSent: {
+        discord: boolean;
+        email: boolean;
+    };
+
+    // Trigger
+    triggeredBy: 'schedule' | 'manual';
+    triggeredByUserId?: string;
 }
 ```
 
@@ -280,7 +282,7 @@ GET    /api/discovery/sweeps/:id        - Get sweep details
 ```
 GET    /api/discovery/leads             - List discovered leads
        Query: ?status=new&limit=50&offset=0
-       
+
 GET    /api/discovery/leads/:id         - Get lead details
 PATCH  /api/discovery/leads/:id         - Update lead (review, dismiss)
 POST   /api/discovery/leads/:id/add-to-pipeline - Convert to pipeline lead
@@ -362,6 +364,7 @@ POST   /api/discovery/discord/test      - Send test message to channel
 **Navigation:** Discover is accessible from sidebar. Tabs are internal to the page (not in sidebar).
 
 **Tab Structure:**
+
 1. **Manual Search** - User-initiated business searches (current functionality)
 2. **AI Discovered** - Automated sweep results, daily feed of AI-found leads
 3. **Watchlist** - Saved/bookmarked businesses not yet in pipeline (staging area)
@@ -521,70 +524,77 @@ POST   /api/discovery/discord/test      - Send test message to channel
 
 ### 6.2 Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Scheduler | Firebase Cloud Scheduler + Pub/Sub |
-| Orchestrator | Cloud Functions (Node.js) or Cloud Run |
-| Data Collectors | Cloud Functions (parallelized) |
-| AI Analysis | OpenAI GPT-4 or Anthropic Claude API |
-| Verification | Custom validation + 3rd party APIs |
-| Storage | Firestore |
-| Discord Bot | Discord.js (existing bot) |
-| Email | SendGrid |
+| Component       | Technology                             |
+| --------------- | -------------------------------------- |
+| Scheduler       | Firebase Cloud Scheduler + Pub/Sub     |
+| Orchestrator    | Cloud Functions (Node.js) or Cloud Run |
+| Data Collectors | Cloud Functions (parallelized)         |
+| AI Analysis     | OpenAI GPT-4 or Anthropic Claude API   |
+| Verification    | Custom validation + 3rd party APIs     |
+| Storage         | Firestore                              |
+| Discord Bot     | Discord.js (existing bot)              |
+| Email           | SendGrid                               |
 
 ### 6.3 Data Sources & Methods
 
-| Source | Method | What We Get |
-|--------|--------|-------------|
-| Google Places | API | Business name, address, phone, website, reviews |
-| LinkedIn | Scraper/API | Company size, industry, recent posts, employees |
-| Industry Directories | Scraper | Niche-specific business listings |
-| News/PR | API (NewsAPI) | Funding, expansion, leadership changes |
-| Job Boards | Scraper | Hiring signals, growth indicators |
-| Social Media | APIs | Sentiment, engagement, recent activity |
-| Business Registries | API | Verification, founding date, status |
+| Source               | Method        | What We Get                                     |
+| -------------------- | ------------- | ----------------------------------------------- |
+| Google Places        | API           | Business name, address, phone, website, reviews |
+| LinkedIn             | Scraper/API   | Company size, industry, recent posts, employees |
+| Industry Directories | Scraper       | Niche-specific business listings                |
+| News/PR              | API (NewsAPI) | Funding, expansion, leadership changes          |
+| Job Boards           | Scraper       | Hiring signals, growth indicators               |
+| Social Media         | APIs          | Sentiment, engagement, recent activity          |
+| Business Registries  | API           | Verification, founding date, status             |
 
 ---
 
 ## 7. Implementation Phases
 
 ### Phase 1: Foundation (Week 1-2)
+
 - [ ] Database schema setup
 - [ ] Discovery profile CRUD API
 - [ ] Settings UI for discovery configuration
 - [ ] AI description parser (LLM integration)
 
 ### Phase 2: Data Collection (Week 3-4)
+
 - [ ] Google Places integration
 - [ ] Basic web scraper framework
 - [ ] News API integration
 - [ ] Result aggregation & deduplication
 
 ### Phase 3: AI Analysis (Week 5)
+
 - [ ] Lead scoring algorithm
 - [ ] Pain point identification
 - [ ] Summary generation
 - [ ] Match reasoning
 
 ### Phase 4: Verification (Week 6)
+
 - [ ] Website validation
 - [ ] Email validation (MX check)
 - [ ] Phone format validation
 - [ ] Verification status tracking
 
 ### Phase 5: Delivery (Week 7)
+
 - [ ] Discover page AI tab UI
 - [ ] Discord notification integration
 - [ ] Email digest setup
 - [ ] "Add to Pipeline" flow
 
 ### Phase 6: Scheduling (Week 8)
+
 - [ ] Cloud Scheduler setup
 - [ ] Sweep history & audit log
 - [ ] Manual sweep trigger
 - [ ] Error handling & retry logic
 
 ### Phase 7: Polish (Week 9-10)
+
 - [ ] Performance optimization
 - [ ] Rate limiting & quotas
 - [ ] Feedback loop (dismissed leads train AI)
@@ -647,22 +657,22 @@ POST   /api/discovery/discord/test      - Send test message to channel
 ```typescript
 // Global limits - stored in config, enforced in code
 const TOKEN_SAFETY = {
-  // Per-sweep limits
-  maxTokensPerSweep: 50_000,        // Hard cap per sweep
-  maxAPICallsPerSweep: 20,          // Max LLM calls per sweep
-  maxLeadsToAnalyze: 50,            // Never analyze more than this
-  
-  // Per-company daily limits
-  maxTokensPerCompanyPerDay: 100_000,
-  maxSweepsPerCompanyPerDay: 3,
-  
-  // Global platform limits (all companies combined)
-  maxTokensPerHour: 500_000,        // Platform-wide hourly cap
-  maxConcurrentSweeps: 5,           // Don't overload APIs
-  
-  // Cost circuit breaker
-  maxDailyCostUSD: 50.00,           // Platform-wide daily spend cap
-  alertThresholdUSD: 25.00,         // Alert admin at this point
+    // Per-sweep limits
+    maxTokensPerSweep: 50_000, // Hard cap per sweep
+    maxAPICallsPerSweep: 20, // Max LLM calls per sweep
+    maxLeadsToAnalyze: 50, // Never analyze more than this
+
+    // Per-company daily limits
+    maxTokensPerCompanyPerDay: 100_000,
+    maxSweepsPerCompanyPerDay: 3,
+
+    // Global platform limits (all companies combined)
+    maxTokensPerHour: 500_000, // Platform-wide hourly cap
+    maxConcurrentSweeps: 5, // Don't overload APIs
+
+    // Cost circuit breaker
+    maxDailyCostUSD: 50.0, // Platform-wide daily spend cap
+    alertThresholdUSD: 25.0, // Alert admin at this point
 };
 ```
 
@@ -671,59 +681,62 @@ const TOKEN_SAFETY = {
 ```typescript
 // Layer 1: Pre-sweep check
 async function canRunSweep(companyId: string): Promise<boolean> {
-  const usage = await getCompanyUsageToday(companyId);
-  
-  if (usage.sweepCount >= TOKEN_SAFETY.maxSweepsPerCompanyPerDay) {
-    throw new Error('Daily sweep limit reached');
-  }
-  if (usage.tokensUsed >= TOKEN_SAFETY.maxTokensPerCompanyPerDay) {
-    throw new Error('Daily token limit reached');
-  }
-  
-  const platformUsage = await getPlatformUsageToday();
-  if (platformUsage.costUSD >= TOKEN_SAFETY.maxDailyCostUSD) {
-    await alertAdmin('CIRCUIT BREAKER: Daily cost limit reached');
-    throw new Error('Platform cost limit reached');
-  }
-  
-  return true;
+    const usage = await getCompanyUsageToday(companyId);
+
+    if (usage.sweepCount >= TOKEN_SAFETY.maxSweepsPerCompanyPerDay) {
+        throw new Error('Daily sweep limit reached');
+    }
+    if (usage.tokensUsed >= TOKEN_SAFETY.maxTokensPerCompanyPerDay) {
+        throw new Error('Daily token limit reached');
+    }
+
+    const platformUsage = await getPlatformUsageToday();
+    if (platformUsage.costUSD >= TOKEN_SAFETY.maxDailyCostUSD) {
+        await alertAdmin('CIRCUIT BREAKER: Daily cost limit reached');
+        throw new Error('Platform cost limit reached');
+    }
+
+    return true;
 }
 
 // Layer 2: Mid-sweep monitoring
 class TokenBudget {
-  private tokensUsed = 0;
-  private apiCalls = 0;
-  
-  consume(tokens: number) {
-    this.tokensUsed += tokens;
-    this.apiCalls++;
-    
-    if (this.tokensUsed > TOKEN_SAFETY.maxTokensPerSweep) {
-      throw new Error('Sweep token budget exceeded');
+    private tokensUsed = 0;
+    private apiCalls = 0;
+
+    consume(tokens: number) {
+        this.tokensUsed += tokens;
+        this.apiCalls++;
+
+        if (this.tokensUsed > TOKEN_SAFETY.maxTokensPerSweep) {
+            throw new Error('Sweep token budget exceeded');
+        }
+        if (this.apiCalls > TOKEN_SAFETY.maxAPICallsPerSweep) {
+            throw new Error('Sweep API call limit exceeded');
+        }
     }
-    if (this.apiCalls > TOKEN_SAFETY.maxAPICallsPerSweep) {
-      throw new Error('Sweep API call limit exceeded');
+
+    getRemaining() {
+        return TOKEN_SAFETY.maxTokensPerSweep - this.tokensUsed;
     }
-  }
-  
-  getRemaining() {
-    return TOKEN_SAFETY.maxTokensPerSweep - this.tokensUsed;
-  }
 }
 
 // Layer 3: Batch processing to minimize calls
 async function analyzeLeadsBatch(leads: Lead[], budget: TokenBudget) {
-  // Instead of 50 API calls, make 1 call with all leads
-  const prompt = buildBatchPrompt(leads); // All leads in one prompt
-  
-  const estimatedTokens = estimateTokens(prompt);
-  if (estimatedTokens > budget.getRemaining()) {
-    // Reduce batch size to fit budget
-    leads = leads.slice(0, Math.floor(leads.length * budget.getRemaining() / estimatedTokens));
-  }
-  
-  budget.consume(estimatedTokens);
-  return await callLLM(prompt);
+    // Instead of 50 API calls, make 1 call with all leads
+    const prompt = buildBatchPrompt(leads); // All leads in one prompt
+
+    const estimatedTokens = estimateTokens(prompt);
+    if (estimatedTokens > budget.getRemaining()) {
+        // Reduce batch size to fit budget
+        leads = leads.slice(
+            0,
+            Math.floor((leads.length * budget.getRemaining()) / estimatedTokens)
+        );
+    }
+
+    budget.consume(estimatedTokens);
+    return await callLLM(prompt);
 }
 ```
 
@@ -732,27 +745,27 @@ async function analyzeLeadsBatch(leads: Lead[], budget: TokenBudget) {
 ```typescript
 // Cache everything possible
 const CACHE_CONFIG = {
-  // Business info cache (they don't change often)
-  businessInfoTTL: 7 * 24 * 60 * 60 * 1000,  // 7 days
-  
-  // AI analysis cache (reuse for same business)
-  aiAnalysisTTL: 30 * 24 * 60 * 60 * 1000,   // 30 days
-  
-  // Search results cache
-  searchResultsTTL: 24 * 60 * 60 * 1000,      // 24 hours
+    // Business info cache (they don't change often)
+    businessInfoTTL: 7 * 24 * 60 * 60 * 1000, // 7 days
+
+    // AI analysis cache (reuse for same business)
+    aiAnalysisTTL: 30 * 24 * 60 * 60 * 1000, // 30 days
+
+    // Search results cache
+    searchResultsTTL: 24 * 60 * 60 * 1000, // 24 hours
 };
 
 async function getBusinessAnalysis(businessId: string, data: BusinessData) {
-  // Check cache first
-  const cached = await cache.get(`analysis:${businessId}`);
-  if (cached && !isStale(cached, CACHE_CONFIG.aiAnalysisTTL)) {
-    return cached; // FREE!
-  }
-  
-  // Only call AI if not cached
-  const analysis = await analyzeWithAI(data);
-  await cache.set(`analysis:${businessId}`, analysis);
-  return analysis;
+    // Check cache first
+    const cached = await cache.get(`analysis:${businessId}`);
+    if (cached && !isStale(cached, CACHE_CONFIG.aiAnalysisTTL)) {
+        return cached; // FREE!
+    }
+
+    // Only call AI if not cached
+    const analysis = await analyzeWithAI(data);
+    await cache.set(`analysis:${businessId}`, analysis);
+    return analysis;
 }
 ```
 
@@ -761,55 +774,56 @@ async function getBusinessAnalysis(businessId: string, data: BusinessData) {
 ```typescript
 // Collection: platform/usage/daily/{date}
 interface DailyUsage {
-  date: string;
-  totalTokens: number;
-  totalCostUSD: number;
-  sweepCount: number;
-  byCompany: {
-    [companyId: string]: {
-      tokens: number;
-      sweeps: number;
-      costUSD: number;
+    date: string;
+    totalTokens: number;
+    totalCostUSD: number;
+    sweepCount: number;
+    byCompany: {
+        [companyId: string]: {
+            tokens: number;
+            sweeps: number;
+            costUSD: number;
+        };
     };
-  };
 }
 
 // Alert thresholds
 async function checkAndAlert(usage: DailyUsage) {
-  if (usage.totalCostUSD >= TOKEN_SAFETY.alertThresholdUSD) {
-    await notifyAdmin({
-      type: 'cost_warning',
-      message: `Daily spend at $${usage.totalCostUSD}`,
-      threshold: TOKEN_SAFETY.maxDailyCostUSD
-    });
-  }
+    if (usage.totalCostUSD >= TOKEN_SAFETY.alertThresholdUSD) {
+        await notifyAdmin({
+            type: 'cost_warning',
+            message: `Daily spend at $${usage.totalCostUSD}`,
+            threshold: TOKEN_SAFETY.maxDailyCostUSD,
+        });
+    }
 }
 ```
 
 ### 8.3 Revised Cost Estimates
 
-| Component | Cost | Notes |
-|-----------|------|-------|
-| Data collection | ~$0 | Free sources + caching |
-| Rule filtering | ~$0 | Pure code, no API |
-| Cheap AI scoring | ~$0.01 | GPT-4o-mini batch |
-| Smart AI analysis | ~$0.10-0.20 | Only top 15 leads |
-| Verification | ~$0.01 | MX lookup, HEAD requests |
-| **Total per sweep** | **$0.05-0.30** | |
+| Component           | Cost           | Notes                    |
+| ------------------- | -------------- | ------------------------ |
+| Data collection     | ~$0            | Free sources + caching   |
+| Rule filtering      | ~$0            | Pure code, no API        |
+| Cheap AI scoring    | ~$0.01         | GPT-4o-mini batch        |
+| Smart AI analysis   | ~$0.10-0.20    | Only top 15 leads        |
+| Verification        | ~$0.01         | MX lookup, HEAD requests |
+| **Total per sweep** | **$0.05-0.30** |                          |
 
 **Monthly estimate per company:**
+
 - Weekly sweeps (4/month): $0.20 - $1.20
 - Daily sweeps (30/month): $1.50 - $9.00
 
 ### 8.4 Subscription Tier Limits
 
-| Tier | Sweeps/Month | Max Leads/Sweep | AI Analysis |
-|------|-------------|-----------------|-------------|
-| Free | 2 | 10 | Basic (mini only) |
-| Pro | 8 | 25 | Full |
-| Enterprise | Unlimited* | 50 | Full + priority |
+| Tier       | Sweeps/Month | Max Leads/Sweep | AI Analysis       |
+| ---------- | ------------ | --------------- | ----------------- |
+| Free       | 2            | 10              | Basic (mini only) |
+| Pro        | 8            | 25              | Full              |
+| Enterprise | Unlimited\*  | 50              | Full + priority   |
 
-*Enterprise "unlimited" still has daily caps for safety
+\*Enterprise "unlimited" still has daily caps for safety
 
 ---
 
@@ -837,4 +851,4 @@ async function checkAndAlert(usage: DailyUsage) {
 
 ---
 
-*This spec is a living document. Update as we build and learn.*
+_This spec is a living document. Update as we build and learn._

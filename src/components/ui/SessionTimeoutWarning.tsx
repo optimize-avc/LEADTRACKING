@@ -30,11 +30,14 @@ export function SessionTimeoutWarning({
     const isUrgent = remainingSeconds <= 60;
 
     // Handle Escape key - extend session (safer default)
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onExtend();
-        }
-    }, [onExtend]);
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onExtend();
+            }
+        },
+        [onExtend]
+    );
 
     useEffect(() => {
         if (isVisible) {
@@ -51,7 +54,7 @@ export function SessionTimeoutWarning({
 
     return (
         <AnimatePresence>
-            <div 
+            <div
                 className="fixed inset-0 z-[100] flex items-center justify-center p-4"
                 role="alertdialog"
                 aria-modal="true"
@@ -77,7 +80,10 @@ export function SessionTimeoutWarning({
                 >
                     {/* Urgent warning bar */}
                     {isUrgent && (
-                        <div className="bg-red-500/20 border-b border-red-500/50 px-4 py-2" role="alert">
+                        <div
+                            className="bg-red-500/20 border-b border-red-500/50 px-4 py-2"
+                            role="alert"
+                        >
                             <p className="text-red-400 text-sm text-center font-medium">
                                 ⚠️ Session expiring soon!
                             </p>
@@ -102,7 +108,10 @@ export function SessionTimeoutWarning({
                         </div>
 
                         {/* Title */}
-                        <h2 id="session-timeout-title" className="text-2xl font-bold text-white text-center mb-2">
+                        <h2
+                            id="session-timeout-title"
+                            className="text-2xl font-bold text-white text-center mb-2"
+                        >
                             Session Expiring
                         </h2>
 

@@ -1,15 +1,11 @@
 import { getFirebaseDb } from './config';
-import {
-    doc,
-    getDoc,
-    updateDoc,
-} from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import type { Company, CompanySettings } from '@/types/company';
 
 /**
  * CompanyService - Manages company/tenant data for multi-tenant SaaS
- * 
+ *
  * Uses server-side API routes for operations that require admin privileges
  * to bypass Firestore security rules properly.
  */
@@ -21,7 +17,7 @@ export const CompanyService = {
     async getCompanyByUser(userId: string, token?: string): Promise<Company | null> {
         try {
             // Get token if not provided
-            const authToken = token || await getAuth().currentUser?.getIdToken();
+            const authToken = token || (await getAuth().currentUser?.getIdToken());
 
             if (!authToken) {
                 console.warn('No auth token available');
@@ -31,7 +27,7 @@ export const CompanyService = {
             const response = await fetch('/api/company/get', {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${authToken}`,
+                    Authorization: `Bearer ${authToken}`,
                     'Content-Type': 'application/json',
                 },
             });
@@ -73,7 +69,7 @@ export const CompanyService = {
         token?: string
     ): Promise<string> {
         // Get token if not provided
-        const authToken = token || await getAuth().currentUser?.getIdToken();
+        const authToken = token || (await getAuth().currentUser?.getIdToken());
 
         if (!authToken) {
             throw new Error('No auth token available');
@@ -82,7 +78,7 @@ export const CompanyService = {
         const response = await fetch('/api/company/create', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                Authorization: `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -113,7 +109,7 @@ export const CompanyService = {
         const response = await fetch('/api/company/settings', {
             method: 'PATCH',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                Authorization: `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -173,7 +169,7 @@ export const CompanyService = {
         const response = await fetch('/api/company/settings', {
             method: 'PATCH',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                Authorization: `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -204,7 +200,7 @@ export const CompanyService = {
         const response = await fetch('/api/company/settings', {
             method: 'PATCH',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                Authorization: `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -232,7 +228,7 @@ export const CompanyService = {
         const response = await fetch('/api/company/settings', {
             method: 'PATCH',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                Authorization: `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -274,7 +270,7 @@ export const CompanyService = {
         const response = await fetch('/api/company/settings', {
             method: 'PATCH',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                Authorization: `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -302,7 +298,7 @@ export const CompanyService = {
         const response = await fetch('/api/company/settings', {
             method: 'PATCH',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                Authorization: `Bearer ${authToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({

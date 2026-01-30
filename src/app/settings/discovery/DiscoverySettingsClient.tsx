@@ -47,7 +47,9 @@ export default function DiscoverySettingsClient() {
         idealCustomerProfile: '',
     });
     const [scheduleEnabled, setScheduleEnabled] = useState(false);
-    const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly'>('weekly');
+    const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly'>(
+        'weekly'
+    );
     const [preferredTime, setPreferredTime] = useState('09:00');
     const [discordEnabled, setDiscordEnabled] = useState(false);
     const [discordChannelId, setDiscordChannelId] = useState<string | null>(null);
@@ -297,19 +299,27 @@ export default function DiscoverySettingsClient() {
                 {!isNew && profile?.stats && (
                     <div className="grid grid-cols-4 gap-4">
                         <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                            <div className="text-2xl font-bold text-white">{profile.stats.totalLeadsFound}</div>
+                            <div className="text-2xl font-bold text-white">
+                                {profile.stats.totalLeadsFound}
+                            </div>
                             <div className="text-xs text-slate-500">Total Found</div>
                         </div>
                         <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                            <div className="text-2xl font-bold text-green-400">{profile.stats.leadsAddedToPipeline}</div>
+                            <div className="text-2xl font-bold text-green-400">
+                                {profile.stats.leadsAddedToPipeline}
+                            </div>
                             <div className="text-xs text-slate-500">Added to Pipeline</div>
                         </div>
                         <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                            <div className="text-2xl font-bold text-slate-400">{profile.stats.leadsDismissed}</div>
+                            <div className="text-2xl font-bold text-slate-400">
+                                {profile.stats.leadsDismissed}
+                            </div>
                             <div className="text-xs text-slate-500">Dismissed</div>
                         </div>
                         <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                            <div className="text-2xl font-bold text-blue-400">{profile.stats.lastSweepLeadsCount}</div>
+                            <div className="text-2xl font-bold text-blue-400">
+                                {profile.stats.lastSweepLeadsCount}
+                            </div>
                             <div className="text-xs text-slate-500">Last Sweep</div>
                         </div>
                     </div>
@@ -322,7 +332,9 @@ export default function DiscoverySettingsClient() {
                             <Building2 size={20} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-white">Describe Your Business</h3>
+                            <h3 className="text-lg font-semibold text-white">
+                                Describe Your Business
+                            </h3>
                             <p className="text-sm text-slate-400">
                                 Tell us about your ideal customers in plain English
                             </p>
@@ -385,7 +397,10 @@ export default function DiscoverySettingsClient() {
                                             onClick={() => {
                                                 const newList = [...targetingCriteria.industries];
                                                 newList.splice(idx, 1);
-                                                setTargetingCriteria({ ...targetingCriteria, industries: newList });
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    industries: newList,
+                                                });
                                             }}
                                             className="hover:text-red-400"
                                         >
@@ -403,7 +418,11 @@ export default function DiscoverySettingsClient() {
                                         e.key === 'Enter' &&
                                         addTag(
                                             targetingCriteria.industries,
-                                            (v) => setTargetingCriteria({ ...targetingCriteria, industries: v }),
+                                            (v) =>
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    industries: v,
+                                                }),
                                             newIndustry,
                                             setNewIndustry
                                         )
@@ -415,7 +434,11 @@ export default function DiscoverySettingsClient() {
                                     onClick={() =>
                                         addTag(
                                             targetingCriteria.industries,
-                                            (v) => setTargetingCriteria({ ...targetingCriteria, industries: v }),
+                                            (v) =>
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    industries: v,
+                                                }),
                                             newIndustry,
                                             setNewIndustry
                                         )
@@ -439,7 +462,10 @@ export default function DiscoverySettingsClient() {
                                     onChange={(e) =>
                                         setTargetingCriteria({
                                             ...targetingCriteria,
-                                            companySize: { ...targetingCriteria.companySize, min: parseInt(e.target.value) || 0 },
+                                            companySize: {
+                                                ...targetingCriteria.companySize,
+                                                min: parseInt(e.target.value) || 0,
+                                            },
                                         })
                                     }
                                     className="w-24 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-center focus:outline-none focus:border-purple-500"
@@ -451,7 +477,10 @@ export default function DiscoverySettingsClient() {
                                     onChange={(e) =>
                                         setTargetingCriteria({
                                             ...targetingCriteria,
-                                            companySize: { ...targetingCriteria.companySize, max: parseInt(e.target.value) || 0 },
+                                            companySize: {
+                                                ...targetingCriteria.companySize,
+                                                max: parseInt(e.target.value) || 0,
+                                            },
                                         })
                                     }
                                     className="w-24 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-center focus:outline-none focus:border-purple-500"
@@ -479,11 +508,16 @@ export default function DiscoverySettingsClient() {
                                                 {state}
                                                 <button
                                                     onClick={() => {
-                                                        const newList = [...targetingCriteria.geography.states];
+                                                        const newList = [
+                                                            ...targetingCriteria.geography.states,
+                                                        ];
                                                         newList.splice(idx, 1);
                                                         setTargetingCriteria({
                                                             ...targetingCriteria,
-                                                            geography: { ...targetingCriteria.geography, states: newList },
+                                                            geography: {
+                                                                ...targetingCriteria.geography,
+                                                                states: newList,
+                                                            },
                                                         });
                                                     }}
                                                     className="hover:text-red-400"
@@ -497,7 +531,9 @@ export default function DiscoverySettingsClient() {
                                         <input
                                             type="text"
                                             value={newState}
-                                            onChange={(e) => setNewState(e.target.value.toUpperCase())}
+                                            onChange={(e) =>
+                                                setNewState(e.target.value.toUpperCase())
+                                            }
                                             onKeyDown={(e) =>
                                                 e.key === 'Enter' &&
                                                 addTag(
@@ -505,7 +541,10 @@ export default function DiscoverySettingsClient() {
                                                     (v) =>
                                                         setTargetingCriteria({
                                                             ...targetingCriteria,
-                                                            geography: { ...targetingCriteria.geography, states: v },
+                                                            geography: {
+                                                                ...targetingCriteria.geography,
+                                                                states: v,
+                                                            },
                                                         }),
                                                     newState,
                                                     setNewState
@@ -522,7 +561,10 @@ export default function DiscoverySettingsClient() {
                                                     (v) =>
                                                         setTargetingCriteria({
                                                             ...targetingCriteria,
-                                                            geography: { ...targetingCriteria.geography, states: v },
+                                                            geography: {
+                                                                ...targetingCriteria.geography,
+                                                                states: v,
+                                                            },
                                                         }),
                                                     newState,
                                                     setNewState
@@ -547,11 +589,16 @@ export default function DiscoverySettingsClient() {
                                                 {city}
                                                 <button
                                                     onClick={() => {
-                                                        const newList = [...targetingCriteria.geography.cities];
+                                                        const newList = [
+                                                            ...targetingCriteria.geography.cities,
+                                                        ];
                                                         newList.splice(idx, 1);
                                                         setTargetingCriteria({
                                                             ...targetingCriteria,
-                                                            geography: { ...targetingCriteria.geography, cities: newList },
+                                                            geography: {
+                                                                ...targetingCriteria.geography,
+                                                                cities: newList,
+                                                            },
                                                         });
                                                     }}
                                                     className="hover:text-red-400"
@@ -573,7 +620,10 @@ export default function DiscoverySettingsClient() {
                                                     (v) =>
                                                         setTargetingCriteria({
                                                             ...targetingCriteria,
-                                                            geography: { ...targetingCriteria.geography, cities: v },
+                                                            geography: {
+                                                                ...targetingCriteria.geography,
+                                                                cities: v,
+                                                            },
                                                         }),
                                                     newCity,
                                                     setNewCity
@@ -589,7 +639,10 @@ export default function DiscoverySettingsClient() {
                                                     (v) =>
                                                         setTargetingCriteria({
                                                             ...targetingCriteria,
-                                                            geography: { ...targetingCriteria.geography, cities: v },
+                                                            geography: {
+                                                                ...targetingCriteria.geography,
+                                                                cities: v,
+                                                            },
                                                         }),
                                                     newCity,
                                                     setNewCity
@@ -620,7 +673,10 @@ export default function DiscoverySettingsClient() {
                                             onClick={() => {
                                                 const newList = [...targetingCriteria.painPoints];
                                                 newList.splice(idx, 1);
-                                                setTargetingCriteria({ ...targetingCriteria, painPoints: newList });
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    painPoints: newList,
+                                                });
                                             }}
                                             className="hover:text-red-400"
                                         >
@@ -638,7 +694,11 @@ export default function DiscoverySettingsClient() {
                                         e.key === 'Enter' &&
                                         addTag(
                                             targetingCriteria.painPoints,
-                                            (v) => setTargetingCriteria({ ...targetingCriteria, painPoints: v }),
+                                            (v) =>
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    painPoints: v,
+                                                }),
                                             newPainPoint,
                                             setNewPainPoint
                                         )
@@ -650,7 +710,11 @@ export default function DiscoverySettingsClient() {
                                     onClick={() =>
                                         addTag(
                                             targetingCriteria.painPoints,
-                                            (v) => setTargetingCriteria({ ...targetingCriteria, painPoints: v }),
+                                            (v) =>
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    painPoints: v,
+                                                }),
                                             newPainPoint,
                                             setNewPainPoint
                                         )
@@ -676,9 +740,14 @@ export default function DiscoverySettingsClient() {
                                         {bs}
                                         <button
                                             onClick={() => {
-                                                const newList = [...targetingCriteria.buyingSignals];
+                                                const newList = [
+                                                    ...targetingCriteria.buyingSignals,
+                                                ];
                                                 newList.splice(idx, 1);
-                                                setTargetingCriteria({ ...targetingCriteria, buyingSignals: newList });
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    buyingSignals: newList,
+                                                });
                                             }}
                                             className="hover:text-red-400"
                                         >
@@ -696,7 +765,11 @@ export default function DiscoverySettingsClient() {
                                         e.key === 'Enter' &&
                                         addTag(
                                             targetingCriteria.buyingSignals,
-                                            (v) => setTargetingCriteria({ ...targetingCriteria, buyingSignals: v }),
+                                            (v) =>
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    buyingSignals: v,
+                                                }),
                                             newBuyingSignal,
                                             setNewBuyingSignal
                                         )
@@ -708,7 +781,11 @@ export default function DiscoverySettingsClient() {
                                     onClick={() =>
                                         addTag(
                                             targetingCriteria.buyingSignals,
-                                            (v) => setTargetingCriteria({ ...targetingCriteria, buyingSignals: v }),
+                                            (v) =>
+                                                setTargetingCriteria({
+                                                    ...targetingCriteria,
+                                                    buyingSignals: v,
+                                                }),
                                             newBuyingSignal,
                                             setNewBuyingSignal
                                         )
@@ -762,19 +839,21 @@ export default function DiscoverySettingsClient() {
                                         Run every
                                     </label>
                                     <div className="grid grid-cols-4 gap-2">
-                                        {(['daily', 'weekly', 'biweekly', 'monthly'] as const).map((f) => (
-                                            <button
-                                                key={f}
-                                                onClick={() => setFrequency(f)}
-                                                className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                                    frequency === f
-                                                        ? 'bg-blue-500/20 border-blue-500 text-blue-300'
-                                                        : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
-                                                }`}
-                                            >
-                                                {f.charAt(0).toUpperCase() + f.slice(1)}
-                                            </button>
-                                        ))}
+                                        {(['daily', 'weekly', 'biweekly', 'monthly'] as const).map(
+                                            (f) => (
+                                                <button
+                                                    key={f}
+                                                    onClick={() => setFrequency(f)}
+                                                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                                        frequency === f
+                                                            ? 'bg-blue-500/20 border-blue-500 text-blue-300'
+                                                            : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
+                                                    }`}
+                                                >
+                                                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                                                </button>
+                                            )
+                                        )}
                                     </div>
                                 </div>
 
@@ -795,7 +874,8 @@ export default function DiscoverySettingsClient() {
                                 {profile?.schedule?.nextRunAt && (
                                     <div className="flex items-center gap-2 text-sm text-slate-400">
                                         <CheckCircle2 size={14} className="text-green-400" />
-                                        Next sweep: {new Date(profile.schedule.nextRunAt).toLocaleString()}
+                                        Next sweep:{' '}
+                                        {new Date(profile.schedule.nextRunAt).toLocaleString()}
                                     </div>
                                 )}
                             </div>
@@ -824,7 +904,9 @@ export default function DiscoverySettingsClient() {
                                 <span className="text-2xl">🎮</span>
                                 <div>
                                     <div className="text-sm font-medium text-white">Discord</div>
-                                    <div className="text-xs text-slate-500">Post to your Discord server</div>
+                                    <div className="text-xs text-slate-500">
+                                        Post to your Discord server
+                                    </div>
                                 </div>
                             </div>
                             <button
@@ -847,7 +929,9 @@ export default function DiscoverySettingsClient() {
                                 <span className="text-2xl">📱</span>
                                 <div>
                                     <div className="text-sm font-medium text-white">In-App</div>
-                                    <div className="text-xs text-slate-500">View in Discover page</div>
+                                    <div className="text-xs text-slate-500">
+                                        View in Discover page
+                                    </div>
                                 </div>
                             </div>
                             <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
@@ -861,7 +945,11 @@ export default function DiscoverySettingsClient() {
                 <div className="flex items-center justify-between pt-4">
                     <button
                         onClick={handleRunSweep}
-                        disabled={isRunningSwep || !businessDescription || targetingCriteria.industries.length === 0}
+                        disabled={
+                            isRunningSwep ||
+                            !businessDescription ||
+                            targetingCriteria.industries.length === 0
+                        }
                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isRunningSwep ? (
@@ -890,8 +978,9 @@ export default function DiscoverySettingsClient() {
                 <div className="flex items-start gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                     <AlertCircle size={20} className="text-green-400 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-green-200">
-                        <strong>Google Places Active:</strong> Discovery sweeps now pull real business data from Google Places API. 
-                        Configure your targeting criteria above and run a sweep to find leads matching your ideal customer profile.
+                        <strong>Google Places Active:</strong> Discovery sweeps now pull real
+                        business data from Google Places API. Configure your targeting criteria
+                        above and run a sweep to find leads matching your ideal customer profile.
                     </div>
                 </div>
             </div>

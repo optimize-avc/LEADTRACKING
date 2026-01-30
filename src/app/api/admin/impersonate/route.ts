@@ -1,9 +1,9 @@
 /**
  * Admin Impersonation API
- * 
+ *
  * Allows super admins to impersonate users for support purposes.
  * Creates a custom token that allows signing in as another user.
- * 
+ *
  * SECURITY: All impersonation events are logged in audit trail.
  */
 
@@ -14,16 +14,14 @@ import { RATE_LIMITS } from '@/lib/rate-limit';
 import { ServerAuditService } from '@/lib/firebase/server-audit';
 
 // Super admin emails
-const SUPER_ADMIN_EMAILS = [
-    'admin@avcpp.com',
-    'blazehaze4201980@gmail.com',
-    'optimize@avcpp.com',
-];
+const SUPER_ADMIN_EMAILS = ['admin@avcpp.com', 'blazehaze4201980@gmail.com', 'optimize@avcpp.com'];
 
 /**
  * Verify user is a super admin
  */
-async function verifySuperAdmin(authHeader: string | null): Promise<{ uid: string; email: string } | null> {
+async function verifySuperAdmin(
+    authHeader: string | null
+): Promise<{ uid: string; email: string } | null> {
     if (!authHeader?.startsWith('Bearer ')) {
         return null;
     }
@@ -49,7 +47,7 @@ async function verifySuperAdmin(authHeader: string | null): Promise<{ uid: strin
 /**
  * POST /api/admin/impersonate
  * Generate a custom token for impersonating a user
- * 
+ *
  * Body: { targetUserId: string, reason: string }
  */
 export async function POST(request: NextRequest) {
@@ -116,9 +114,10 @@ export async function POST(request: NextRequest) {
             targetCompanyId,
             reason,
             timestamp: new Date(),
-            ipAddress: request.headers.get('x-forwarded-for') || 
-                       request.headers.get('x-real-ip') || 
-                       'unknown',
+            ipAddress:
+                request.headers.get('x-forwarded-for') ||
+                request.headers.get('x-real-ip') ||
+                'unknown',
         });
 
         return NextResponse.json({
@@ -163,7 +162,7 @@ export async function GET(request: NextRequest) {
             .limit(limit)
             .get();
 
-        const logs = snapshot.docs.map(doc => ({
+        const logs = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
             timestamp: doc.data().timestamp?.toDate?.()?.toISOString(),

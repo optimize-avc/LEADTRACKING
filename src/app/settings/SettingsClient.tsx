@@ -268,7 +268,9 @@ export default function SettingsClient() {
                                         Subscription & Billing
                                     </h3>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-sm text-slate-400">Current Plan:</span>
+                                        <span className="text-sm text-slate-400">
+                                            Current Plan:
+                                        </span>
                                         <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 uppercase text-[10px] font-bold tracking-wider">
                                             {profile?.tier || 'Free'}
                                         </Badge>

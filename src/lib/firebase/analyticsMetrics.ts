@@ -184,6 +184,25 @@ export const AnalyticsMetricsService = {
             this.getCompanyLeads(companyId, periodStart, periodEnd),
         ]);
 
+        // Find any repIds not in team and fetch their profiles
+        const allRepIds = new Set(currentMetrics.map((m) => m.repId));
+        const missingRepIds = [...allRepIds].filter((id) => !teamMembers.has(id));
+
+        // Fetch missing user profiles in parallel
+        const missingProfiles = await Promise.all(
+            missingRepIds.map(async (repId) => {
+                const profile = await this.getUserProfile(repId);
+                return { repId, profile };
+            })
+        );
+
+        // Add missing profiles to teamMembers map
+        missingProfiles.forEach(({ repId, profile }) => {
+            if (profile) {
+                teamMembers.set(repId, profile);
+            }
+        });
+
         // Aggregate current period metrics
         const currentAgg = this.aggregateMetrics(currentMetrics);
         const previousAgg = this.aggregateMetrics(previousMetrics);
@@ -260,6 +279,7 @@ export const AnalyticsMetricsService = {
 
     /**
      * Get team members for a company
+     * Falls back to user profiles if team member data not found
      */
     async getTeamMembers(
         companyId: string
@@ -272,12 +292,44 @@ export const AnalyticsMetricsService = {
         snapshot.docs.forEach((doc) => {
             const data = doc.data();
             members.set(doc.id, {
-                name: data.name || data.email || 'Unknown',
-                avatar: data.avatar,
+                name: data.name || data.displayName || data.email || 'Unknown',
+                avatar: data.avatar || data.photoURL,
             });
         });
 
         return members;
+    },
+
+    /**
+     * Get user profile as fallback for team member lookup
+     */
+    async getUserProfile(userId: string): Promise<{ name: string; avatar?: string } | null> {
+        const db = getFirebaseDb();
+        const userRef = doc(db, 'users', userId, 'profile', 'main');
+        const { getDoc } = await import('firebase/firestore');
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+            const data = userDoc.data();
+            return {
+                name: data.displayName || data.name || data.email || 'Unknown',
+                avatar: data.photoURL || data.avatar,
+            };
+        }
+
+        // Also try the users/{userId} document directly
+        const userDirectRef = doc(db, 'users', userId);
+        const userDirectDoc = await getDoc(userDirectRef);
+
+        if (userDirectDoc.exists()) {
+            const data = userDirectDoc.data();
+            return {
+                name: data.displayName || data.name || data.email || 'Unknown',
+                avatar: data.photoURL || data.avatar,
+            };
+        }
+
+        return null;
     },
 
     /**

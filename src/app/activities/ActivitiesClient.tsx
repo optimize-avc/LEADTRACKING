@@ -1,12 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { EnhancedActivitiesService } from '@/lib/firebase/enhancedActivities';
 import { Activity } from '@/types';
 import { Phone, Mail, Calendar, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+
+// Default daily targets (could be made configurable per user/company)
+const DEFAULT_TARGETS = {
+    dials: 50,
+    talkTimeMinutes: 60,
+};
 
 export default function ActivitiesClient() {
     const { user, profile } = useAuth();
@@ -26,6 +32,25 @@ export default function ActivitiesClient() {
     });
 
     const companyId = profile?.companyId || 'default';
+
+    // Calculate today's stats from activities
+    const todayStats = useMemo(() => {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayTimestamp = todayStart.getTime();
+
+        const todayActivities = activities.filter((a) => a.timestamp >= todayTimestamp);
+        const calls = todayActivities.filter((a) => a.type === 'call');
+        const totalTalkTime = calls.reduce((sum, a) => sum + (a.duration || 0), 0);
+
+        return {
+            dials: calls.length,
+            talkTimeSeconds: totalTalkTime,
+            talkTimeMinutes: Math.round(totalTalkTime / 60),
+            emails: todayActivities.filter((a) => a.type === 'email').length,
+            meetings: todayActivities.filter((a) => a.type === 'meeting').length,
+        };
+    }, [activities]);
 
     // Fetch activities function
     const fetchActivities = async () => {
@@ -273,19 +298,34 @@ export default function ActivitiesClient() {
                             <div>
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-slate-400">Dials</span>
-                                    <span className="text-white">45/50</span>
+                                    <span className="text-white">
+                                        {todayStats.dials}/{DEFAULT_TARGETS.dials}
+                                    </span>
                                 </div>
                                 <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-blue-500 w-[90%]"></div>
+                                    <div
+                                        className="h-full bg-blue-500 transition-all duration-500"
+                                        style={{
+                                            width: `${Math.min((todayStats.dials / DEFAULT_TARGETS.dials) * 100, 100)}%`,
+                                        }}
+                                    />
                                 </div>
                             </div>
                             <div>
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-slate-400">Talk Time</span>
-                                    <span className="text-white">52m/60m</span>
+                                    <span className="text-white">
+                                        {todayStats.talkTimeMinutes}m/
+                                        {DEFAULT_TARGETS.talkTimeMinutes}m
+                                    </span>
                                 </div>
                                 <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-500 w-[85%]"></div>
+                                    <div
+                                        className="h-full bg-green-500 transition-all duration-500"
+                                        style={{
+                                            width: `${Math.min((todayStats.talkTimeMinutes / DEFAULT_TARGETS.talkTimeMinutes) * 100, 100)}%`,
+                                        }}
+                                    />
                                 </div>
                             </div>
                         </div>

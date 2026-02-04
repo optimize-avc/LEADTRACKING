@@ -80,9 +80,22 @@ export const EnhancedActivitiesService = {
         }
 
         // Run as transaction to ensure atomicity
+        // IMPORTANT: Firestore requires all reads before all writes
         const activityId = await runTransaction(db, async (transaction) => {
-            // 1. Create the activity document
+            // Prepare document references
             const activityDocRef = doc(activityCollectionRef);
+            const today = formatDateKey(new Date());
+            const metricsId = `${today}_${userId}`;
+            const metricsRef = doc(db, 'companies', companyId, 'dailyMetrics', metricsId);
+            const leadRef = activity.leadId ? doc(db, 'leads', activity.leadId) : null;
+
+            // ====== PHASE 1: ALL READS FIRST ======
+            // Read metrics document (needed to check if it exists)
+            const metricsDoc = await transaction.get(metricsRef);
+
+            // ====== PHASE 2: ALL WRITES AFTER ======
+
+            // 1. Create the activity document
             transaction.set(activityDocRef, {
                 ...activity,
                 repId: userId,
@@ -90,10 +103,6 @@ export const EnhancedActivitiesService = {
             });
 
             // 2. Update daily metrics for analytics
-            const today = formatDateKey(new Date());
-            const metricsId = `${today}_${userId}`;
-            const metricsRef = doc(db, 'companies', companyId, 'dailyMetrics', metricsId);
-
             // Build the metrics updates based on activity type
             const metricsUpdates: Record<string, unknown> = {};
 
@@ -138,9 +147,6 @@ export const EnhancedActivitiesService = {
 
             // Only update metrics if we have updates
             if (Object.keys(metricsUpdates).length > 0) {
-                // We need to check if the document exists first
-                const metricsDoc = await transaction.get(metricsRef);
-
                 if (metricsDoc.exists()) {
                     transaction.update(metricsRef, metricsUpdates);
                 } else {
@@ -170,8 +176,7 @@ export const EnhancedActivitiesService = {
             }
 
             // 3. Update lead's lastContact if associated with a lead
-            if (activity.leadId) {
-                const leadRef = doc(db, 'leads', activity.leadId);
+            if (leadRef) {
                 transaction.update(leadRef, {
                     lastContact: activity.timestamp,
                     updatedAt: Date.now(),

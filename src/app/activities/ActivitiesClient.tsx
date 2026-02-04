@@ -4,15 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { addActivity, getActivities } from '@/lib/firebase/services';
+import { EnhancedActivitiesService } from '@/lib/firebase/enhancedActivities';
 import { Activity } from '@/types';
-import { Phone, Mail, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
+import { Phone, Mail, Calendar, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function ActivitiesClient() {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [activeTab, setActiveTab] = useState<'call' | 'email' | 'meeting'>('call');
     const [activities, setActivities] = useState<Activity[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(
         null
     );
@@ -24,20 +25,30 @@ export default function ActivitiesClient() {
         notes: '',
     });
 
-    // Fetch activities on mount
-    useEffect(() => {
-        async function fetchActivities() {
-            if (user?.uid) {
-                try {
-                    const data = await getActivities(user.uid);
-                    setActivities(data.slice(0, 10)); // Show last 10
-                } catch (error) {
-                    console.error('Failed to fetch activities:', error);
-                }
+    const companyId = profile?.companyId || 'default';
+
+    // Fetch activities function
+    const fetchActivities = async () => {
+        if (user?.uid) {
+            try {
+                const data = await EnhancedActivitiesService.getActivities(user.uid, 20);
+                setActivities(data);
+            } catch (error) {
+                console.error('Failed to fetch activities:', error);
             }
         }
+    };
+
+    // Fetch activities on mount and when user changes
+    useEffect(() => {
         fetchActivities();
     }, [user?.uid]);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await fetchActivities();
+        setIsRefreshing(false);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,21 +63,23 @@ export default function ActivitiesClient() {
 
         try {
             const userId = user?.uid || 'demo-user';
-            const activity: Omit<Activity, 'id'> = {
-                type: activeTab,
-                outcome: formData.outcome as Activity['outcome'],
-                timestamp: Date.now(),
-                repId: userId,
-                notes: `${formData.leadName}: ${formData.notes}`,
-            };
 
-            await addActivity(userId, activity);
+            // Use EnhancedActivitiesService for logging
+            await EnhancedActivitiesService.logActivity({
+                userId,
+                companyId,
+                activity: {
+                    type: activeTab,
+                    outcome: formData.outcome as Activity['outcome'],
+                    timestamp: Date.now(),
+                    repId: userId,
+                    notes: `${formData.leadName}: ${formData.notes}`,
+                    visibility: 'private',
+                },
+            });
 
             // Refresh activities list
-            if (user?.uid) {
-                const data = await getActivities(user.uid);
-                setActivities(data.slice(0, 10));
-            }
+            await fetchActivities();
 
             // Reset form
             setFormData({ leadName: '', outcome: 'connected', notes: '' });
@@ -282,7 +295,19 @@ export default function ActivitiesClient() {
                 {/* Recent Activity List */}
                 <div className="flex-1">
                     <GlassCard>
-                        <h3 className="font-semibold text-white mb-4">Recent History</h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-semibold text-white">Recent History</h3>
+                            <button
+                                onClick={handleRefresh}
+                                disabled={isRefreshing}
+                                className="p-2 text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+                                title="Refresh activities"
+                            >
+                                <RefreshCw
+                                    className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                                />
+                            </button>
+                        </div>
                         <div className="space-y-0 text-sm">
                             {activities.length === 0 ? (
                                 <div className="text-center py-10 text-slate-500">

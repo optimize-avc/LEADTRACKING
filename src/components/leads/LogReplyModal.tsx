@@ -2,19 +2,28 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Lead } from '@/types';
-import { ActivitiesService, LeadsService } from '@/lib/firebase/services';
+import { EnhancedActivitiesService } from '@/lib/firebase/enhancedActivities';
+import { LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface LogReplyModalProps {
     lead: Lead;
     userId: string;
+    companyId?: string;
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogReplyModalProps) {
+export function LogReplyModal({
+    lead,
+    userId,
+    companyId,
+    isOpen,
+    onClose,
+    onSuccess,
+}: LogReplyModalProps) {
     const [replyContent, setReplyContent] = useState('');
     const [sentiment, setSentiment] = useState<'positive' | 'neutral' | 'negative'>('positive');
     const [nextStep, setNextStep] = useState('');
@@ -51,19 +60,24 @@ export function LogReplyModal({ lead, userId, isOpen, onClose, onSuccess }: LogR
 
         setIsSaving(true);
         try {
-            // Log the reply as an email activity
-            await ActivitiesService.logActivity(userId, {
-                type: 'email',
-                outcome:
-                    sentiment === 'positive'
-                        ? 'connected'
-                        : sentiment === 'negative'
-                          ? 'none'
-                          : 'connected',
-                leadId: lead.id,
-                notes: `📩 REPLY RECEIVED (${sentiment}): ${replyContent}`,
-                timestamp: Date.now(),
-                repId: userId,
+            // Log the reply as an email activity with analytics
+            await EnhancedActivitiesService.logActivity({
+                userId,
+                companyId: companyId || 'default',
+                activity: {
+                    type: 'email',
+                    outcome:
+                        sentiment === 'positive'
+                            ? 'connected'
+                            : sentiment === 'negative'
+                              ? 'none'
+                              : 'connected',
+                    leadId: lead.id,
+                    notes: `📩 REPLY RECEIVED (${sentiment}): ${replyContent}`,
+                    timestamp: Date.now(),
+                    repId: userId,
+                    visibility: 'private',
+                },
             });
 
             // Update lead

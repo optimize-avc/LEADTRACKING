@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Lead, ActivityOutcome } from '@/types';
-import { ActivitiesService, LeadsService } from '@/lib/firebase/services';
+import { EnhancedActivitiesService } from '@/lib/firebase/enhancedActivities';
+import { LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface LogCallModalProps {
     lead: Lead;
     userId: string;
+    companyId?: string;
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
@@ -23,7 +25,14 @@ const OUTCOMES: { value: ActivityOutcome; label: string; icon: string; statusUpd
     { value: 'qualified', label: 'Qualified', icon: '⭐', statusUpdate: 'Qualified' },
 ];
 
-export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCallModalProps) {
+export function LogCallModal({
+    lead,
+    userId,
+    companyId,
+    isOpen,
+    onClose,
+    onSuccess,
+}: LogCallModalProps) {
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
     const [outcome, setOutcome] = useState<ActivityOutcome>('connected');
@@ -92,15 +101,35 @@ export function LogCallModal({ lead, userId, isOpen, onClose, onSuccess }: LogCa
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            // Log the call activity
-            await ActivitiesService.logCall(
-                userId,
-                lead.id,
-                outcome,
-                elapsedSeconds,
-                notes || undefined,
-                shareWithTeam
-            );
+            // Log the call activity with analytics tracking
+            if (companyId) {
+                await EnhancedActivitiesService.logCall({
+                    userId,
+                    companyId,
+                    leadId: lead.id,
+                    outcome,
+                    duration: elapsedSeconds,
+                    notes: notes || undefined,
+                    isPublic: shareWithTeam,
+                    leadValue: lead.value,
+                });
+            } else {
+                // Fallback for users without company (shouldn't happen in production)
+                await EnhancedActivitiesService.logActivity({
+                    userId,
+                    companyId: 'default',
+                    activity: {
+                        type: 'call',
+                        outcome,
+                        leadId: lead.id,
+                        duration: elapsedSeconds,
+                        notes: notes || undefined,
+                        timestamp: Date.now(),
+                        repId: userId,
+                        visibility: shareWithTeam ? 'public' : 'private',
+                    },
+                });
+            }
 
             // Update lead if outcome warrants it
             const selectedOutcome = OUTCOMES.find((o) => o.value === outcome);

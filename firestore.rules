@@ -134,6 +134,18 @@ service cloud.firestore {
         allow create: if userBelongsToCompany(companyId);
         allow update, delete: if false;
       }
+      
+      // --------------------------------------------------------------------------
+      // DAILY METRICS SUBCOLLECTION (Analytics Dashboard)
+      // --------------------------------------------------------------------------
+      match /dailyMetrics/{metricsId} {
+        // Company members can read all metrics (for leaderboard)
+        allow read: if userBelongsToCompany(companyId);
+        // Company members can create/update their own metrics
+        allow create, update: if userBelongsToCompany(companyId);
+        // Metrics cannot be deleted (historical data integrity)
+        allow delete: if false;
+      }
     }
     
     // ==========================================================================

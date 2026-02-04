@@ -1,6 +1,34 @@
 {
     "indexes": [
         {
+            "collectionGroup": "dailyMetrics",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "repId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "leads",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "companyId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "updatedAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
             "collectionGroup": "leads",
             "queryScope": "COLLECTION",
             "fields": [

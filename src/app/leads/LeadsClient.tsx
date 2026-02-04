@@ -16,6 +16,7 @@ import { ImportCSVModal } from '@/components/leads/ImportCSVModal';
 import { AIEmailDraft } from '@/components/ai/AIEmailDraft';
 import { LeadDetailDrawer } from '@/components/leads/LeadDetailDrawer';
 import { LeadsService, ActivitiesService } from '@/lib/firebase/services';
+import { EnhancedActivitiesService } from '@/lib/firebase/enhancedActivities';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { toast } from 'sonner';
 import { analytics } from '@/lib/analytics';
@@ -108,7 +109,7 @@ export default function LeadsClient() {
         'value-desc' | 'value-asc' | 'newest' | 'oldest' | 'velocity'
     >('newest');
     const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid');
-    const [showFilters, setShowFilters] = useState(false);
+    const [_showFilters, _setShowFilters] = useState(false);
 
     // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -248,7 +249,17 @@ export default function LeadsClient() {
         }
 
         try {
-            await LeadsService.createLead(user.uid, leadData);
+            await LeadsService.createLead(user.uid, leadData, profile?.companyId);
+
+            // Record lead creation in analytics metrics
+            if (profile?.companyId) {
+                await EnhancedActivitiesService.recordLeadCreated(
+                    profile.companyId,
+                    user.uid,
+                    leadData.value || 0
+                );
+            }
+
             toast.success('Lead created successfully!');
             analytics.track('lead_added', { mode: 'prod', industry: leadData.industry });
             loadLeads();
@@ -612,7 +623,17 @@ export default function LeadsClient() {
         let imported = 0;
         for (const lead of newLeads) {
             try {
-                await LeadsService.createLead(user.uid, lead);
+                await LeadsService.createLead(user.uid, lead, profile?.companyId);
+
+                // Record lead creation in analytics metrics
+                if (profile?.companyId) {
+                    await EnhancedActivitiesService.recordLeadCreated(
+                        profile.companyId,
+                        user.uid,
+                        lead.value || 0
+                    );
+                }
+
                 imported++;
             } catch (error) {
                 console.error('Failed to import lead:', lead.companyName, error);
@@ -1356,6 +1377,7 @@ export default function LeadsClient() {
                             <LogCallModal
                                 lead={selectedLead}
                                 userId={user.uid}
+                                companyId={profile?.companyId}
                                 isOpen={isCallModalOpen}
                                 onClose={() => {
                                     setIsCallModalOpen(false);
@@ -1367,6 +1389,7 @@ export default function LeadsClient() {
                             <LogMeetingModal
                                 lead={selectedLead}
                                 userId={user.uid}
+                                companyId={profile?.companyId}
                                 isOpen={isMeetingModalOpen}
                                 onClose={() => {
                                     setIsMeetingModalOpen(false);
@@ -1378,6 +1401,7 @@ export default function LeadsClient() {
                             <LogReplyModal
                                 lead={selectedLead}
                                 userId={user.uid}
+                                companyId={profile?.companyId}
                                 isOpen={isReplyModalOpen}
                                 onClose={() => {
                                     setIsReplyModalOpen(false);

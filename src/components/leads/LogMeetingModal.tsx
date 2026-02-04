@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Lead, ActivityOutcome } from '@/types';
-import { ActivitiesService, LeadsService } from '@/lib/firebase/services';
+import { EnhancedActivitiesService } from '@/lib/firebase/enhancedActivities';
+import { LeadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface LogMeetingModalProps {
     lead: Lead;
     userId: string;
+    companyId?: string;
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
@@ -33,6 +35,7 @@ const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120];
 export function LogMeetingModal({
     lead,
     userId,
+    companyId,
     isOpen,
     onClose,
     onSuccess,
@@ -43,7 +46,7 @@ export function LogMeetingModal({
     const [notes, setNotes] = useState('');
     const [meetingDate, setMeetingDate] = useState('');
     const [meetingTime, setMeetingTime] = useState('');
-    const [shareWithTeam, setShareWithTeam] = useState(false); // Default private
+    const [shareWithTeam, setShareWithTeam] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     const { containerRef } = useFocusTrap(isOpen);
@@ -86,18 +89,33 @@ export function LogMeetingModal({
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            // Calculate timestamp from date and time
-            const dateTime = new Date(`${meetingDate}T${meetingTime}`);
-            const timestamp = dateTime.getTime();
-
-            // Log the meeting activity
-            await ActivitiesService.logMeeting(
-                userId,
-                lead.id,
-                outcome,
-                `${meetingType.toUpperCase()} meeting. ${notes}`,
-                shareWithTeam
-            );
+            // Log the meeting activity with analytics tracking
+            if (companyId) {
+                await EnhancedActivitiesService.logMeeting({
+                    userId,
+                    companyId,
+                    leadId: lead.id,
+                    outcome,
+                    notes: `${meetingType.toUpperCase()} meeting (${duration} min). ${notes}`,
+                    isPublic: shareWithTeam,
+                    pipelineValue: lead.value,
+                });
+            } else {
+                // Fallback for users without company
+                await EnhancedActivitiesService.logActivity({
+                    userId,
+                    companyId: 'default',
+                    activity: {
+                        type: 'meeting',
+                        outcome,
+                        leadId: lead.id,
+                        notes: `${meetingType.toUpperCase()} meeting (${duration} min). ${notes}`,
+                        timestamp: Date.now(),
+                        repId: userId,
+                        visibility: shareWithTeam ? 'public' : 'private',
+                    },
+                });
+            }
 
             // Update lead based on outcome
             const selectedOutcome = MEETING_OUTCOMES.find((o) => o.value === outcome);

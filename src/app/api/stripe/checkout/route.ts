@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe/server';
+import { getStripe } from '@/lib/stripe/server';
 
 interface CheckoutRequest {
     userId: string;
@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         }
 
         // 2. Create Stripe Checkout Session
+        const stripe = getStripe();
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             billing_address_collection: 'auto',

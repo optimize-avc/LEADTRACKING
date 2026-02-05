@@ -94,10 +94,39 @@ INSTRUCTIONS:
 1. Synthesize ALL the data above into actionable insights
 2. Be specific - cite actual findings from the search results
 3. If you reference user's enablement materials, mention them by name
-4. Score digital presence and AI readiness objectively (0-100)
-5. Pain points should be REAL problems you can identify from the data
-6. Opportunities should be specific ways the user could help this company
-7. Talking points should be conversation starters based on actual findings
+4. Pain points should be REAL problems you can identify from the data
+5. Opportunities should be specific ways the user could help this company
+6. Talking points should be conversation starters based on actual findings
+
+SCORING RUBRIC - Use these exact criteria for consistent scores:
+
+DIGITAL PRESENCE SCORE (0-100) - Add points for each:
+- Has a website: +20
+- Website loads/works: +10
+- Mobile responsive: +10
+- Has SSL (https): +5
+- Professional design (not template/outdated): +15
+- Has social profiles (LinkedIn, Twitter, FB): +5 each (max +15)
+- Google rating 4.0+: +10
+- Google rating 4.5+: +5 (additional)
+- 50+ Google reviews: +5
+- 100+ Google reviews: +5 (additional)
+- Appears in search results: +5 (per quality mention, max +10)
+
+AI READINESS SCORE (0-100) - Add points for each:
+- Has a modern website (not early 2000s design): +15
+- Uses any automation (chatbots, forms, booking): +15
+- Has CRM/marketing automation mentions: +15
+- Uses cloud services: +10
+- Has mobile app: +10
+- Active on social media: +10
+- Shows tech-forward culture in content: +10
+- Already using AI tools: +15
+- Industry is traditionally slow to adopt tech: -10
+- Small local business with no tech signals: -10
+
+Round final scores to nearest 5 (e.g., 72 → 70, 78 → 80).
+Be deterministic: same business data MUST produce same scores.
 
 Return ONLY a valid JSON object with this EXACT structure:
 {

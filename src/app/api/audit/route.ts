@@ -69,13 +69,23 @@ async function tryInitializeVertexAI(): Promise<unknown> {
 }
 
 async function generateWithGemini(prompt: string): Promise<string> {
+    // Deterministic generation config for consistent scoring
+    const generationConfig = {
+        temperature: 0, // Deterministic output - same input = same output
+        topP: 1,
+        topK: 1,
+    };
+
     // Try Vertex AI first
     try {
         const vertexAI = await tryInitializeVertexAI();
         if (vertexAI) {
             const model = (
                 vertexAI as unknown as {
-                    getGenerativeModel: (config: { model: string }) => {
+                    getGenerativeModel: (config: {
+                        model: string;
+                        generationConfig?: typeof generationConfig;
+                    }) => {
                         generateContent: (prompt: string) => Promise<{
                             response?: {
                                 candidates?: Array<{
@@ -85,7 +95,7 @@ async function generateWithGemini(prompt: string): Promise<string> {
                         }>;
                     };
                 }
-            ).getGenerativeModel({ model: 'gemini-2.5-flash' });
+            ).getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig });
             const result = await model.generateContent(prompt);
             return result.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         }
@@ -102,7 +112,10 @@ async function generateWithGemini(prompt: string): Promise<string> {
         genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({
+        model: 'gemini-2.5-flash',
+        generationConfig,
+    });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();

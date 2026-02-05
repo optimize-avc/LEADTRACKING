@@ -280,8 +280,9 @@ async function callGemini(
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    temperature: 0.1, // Low temp for consistent scoring
-                    topP: 0.95,
+                    temperature: 0, // Deterministic output for consistent scoring
+                    topP: 1,
+                    topK: 1,
                     maxOutputTokens: 4096,
                 },
             }),
@@ -322,7 +323,7 @@ async function callOpenAI(
         body: JSON.stringify({
             model,
             messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1, // Low temp for consistent scoring
+            temperature: 0, // Deterministic output for consistent scoring
             response_format: { type: 'json_object' },
         }),
     });

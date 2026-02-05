@@ -39,6 +39,7 @@ export async function POST(req: Request) {
                 },
             ],
             mode: 'subscription',
+            allow_promotion_codes: true, // Enable promo code field (e.g., DEV1 for 100% off)
             success_url: `${req.headers.get('origin')}/settings?success=true`,
             cancel_url: `${req.headers.get('origin')}/pricing?canceled=true`,
             metadata: {

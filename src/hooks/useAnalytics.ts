@@ -245,7 +245,17 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRes
             }
         } catch (err) {
             console.error('Failed to fetch analytics:', err);
-            setError(err instanceof Error ? err : new Error('Failed to fetch analytics'));
+
+            // For permission errors, gracefully fall back to demo data without showing error
+            // This is expected for new users or users without sufficient activity data
+            const isPermissionError =
+                err instanceof Error &&
+                (err.message.includes('permission') || err.message.includes('Permission'));
+
+            if (!isPermissionError) {
+                // Only set error for unexpected failures (network, etc.)
+                setError(err instanceof Error ? err : new Error('Failed to fetch analytics'));
+            }
 
             // On error, fall back to demo data
             const now = new Date();

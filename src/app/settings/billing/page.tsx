@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
     CreditCard,
@@ -23,11 +23,13 @@ import {
     CheckCircle,
     AlertCircle,
     Loader2,
+    RefreshCw,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { useCompanyUsage } from '@/hooks/useCompanySettings';
 import { PLAN_INFO, formatLimit } from '@/lib/plans';
 import { toast } from 'sonner';
 
@@ -42,22 +44,113 @@ export default function BillingPage() {
         remainingEmailsThisMonth,
         isLoading,
     } = usePlanLimits();
+    const { refresh: refreshUsage } = useCompanyUsage();
 
     const [isPortalLoading, setIsPortalLoading] = useState(false);
+    const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
+    const [isSyncingUsage, setIsSyncingUsage] = useState(false);
 
     const planInfo = PLAN_INFO[tier];
 
     const handleManageBilling = async () => {
-        // TODO: Implement actual Stripe Customer Portal
-        toast.info('Stripe billing portal coming soon!');
-        // Placeholder - in production this will redirect to Stripe
+        if (!user) {
+            toast.error('You must be logged in');
+            return;
+        }
+
+        setIsPortalLoading(true);
+        try {
+            const token = await user.getIdToken();
+            const response = await fetch('/api/stripe/portal', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || 'Failed to access billing portal');
+            }
+
+            const { url } = await response.json();
+            if (url) {
+                window.location.href = url;
+            } else {
+                toast.info('No active subscription found. Subscribe first to access the portal.');
+            }
+        } catch (error) {
+            console.error('Portal error:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to open billing portal');
+        } finally {
+            setIsPortalLoading(false);
+        }
     };
 
-    const handleUpgrade = () => {
-        // TODO: Implement actual upgrade flow with Stripe Checkout
-        toast.info('Plan upgrades coming soon! Contact support for early access.');
-        // window.location.href = '/pricing';
+    const handleUpgrade = async () => {
+        if (!user) {
+            window.location.href = '/login?redirect=/pricing';
+            return;
+        }
+
+        setIsUpgradeLoading(true);
+        try {
+            const response = await fetch('/api/stripe/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    tier: 'Pro',
+                    email: user.email,
+                }),
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || 'Failed to create checkout session');
+            }
+
+            const { url } = await response.json();
+            if (url) {
+                window.location.href = url;
+            }
+        } catch (error) {
+            console.error('Checkout error:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to start checkout');
+        } finally {
+            setIsUpgradeLoading(false);
+        }
     };
+
+    const handleSyncUsage = useCallback(async () => {
+        if (!user) return;
+
+        setIsSyncingUsage(true);
+        try {
+            const token = await user.getIdToken();
+            const response = await fetch('/api/company/usage', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to sync usage');
+            }
+
+            const { usage: newUsage } = await response.json();
+            await refreshUsage();
+            toast.success(`Usage synced! ${newUsage.leadCount} leads found.`);
+        } catch (error) {
+            console.error('Sync error:', error);
+            toast.error('Failed to sync usage data');
+        } finally {
+            setIsSyncingUsage(false);
+        }
+    }, [user, refreshUsage]);
 
     if (isLoading) {
         return (
@@ -128,9 +221,14 @@ export default function BillingPage() {
                                 {tier !== 'enterprise' && (
                                     <button
                                         onClick={handleUpgrade}
-                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:opacity-90 text-white rounded-lg font-medium transition-all"
+                                        disabled={isUpgradeLoading}
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:opacity-90 text-white rounded-lg font-medium transition-all disabled:opacity-50"
                                     >
-                                        <Zap className="w-4 h-4" />
+                                        {isUpgradeLoading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Zap className="w-4 h-4" />
+                                        )}
                                         Upgrade Plan
                                     </button>
                                 )}
@@ -160,10 +258,23 @@ export default function BillingPage() {
                     transition={{ delay: 0.1 }}
                 >
                     <GlassCard>
-                        <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-emerald-400" />
-                            Usage This Period
-                        </h3>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                                Usage This Period
+                            </h3>
+                            <button
+                                onClick={handleSyncUsage}
+                                disabled={isSyncingUsage}
+                                className="flex items-center gap-2 px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg border border-white/10 transition-all disabled:opacity-50"
+                                title="Sync usage data with actual counts"
+                            >
+                                <RefreshCw
+                                    className={`w-3 h-3 ${isSyncingUsage ? 'animate-spin' : ''}`}
+                                />
+                                Sync
+                            </button>
+                        </div>
 
                         <div className="space-y-6">
                             {/* Leads Meter */}

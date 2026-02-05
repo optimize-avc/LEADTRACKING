@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe/server';
-import { getAdminDb } from '@/lib/firebase/admin';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 
 /**
  * Stripe Customer Portal API
@@ -12,9 +13,42 @@ import { getAdminDb } from '@/lib/firebase/admin';
  * - Cancel subscription
  * - Download invoices
  */
-export async function POST(req: Request) {
+
+async function verifyAuth() {
+    const headersList = await headers();
+    const authHeader = headersList.get('Authorization');
+
+    if (!authHeader?.startsWith('Bearer ')) {
+        return null;
+    }
+
+    const token = authHeader.substring(7);
+
     try {
-        const { userId } = await req.json();
+        const auth = getAdminAuth();
+        const decodedToken = await auth.verifyIdToken(token);
+        return decodedToken;
+    } catch (error) {
+        console.error('[Stripe Portal] Token verification failed:', error);
+        return null;
+    }
+}
+
+export async function POST(req: NextRequest) {
+    try {
+        // Verify auth from header
+        const decodedToken = await verifyAuth();
+
+        // Fall back to body for backward compatibility
+        let userId = decodedToken?.uid;
+        if (!userId) {
+            try {
+                const body = await req.json();
+                userId = body.userId;
+            } catch {
+                // No body, that's fine
+            }
+        }
 
         if (!userId) {
             return new NextResponse('Unauthorized', { status: 401 });

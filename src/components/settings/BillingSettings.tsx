@@ -63,17 +63,28 @@ export function BillingSettings() {
         setError(null);
 
         try {
+            const token = await user.getIdToken();
+
             const response = await fetch('/api/stripe/portal', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.uid }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
             });
 
             if (!response.ok) {
-                throw new Error('Failed to create portal session');
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to create portal session');
             }
 
             const data = await response.json();
+
+            // Handle redirect response (no subscription)
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
 
             if (data.url) {
                 window.location.href = data.url;

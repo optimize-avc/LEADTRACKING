@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { stripe } from '@/lib/stripe/server';
+import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
 import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
 
 /**
@@ -12,9 +12,15 @@ import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
  * - View billing history
  * - Cancel subscription
  * - Download invoices
+ *
+ * POST /api/stripe/portal
+ * Headers: Authorization: Bearer <firebase-token>
  */
 
-async function verifyAuth() {
+/**
+ * Verify Firebase Auth token from Authorization header
+ */
+async function verifyAuth(): Promise<{ uid: string } | null> {
     const headersList = await headers();
     const authHeader = headersList.get('Authorization');
 
@@ -27,7 +33,7 @@ async function verifyAuth() {
     try {
         const auth = getAdminAuth();
         const decodedToken = await auth.verifyIdToken(token);
-        return decodedToken;
+        return { uid: decodedToken.uid };
     } catch (error) {
         console.error('[Stripe Portal] Token verification failed:', error);
         return null;
@@ -36,30 +42,27 @@ async function verifyAuth() {
 
 export async function POST(req: NextRequest) {
     try {
-        // Verify auth from header
-        const decodedToken = await verifyAuth();
-
-        // Fall back to body for backward compatibility
-        let userId = decodedToken?.uid;
-        if (!userId) {
-            try {
-                const body = await req.json();
-                userId = body.userId;
-            } catch {
-                // No body, that's fine
-            }
+        // Check Stripe configuration
+        if (!isStripeConfigured()) {
+            console.error('[Stripe Portal] Stripe is not configured');
+            return NextResponse.json(
+                { error: 'Payment system is not configured' },
+                { status: 503 }
+            );
         }
 
-        if (!userId) {
-            return new NextResponse('Unauthorized', { status: 401 });
+        // Authenticate user
+        const user = await verifyAuth();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         // Get user's Stripe Customer ID from Firestore
         const db = getAdminDb();
-        const userDoc = await db.collection('users').doc(userId).get();
+        const userDoc = await db.collection('users').doc(user.uid).get();
 
         if (!userDoc.exists) {
-            return new NextResponse('User not found', { status: 404 });
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
         const userData = userDoc.data();
@@ -67,24 +70,42 @@ export async function POST(req: NextRequest) {
 
         if (!customerId) {
             // No Stripe customer yet - redirect to pricing to create subscription
+            console.log(`[Stripe Portal] User ${user.uid} has no Stripe customer ID`);
             return NextResponse.json({
-                url: '/pricing',
+                redirect: '/pricing',
                 message: 'No active subscription found. Please subscribe first.',
             });
         }
 
+        // Get origin for return URL
+        const origin = req.headers.get('origin') || 'http://localhost:3000';
+
         // Create Stripe Customer Portal session
+        const stripe = getStripe();
         const session = await stripe.billingPortal.sessions.create({
             customer: customerId,
-            return_url: `${req.headers.get('origin')}/settings`,
+            return_url: `${origin}/settings`,
         });
+
+        console.log(`[Stripe Portal] Session created for user ${user.uid}`);
 
         return NextResponse.json({ url: session.url });
     } catch (error: unknown) {
-        console.error('[Stripe Portal Error]:', error);
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to create portal session' },
-            { status: 500 }
-        );
+        console.error('[Stripe Portal] Error:', error);
+
+        // Handle specific Stripe errors
+        if (error instanceof Error) {
+            if (error.message.includes('No such customer')) {
+                return NextResponse.json(
+                    {
+                        redirect: '/pricing',
+                        message: 'Customer record not found. Please contact support.',
+                    },
+                    { status: 404 }
+                );
+            }
+        }
+
+        return NextResponse.json({ error: 'Failed to create portal session' }, { status: 500 });
     }
 }

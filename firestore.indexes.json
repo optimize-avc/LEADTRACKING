@@ -1,6 +1,30 @@
 {
     "indexes": [
         {
+            "collectionGroup": "discoveredLeads",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "discoveredAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "discoverySweeps",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "startedAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
             "collectionGroup": "dailyMetrics",
             "queryScope": "COLLECTION",
             "fields": [

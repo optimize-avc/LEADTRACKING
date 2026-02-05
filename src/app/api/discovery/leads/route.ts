@@ -41,12 +41,16 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Build query
-        let query = collectionRef.orderBy('discoveredAt', 'desc');
+        // Build query - filter first, then order
+        // This is the correct order for Firestore composite queries
+        let query: FirebaseFirestore.Query = collectionRef;
 
         if (status) {
             query = query.where('status', '==', status);
         }
+
+        // Order by discoveredAt descending
+        query = query.orderBy('discoveredAt', 'desc');
 
         // Apply pagination
         const snapshot = await query.limit(limitParam + offsetParam).get();
@@ -58,7 +62,7 @@ export async function GET(request: NextRequest) {
         })) as DiscoveredLead[];
 
         // Get total count for the filtered query
-        let totalQuery = collectionRef as FirebaseFirestore.Query;
+        let totalQuery: FirebaseFirestore.Query = collectionRef;
         if (status) {
             totalQuery = totalQuery.where('status', '==', status);
         }
@@ -71,10 +75,24 @@ export async function GET(request: NextRequest) {
             offset: offsetParam,
         });
     } catch (error) {
-        console.error('Error fetching discovered leads:', error);
+        console.error('[Discovery Leads] Error fetching discovered leads:', error);
 
-        // Return empty state instead of 500 for most errors
-        // This provides better UX for edge cases
+        // Check if it's a missing index error
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('index')) {
+            console.error(
+                '[Discovery Leads] Missing Firestore index. Run: firebase deploy --only firestore:indexes'
+            );
+            return NextResponse.json(
+                {
+                    error: 'Database configuration issue. Please contact support.',
+                    _debug: 'Missing Firestore composite index for discoveredLeads',
+                },
+                { status: 500 }
+            );
+        }
+
+        // Return empty state for other errors
         return NextResponse.json({
             leads: [],
             total: 0,
@@ -153,7 +171,7 @@ export async function PATCH(request: NextRequest) {
             }
         } catch (statsError) {
             // Log but don't fail the main operation
-            console.warn('Failed to update discovery stats:', statsError);
+            console.warn('[Discovery Leads] Failed to update discovery stats:', statsError);
         }
 
         const updatedSnap = await leadRef.get();
@@ -162,7 +180,7 @@ export async function PATCH(request: NextRequest) {
             lead: { id: updatedSnap.id, ...updatedSnap.data() },
         });
     } catch (error) {
-        console.error('Error updating lead:', error);
+        console.error('[Discovery Leads] Error updating lead:', error);
         return NextResponse.json({ error: 'Failed to update lead' }, { status: 500 });
     }
 }

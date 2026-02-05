@@ -95,7 +95,7 @@ env:
 
     # Stripe (publishable key is public)
     - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-      value: pk_test_your_publishable_key_here
+      value: pk_live_51RxXjl1FzlzjzbwrpNOyndHbf76eejPLAFk7UH5JTIXFofVhoSCIzujoZTtYzPR6fghN3NeegvOZ6NwHRnyQVem000ZzcuvOao
       availability:
           - BUILD
           - RUNTIME
@@ -116,17 +116,21 @@ env:
     # Run `firebase apphosting:secrets:set <SECRET_NAME>` to add each secret
     # See header comments for full setup guide
 
-    # Stripe Secrets (DISABLED - enable after running firebase apphosting:secrets:set)
-    # - variable: STRIPE_SECRET_KEY
-    #   secret: STRIPE_SECRET_KEY
-    #   availability:
-    #       - RUNTIME
-    # - variable: STRIPE_WEBHOOK_SECRET
-    #   secret: STRIPE_WEBHOOK_SECRET
-    #   availability:
-    #       - RUNTIME
-    # - variable: STRIPE_PRICE_ID_PRO
-    #   secret: STRIPE_PRICE_ID_PRO
+    # Stripe Secrets (LIVE - set via firebase apphosting:secrets:set)
+    - variable: STRIPE_SECRET_KEY
+      secret: STRIPE_SECRET_KEY
+      availability:
+          - RUNTIME
+    - variable: STRIPE_WEBHOOK_SECRET
+      secret: STRIPE_WEBHOOK_SECRET
+      availability:
+          - RUNTIME
+    - variable: STRIPE_PRICE_ID_PRO
+      value: price_1SxMHP1Fzlzjzbwr2eUef6NZ
+      availability:
+          - RUNTIME
+    # - variable: STRIPE_PRICE_ID_VENTURE
+    #   secret: STRIPE_PRICE_ID_VENTURE
     #   availability:
     #       - RUNTIME
     # - variable: STRIPE_PRICE_ID_VENTURE

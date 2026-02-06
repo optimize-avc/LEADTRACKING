@@ -5,8 +5,13 @@ import {
     isValidPhoneNumber,
 } from '@/lib/twilio/twilio-service';
 import { isTwilioConfigured } from '@/lib/twilio/twilio-config';
+import { verifyIdToken } from '@/lib/firebase/admin';
 
-// POST: Initiate an outbound call to a lead
+/**
+ * POST /api/twilio/call - Initiate an outbound call to a lead
+ * 
+ * Requires Authorization: Bearer <firebase-token>
+ */
 export async function POST(request: NextRequest) {
     try {
         // Check if Twilio is configured
@@ -14,13 +19,29 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Twilio is not configured' }, { status: 503 });
         }
 
+        // Verify auth token
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        const token = authHeader.substring(7);
+        const decodedToken = await verifyIdToken(token);
+        
+        if (!decodedToken) {
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        }
+
         const body = await request.json();
-        const { userId, leadId, to } = body;
+        const { leadId, to } = body;
+        
+        // Use authenticated user ID instead of trusting the body
+        const userId = decodedToken.uid;
 
         // Validate required fields
-        if (!userId || !to) {
+        if (!to) {
             return NextResponse.json(
-                { error: 'Missing required fields: userId, to' },
+                { error: 'Missing required field: to (phone number)' },
                 { status: 400 }
             );
         }

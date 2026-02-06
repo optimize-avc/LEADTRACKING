@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { CompanyService } from '@/lib/firebase/company';
 import type { Company, CompanySettings, ChannelMapping, DiscordChannel } from '@/types/company';
 import Link from 'next/link';
+import DiscordSetupGuide from './DiscordSetupGuide';
 
 // Discord OAuth2 configuration
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
@@ -361,6 +362,9 @@ export default function BotStudioClient() {
                         </div>
                     </div>
                 </GlassCard>
+
+                {/* Setup Guide - Show when not connected */}
+                {!company?.discordGuildId && <DiscordSetupGuide />}
 
                 {/* Channel Mapping Card - Only show if connected */}
                 {company?.discordGuildId && (

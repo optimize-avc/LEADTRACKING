@@ -70,9 +70,14 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                 setIsLoading(false);
             },
             (error) => {
-                console.error('Error fetching messages:', error);
+                // Silently handle permission errors - messages collection may not be set up
+                const err = error as { code?: string; message?: string };
+                if (err?.code !== 'permission-denied' && !err?.message?.includes('permission')) {
+                    console.error('Error fetching messages:', error);
+                }
+                // Set empty state gracefully
+                setMessages([]);
                 setIsLoading(false);
-                // Index might be required
             }
         );
 
@@ -84,13 +89,16 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
 
         setIsSending(true);
         try {
+            const token = await user.getIdToken();
             const response = await fetch('/api/twilio/sms', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
                 body: JSON.stringify({
-                    toNumber: leadPhone,
-                    message: newMessage.trim(),
-                    userId: user.uid,
+                    to: leadPhone,
+                    body: newMessage.trim(),
                     leadId,
                 }),
             });
@@ -100,10 +108,19 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
                 throw new Error(data.error || 'Failed to send');
             }
 
+            // Add optimistic message to UI
+            const optimisticMsg: Message = {
+                id: `temp-${Date.now()}`,
+                body: newMessage.trim(),
+                direction: 'outbound',
+                status: 'sending',
+                createdAt: new Date(),
+                leadId,
+            };
+            setMessages(prev => [...prev, optimisticMsg]);
+
             setNewMessage('');
-            // Optimistic update handled by snapshot listener mostly,
-            // but we could add a temp message if needed.
-            // Twilio API is fast enough usually.
+            toast.success('SMS sent!');
         } catch (error: unknown) {
             toast.error('Failed to send message');
             console.error(error);
@@ -128,7 +145,7 @@ export function SMSChatWindow({ leadId, leadName, leadPhone, onClose }: SMSChatW
 
     return (
         <div
-            className="flex flex-col h-[600px] w-full max-w-md bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden"
+            className="flex flex-col h-[600px] max-h-[85vh] w-full max-w-md bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden"
             role="region"
             aria-label={`SMS conversation with ${leadName}`}
         >

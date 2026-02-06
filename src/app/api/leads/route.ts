@@ -26,6 +26,7 @@ import {
 import { createLeadSchema } from '@/lib/validation';
 import { RATE_LIMITS } from '@/lib/rate-limit';
 import { AuditService } from '@/lib/firebase/audit';
+import { sendNewLeadNotification } from '@/lib/discord/server';
 import { ZodError } from 'zod';
 import type { Lead } from '@/types';
 
@@ -240,10 +241,17 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        // 8. Send Discord notification (fire-and-forget)
+        // This is async but we don't await - it runs in the background
+        const createdLead: Lead = { id: leadRef.id, ...leadData };
+        sendNewLeadNotification(createdLead, effectiveCompanyId).catch((err) => {
+            console.warn('[Leads API] Discord notification failed:', err);
+        });
+
         return NextResponse.json({
             success: true,
             leadId: leadRef.id,
-            lead: { id: leadRef.id, ...leadData },
+            lead: createdLead,
         });
     } catch (error) {
         console.error('[Leads API] Error creating lead:', error);

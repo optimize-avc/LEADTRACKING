@@ -167,9 +167,9 @@ export default function ActivitiesClient() {
                 <p className="text-slate-500 text-sm mt-1">Log calls, emails, and meetings</p>
             </header>
 
-            <div className="flex gap-6 items-start">
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
                 {/* Helper Panel */}
-                <div className="w-1/3 space-y-6">
+                <div className="w-full lg:w-1/3 space-y-6">
                     <GlassCard>
                         <h3 className="font-semibold text-white mb-4">Quick Log</h3>
 

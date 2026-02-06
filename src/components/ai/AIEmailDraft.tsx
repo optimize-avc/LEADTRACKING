@@ -6,6 +6,12 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { generateEmail, enhanceEmail, EnhancementAction } from '@/lib/firebase/ai-service';
 import { ActivitiesService, EmailThreadsService } from '@/lib/firebase/services';
 import { toast } from 'sonner';
+import { 
+    DEFAULT_TEMPLATES, 
+    EmailTemplate, 
+    getPopulatedTemplate,
+    TEMPLATE_CATEGORIES 
+} from '@/lib/email/email-templates';
 
 interface AIEmailDraftProps {
     lead: Lead;
@@ -28,12 +34,36 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
     const [customPrompt, setCustomPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState<EnhancementAction | null>(null);
+    const [isSending, setIsSending] = useState(false);
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showCustomPrompt, setShowCustomPrompt] = useState(false);
+    const [gmailConnected, setGmailConnected] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+    const [showTemplates, setShowTemplates] = useState(false);
 
     const senderName = user?.displayName || 'Sales Team';
     const senderEmail = user?.email || '';
+
+    // Check if Gmail is connected on mount
+    useEffect(() => {
+        const checkGmailStatus = async () => {
+            if (!user) return;
+            try {
+                const token = await user.getIdToken();
+                const res = await fetch('/api/auth/gmail/status', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setGmailConnected(data.connected || false);
+                }
+            } catch {
+                // Gmail not connected, will use mailto fallback
+            }
+        };
+        checkGmailStatus();
+    }, [user]);
 
     useEffect(() => {
         if (isOpen && !email) {
@@ -70,6 +100,21 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
         }
     };
 
+    const handleApplyTemplate = (template: EmailTemplate) => {
+        const populated = getPopulatedTemplate(template, {
+            contactName: lead.contactName || 'there',
+            companyName: lead.companyName,
+            industry: lead.industry || 'your industry',
+            senderName: senderName,
+            valueProposition: 'improve your sales process and close more deals',
+        });
+        setSubject(populated.subject);
+        setEmail(populated.body);
+        setSelectedTemplate(template);
+        setShowTemplates(false);
+        toast.success(`Applied "${template.name}" template`);
+    };
+
     const handleCopy = () => {
         navigator.clipboard.writeText(`Subject: ${subject}\n\n${email}`);
         setCopied(true);
@@ -78,35 +123,98 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
     };
 
     const handleSendEmail = async () => {
-        // Log the email activity if user is logged in
-        if (user) {
-            try {
-                // Create email thread record
-                await EmailThreadsService.createThread(user.uid, {
-                    leadId: lead.id,
-                    subject,
-                    body: email,
-                    status: 'sent',
-                    sentAt: Date.now(),
-                    aiGenerated: true,
-                });
-
-                // Log activity
-                await ActivitiesService.logEmail(
-                    user.uid,
-                    lead.id,
-                    subject,
-                    email.substring(0, 200)
-                );
-                toast.success('Email logged to activity history');
-            } catch (error) {
-                console.error('Failed to log email:', error);
-            }
+        if (!user || !lead.email) {
+            toast.error('Missing user or recipient email');
+            return;
         }
 
-        // Open email client
-        const mailtoUrl = `mailto:${lead.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(email)}`;
-        window.open(mailtoUrl, '_blank');
+        setIsSending(true);
+        setError(null);
+
+        try {
+            const token = await user.getIdToken();
+
+            // Try to send via Gmail API if connected
+            if (gmailConnected) {
+                const res = await fetch('/api/email/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        userId: user.uid,
+                        to: lead.email,
+                        subject,
+                        emailBody: email,
+                        leadId: lead.id,
+                    }),
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    toast.success('✅ Email sent via Gmail!');
+                    
+                    // Create email thread record
+                    await EmailThreadsService.createThread(user.uid, {
+                        leadId: lead.id,
+                        subject,
+                        body: email,
+                        status: 'sent',
+                        sentAt: Date.now(),
+                        aiGenerated: true,
+                        messageId: data.messageId,
+                    });
+
+                    // Log activity
+                    await ActivitiesService.logEmail(
+                        user.uid,
+                        lead.id,
+                        subject,
+                        email.substring(0, 200)
+                    );
+
+                    onClose();
+                    return;
+                } else {
+                    const errorData = await res.json();
+                    console.warn('Gmail send failed, falling back to mailto:', errorData);
+                    // Fall through to mailto
+                }
+            }
+
+            // Fallback: Log activity and open mailto
+            await EmailThreadsService.createThread(user.uid, {
+                leadId: lead.id,
+                subject,
+                body: email,
+                status: 'draft', // Mark as draft since we're using mailto
+                sentAt: Date.now(),
+                aiGenerated: true,
+            });
+
+            await ActivitiesService.logEmail(
+                user.uid,
+                lead.id,
+                subject,
+                email.substring(0, 200)
+            );
+
+            // Open email client
+            const mailtoUrl = `mailto:${lead.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(email)}`;
+            window.open(mailtoUrl, '_blank');
+            
+            toast.info(gmailConnected 
+                ? '📧 Gmail send failed, opened in email client instead' 
+                : '📧 Opening in your email client (connect Gmail for direct send)'
+            );
+        } catch (err) {
+            console.error('Failed to send email:', err);
+            setError('Failed to send email. Please try again.');
+            toast.error('Failed to send email');
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const handleCustomGenerate = () => {
@@ -180,6 +288,62 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                                     {error}
                                 </div>
                             )}
+
+                            {/* Quick Templates Selector */}
+                            <div className="mb-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm text-slate-400 flex items-center gap-2">
+                                        📋 Quick Templates
+                                    </label>
+                                    <button
+                                        onClick={() => setShowTemplates(!showTemplates)}
+                                        className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1"
+                                    >
+                                        {showTemplates ? 'Hide' : 'Browse Templates'} 
+                                        <span className={`transition-transform ${showTemplates ? 'rotate-180' : ''}`}>▼</span>
+                                    </button>
+                                </div>
+                                
+                                {showTemplates && (
+                                    <div className="grid grid-cols-2 gap-2 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+                                        {DEFAULT_TEMPLATES.map((template) => {
+                                            const category = TEMPLATE_CATEGORIES[template.category];
+                                            return (
+                                                <button
+                                                    key={template.id}
+                                                    onClick={() => handleApplyTemplate(template)}
+                                                    className={`text-left p-3 rounded-lg border transition-all hover:scale-[1.02] ${
+                                                        selectedTemplate?.id === template.id
+                                                            ? 'bg-violet-500/20 border-violet-500/50'
+                                                            : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/50'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span>{category.icon}</span>
+                                                        <span className="text-sm font-medium text-white">{template.name}</span>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500 line-clamp-1">{template.description}</p>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                
+                                {selectedTemplate && !showTemplates && (
+                                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                                        <span>Using:</span>
+                                        <span className="px-2 py-0.5 bg-violet-500/20 text-violet-300 rounded">
+                                            {TEMPLATE_CATEGORIES[selectedTemplate.category].icon} {selectedTemplate.name}
+                                        </span>
+                                        <button 
+                                            onClick={() => setSelectedTemplate(null)}
+                                            className="text-slate-400 hover:text-white"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Smart Templates using Enrichment Data */}
                             {lead.enrichmentData && (
@@ -349,29 +513,42 @@ export function AIEmailDraft({ lead, isOpen, onClose }: AIEmailDraftProps) {
                         <div className="flex justify-between items-center">
                             <button
                                 onClick={() => handleGenerate()}
-                                className="px-4 py-2 text-slate-400 hover:text-white transition-colors flex items-center gap-2"
+                                disabled={isSending}
+                                className="px-4 py-2 text-slate-400 hover:text-white transition-colors flex items-center gap-2 disabled:opacity-50"
                             >
                                 <span>🔄</span> Regenerate
                             </button>
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleCopy}
-                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors"
+                                    disabled={isSending}
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors disabled:opacity-50"
                                 >
                                     {copied ? '✓ Copied!' : '📋 Copy'}
                                 </button>
                                 <button
                                     onClick={handleSendEmail}
-                                    disabled={!lead.email}
-                                    className="glass-button px-6 py-2 flex items-center gap-2"
+                                    disabled={!lead.email || isSending}
+                                    className="glass-button px-6 py-2 flex items-center gap-2 disabled:opacity-50"
                                 >
-                                    📧 Send & Log
+                                    {isSending ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        <>
+                                            {gmailConnected ? '📧' : '📤'} {gmailConnected ? 'Send via Gmail' : 'Send & Log'}
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
                         <p className="text-xs text-slate-600 mt-3 text-center">
                             {user
-                                ? "Email will be logged to this lead's activity timeline"
+                                ? gmailConnected 
+                                    ? '✅ Gmail connected — email will be sent directly'
+                                    : '📧 Opens in email client — connect Gmail in settings for direct send'
                                 : 'Log in to track email activity'}
                         </p>
                     </div>

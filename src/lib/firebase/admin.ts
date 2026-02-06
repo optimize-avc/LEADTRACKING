@@ -121,6 +121,11 @@ export function getAdminAuth(): Auth {
 }
 
 /**
+ * Track whether settings have been applied (survives module reloads in dev)
+ */
+let settingsApplied = false;
+
+/**
  * Get Firebase Admin Firestore instance
  */
 export function getAdminDb(): Firestore {
@@ -132,7 +137,16 @@ export function getAdminDb(): Firestore {
     adminDb = getFirestore(app);
 
     // Allow undefined values to be ignored (they won't be written to the document)
-    adminDb.settings({ ignoreUndefinedProperties: true });
+    // Only call settings() once - Firestore throws if called multiple times
+    if (!settingsApplied) {
+        try {
+            adminDb.settings({ ignoreUndefinedProperties: true });
+            settingsApplied = true;
+        } catch (_e) {
+            // Settings may have already been applied in a previous module load
+            console.warn('Firebase Admin: Firestore settings already applied');
+        }
+    }
 
     return adminDb;
 }

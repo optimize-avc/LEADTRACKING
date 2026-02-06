@@ -59,11 +59,10 @@ function getRAGModel(): GenerativeModel | null {
     if (!ai) return null;
 
     try {
+        // Note: fileSearch/RAG tools are not yet available in the Firebase AI SDK
+        // Using standard generative model for now - RAG can be added when SDK supports it
         _model = getGenerativeModel(ai, {
             model: 'gemini-2.0-flash',
-            // Enable File Search tool for Managed RAG
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            tools: [{ fileSearch: {} } as unknown as any], // Bypass SDK type limitation for beta fileSearch tool
         });
         return _model;
     } catch (e) {

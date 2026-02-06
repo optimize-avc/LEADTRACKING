@@ -164,11 +164,16 @@ TASK:
     try {
         const result = await model.generateContent(prompt);
         const text = result.response.text();
+        // Clean up markdown code blocks and extract JSON
         const cleanText = text
-            .replace(/```json\n ? /g, '')
-            .replace(/```\n?/g, '')
+            .replace(/```json\s*/gi, '')
+            .replace(/```\s*/g, '')
             .trim();
-        const parsed = JSON.parse(cleanText);
+        
+        // Try to extract JSON object if there's extra text
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        const jsonStr = jsonMatch ? jsonMatch[0] : cleanText;
+        const parsed = JSON.parse(jsonStr);
 
         return {
             score: typeof parsed.score === 'number' ? parsed.score : 50,
@@ -238,12 +243,16 @@ Return ONLY a JSON object with exactly this structure(no markdown, no code block
         const result = await model.generateContent(prompt);
         const text = result.response.text();
 
-        // Parse the JSON response
+        // Parse the JSON response - clean up markdown code blocks
         const cleanText = text
-            .replace(/```json\n ? /g, '')
-            .replace(/```\n?/g, '')
+            .replace(/```json\s*/gi, '')
+            .replace(/```\s*/g, '')
             .trim();
-        const parsed = JSON.parse(cleanText);
+        
+        // Try to extract JSON object if there's extra text
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        const jsonStr = jsonMatch ? jsonMatch[0] : cleanText;
+        const parsed = JSON.parse(jsonStr);
 
         return {
             subject: parsed.subject || `Following up - ${lead.companyName} `,
@@ -263,7 +272,7 @@ Return ONLY a JSON object with exactly this structure(no markdown, no code block
 export async function enhanceEmail(
     email: string,
     action: EnhancementAction,
-    lead?: Lead
+    _lead?: Lead
 ): Promise<string> {
     if (!model) return email;
 

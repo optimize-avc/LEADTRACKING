@@ -14,17 +14,7 @@
                 }
             ]
         },
-        {
-            "collectionGroup": "discoverySweeps",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "startedAt",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
+{
             "collectionGroup": "dailyMetrics",
             "queryScope": "COLLECTION",
             "fields": [

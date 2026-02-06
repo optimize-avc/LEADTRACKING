@@ -101,6 +101,7 @@ export function Header() {
                                             src={user.photoURL}
                                             alt="User"
                                             fill
+                                            sizes="40px"
                                             className="rounded-full object-cover"
                                         />
                                     </div>
@@ -196,6 +197,7 @@ export function Header() {
                                                 src={user.photoURL}
                                                 alt="User"
                                                 fill
+                                                sizes="48px"
                                                 className="object-cover"
                                             />
                                         </div>

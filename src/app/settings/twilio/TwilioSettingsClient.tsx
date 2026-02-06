@@ -77,7 +77,11 @@ export default function TwilioSettingsClient() {
                     }
                 }
             } catch (err) {
-                console.error('Failed to load Twilio config:', err);
+                // Silently handle permission errors - config may not be set up yet
+                const error = err as { code?: string; message?: string };
+                if (error?.code !== 'permission-denied' && !error?.message?.includes('permission')) {
+                    console.error('Failed to load Twilio config:', err);
+                }
             } finally {
                 setLoading(false);
             }

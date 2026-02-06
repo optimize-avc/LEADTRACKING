@@ -115,30 +115,40 @@ const DEFAULT_ENTERPRISE_SETTINGS: Partial<CompanySettings> = {
 async function fetchCompanySettings(companyId: string): Promise<CompanySettings | null> {
     const db = getFirebaseDb();
     const docRef = doc(db, 'companies', companyId);
-    const snapshot = await getDoc(docRef);
+    
+    try {
+        const snapshot = await getDoc(docRef);
 
-    if (!snapshot.exists()) {
-        return null;
+        if (!snapshot.exists()) {
+            return null;
+        }
+
+        const data = snapshot.data();
+        const plan = data.plan || 'free';
+
+        // Merge with defaults based on plan
+        const defaults =
+            plan === 'enterprise'
+                ? DEFAULT_ENTERPRISE_SETTINGS
+                : plan === 'pro'
+                  ? DEFAULT_PRO_SETTINGS
+                  : DEFAULT_FREE_SETTINGS;
+
+        return {
+            id: snapshot.id,
+            ...defaults,
+            ...data,
+            features: { ...defaults.features, ...data.features },
+            limits: { ...defaults.limits, ...data.limits },
+        } as CompanySettings;
+    } catch (error) {
+        // Handle permission errors gracefully - return null
+        const err = error as { code?: string; message?: string };
+        if (err?.code === 'permission-denied' || err?.message?.includes('permission')) {
+            return null;
+        }
+        throw error;
     }
-
-    const data = snapshot.data();
-    const plan = data.plan || 'free';
-
-    // Merge with defaults based on plan
-    const defaults =
-        plan === 'enterprise'
-            ? DEFAULT_ENTERPRISE_SETTINGS
-            : plan === 'pro'
-              ? DEFAULT_PRO_SETTINGS
-              : DEFAULT_FREE_SETTINGS;
-
-    return {
-        id: snapshot.id,
-        ...defaults,
-        ...data,
-        features: { ...defaults.features, ...data.features },
-        limits: { ...defaults.limits, ...data.limits },
-    } as CompanySettings;
 }
 
 /**

@@ -69,12 +69,28 @@ export default function DiscoverClient() {
             setIsLoadingResources(true);
             try {
                 const [userResources, companyResources] = await Promise.all([
-                    ResourcesService.getUserResources(user.uid),
-                    ResourcesService.getCompanyResources(),
+                    ResourcesService.getUserResources(user.uid).catch((e) => {
+                        // Silently handle permission errors - user may not have resources set up
+                        if (e?.code === 'permission-denied' || e?.message?.includes('permission')) {
+                            return [];
+                        }
+                        throw e;
+                    }),
+                    ResourcesService.getCompanyResources().catch((e) => {
+                        // Silently handle permission errors - company resources may not be configured
+                        if (e?.code === 'permission-denied' || e?.message?.includes('permission')) {
+                            return [];
+                        }
+                        throw e;
+                    }),
                 ]);
                 setResources([...userResources, ...companyResources]);
             } catch (error) {
-                console.error('Failed to load resources:', error);
+                // Only log unexpected errors, not permission issues
+                const err = error as { code?: string; message?: string };
+                if (err?.code !== 'permission-denied' && !err?.message?.includes('permission')) {
+                    console.error('Failed to load resources:', error);
+                }
             } finally {
                 setIsLoadingResources(false);
             }
@@ -85,6 +101,7 @@ export default function DiscoverClient() {
     // Load discovered leads when tab changes
     useEffect(() => {
         if (activeTab === 'ai-discovered' && user && userToken) {
+            console.log('[DiscoverClient] Loading discovered leads with token:', userToken?.slice(0, 20) + '...');
             loadDiscoveredLeads();
         } else if (activeTab === 'watchlist' && user && userToken) {
             loadWatchlistLeads();
@@ -95,10 +112,12 @@ export default function DiscoverClient() {
         if (!userToken) return;
         setIsLoadingDiscovered(true);
         try {
+            console.log('[DiscoverClient] Fetching /api/discovery/leads...');
             const response = await fetch('/api/discovery/leads?status=new&limit=50', {
                 headers: { Authorization: `Bearer ${userToken}` },
             });
             const data = await response.json();
+            console.log('[DiscoverClient] API response:', response.status, data);
             if (data.leads) {
                 setDiscoveredLeads(data.leads);
                 setDiscoveredTotal(data.total);

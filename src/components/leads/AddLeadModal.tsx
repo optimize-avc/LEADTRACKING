@@ -144,9 +144,10 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
             {/* Modal */}
             <div
                 ref={containerRef}
-                className="relative bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl"
+                className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
             >
-                <div className="flex items-center justify-between mb-6">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-800 flex-shrink-0">
                     <h2 id="add-lead-title" className="text-2xl font-bold text-white">
                         Add New Lead
                     </h2>
@@ -160,7 +161,8 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4">
                     {/* Company & Contact */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -385,8 +387,10 @@ export function AddLeadModal({ isOpen, onClose, onSave }: AddLeadModalProps) {
                         />
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4">
+                    </div>
+
+                    {/* Actions - Sticky Footer */}
+                    <div className="flex justify-end gap-3 p-6 border-t border-slate-800 flex-shrink-0">
                         <button
                             type="button"
                             onClick={onClose}

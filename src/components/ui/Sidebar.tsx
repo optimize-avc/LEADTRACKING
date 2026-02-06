@@ -107,6 +107,7 @@ export function Sidebar() {
                                         src={user.photoURL}
                                         alt="Profile"
                                         fill
+                                        sizes="40px"
                                         className="rounded-full border border-white/10 object-cover"
                                     />
                                 </div>

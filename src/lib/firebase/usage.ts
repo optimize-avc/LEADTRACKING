@@ -18,7 +18,6 @@ import {
     query,
     where,
     getDocs,
-    Timestamp,
 } from 'firebase/firestore';
 
 export interface CompanyUsage {
@@ -55,42 +54,68 @@ export const UsageService = {
     async getUsage(companyId: string): Promise<CompanyUsage> {
         const db = getFirebaseDb();
         const usageRef = doc(db, 'companies', companyId, 'meta', 'usage');
-        const usageSnap = await getDoc(usageRef);
+        
+        try {
+            const usageSnap = await getDoc(usageRef);
 
-        const currentMonth = getCurrentMonthKey();
+            const currentMonth = getCurrentMonthKey();
 
-        if (!usageSnap.exists()) {
-            // Initialize usage document
-            const initialUsage: CompanyUsage = {
-                leadCount: 0,
-                leadsThisMonth: 0,
-                teamMemberCount: 1,
-                emailsSentThisMonth: 0,
-                activitiesThisMonth: 0,
-                lastUpdated: Date.now(),
-                monthStartDate: currentMonth,
-            };
-            await setDoc(usageRef, initialUsage);
-            return initialUsage;
+            if (!usageSnap.exists()) {
+                // Initialize usage document
+                const initialUsage: CompanyUsage = {
+                    leadCount: 0,
+                    leadsThisMonth: 0,
+                    teamMemberCount: 1,
+                    emailsSentThisMonth: 0,
+                    activitiesThisMonth: 0,
+                    lastUpdated: Date.now(),
+                    monthStartDate: currentMonth,
+                };
+                try {
+                    await setDoc(usageRef, initialUsage);
+                } catch {
+                    // Ignore write permission errors - return initial usage anyway
+                }
+                return initialUsage;
+            }
+
+            const usage = usageSnap.data() as CompanyUsage;
+
+            // Reset monthly counters if new month
+            if (usage.monthStartDate !== currentMonth) {
+                const resetUsage = {
+                    ...usage,
+                    leadsThisMonth: 0,
+                    emailsSentThisMonth: 0,
+                    activitiesThisMonth: 0,
+                    monthStartDate: currentMonth,
+                    lastUpdated: Date.now(),
+                };
+                try {
+                    await setDoc(usageRef, resetUsage);
+                } catch {
+                    // Ignore write permission errors
+                }
+                return resetUsage;
+            }
+
+            return usage;
+        } catch (error) {
+            // Handle permission errors gracefully - return default usage
+            const err = error as { code?: string; message?: string };
+            if (err?.code === 'permission-denied' || err?.message?.includes('permission')) {
+                return {
+                    leadCount: 0,
+                    leadsThisMonth: 0,
+                    teamMemberCount: 1,
+                    emailsSentThisMonth: 0,
+                    activitiesThisMonth: 0,
+                    lastUpdated: Date.now(),
+                    monthStartDate: getCurrentMonthKey(),
+                };
+            }
+            throw error;
         }
-
-        const usage = usageSnap.data() as CompanyUsage;
-
-        // Reset monthly counters if new month
-        if (usage.monthStartDate !== currentMonth) {
-            const resetUsage = {
-                ...usage,
-                leadsThisMonth: 0,
-                emailsSentThisMonth: 0,
-                activitiesThisMonth: 0,
-                monthStartDate: currentMonth,
-                lastUpdated: Date.now(),
-            };
-            await setDoc(usageRef, resetUsage);
-            return resetUsage;
-        }
-
-        return usage;
     },
 
     /**

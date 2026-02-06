@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { Bell, Mail, MessageSquare, Smartphone, Save, Check } from 'lucide-react';
+import { Bell, Mail, MessageSquare, Smartphone, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { getFirebaseDb } from '@/lib/firebase/config';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export interface NotificationPreferences {
     email: {
@@ -67,7 +67,11 @@ export default function NotificationSettings() {
                     setPrefs(snapshot.data().notificationPrefs);
                 }
             } catch (error) {
-                console.error('Failed to load notification preferences:', error);
+                // Silently handle permission errors - user prefs may not exist yet
+                const err = error as { code?: string; message?: string };
+                if (err?.code !== 'permission-denied' && !err?.message?.includes('permission')) {
+                    console.error('Failed to load notification preferences:', error);
+                }
             } finally {
                 setIsLoading(false);
             }

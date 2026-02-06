@@ -9,6 +9,7 @@ import { AddLeadModal } from '@/components/leads/AddLeadModal';
 import { LogCallModal } from '@/components/leads/LogCallModal';
 import { LogMeetingModal } from '@/components/leads/LogMeetingModal';
 import { LogReplyModal } from '@/components/leads/LogReplyModal';
+import { SMSModal } from '@/components/leads/SMSModal';
 import { KanbanView } from '@/components/leads/KanbanView';
 import { AILeadInsights } from '@/components/leads/AILeadInsights';
 import { QuickEditModal } from '@/components/leads/QuickEditModal';
@@ -31,6 +32,7 @@ import {
     CheckSquare,
     Square,
     Trash2,
+    Pencil,
     Mail as MailIcon,
     Search,
     Filter,
@@ -118,6 +120,7 @@ export default function LeadsClient() {
     const [isCallModalOpen, setIsCallModalOpen] = useState(false);
     const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
     const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+    const [isSMSModalOpen, setIsSMSModalOpen] = useState(false);
     const [isQuickEditOpen, setIsQuickEditOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
@@ -249,7 +252,7 @@ export default function LeadsClient() {
         }
 
         try {
-            await LeadsService.createLead(user.uid, leadData, profile?.companyId);
+            const leadId = await LeadsService.createLead(user.uid, leadData, profile?.companyId);
 
             // Record lead creation in analytics metrics
             if (profile?.companyId) {
@@ -258,6 +261,25 @@ export default function LeadsClient() {
                     user.uid,
                     leadData.value || 0
                 );
+
+                // Fire-and-forget Discord notification
+                fetch('/api/notifications/discord', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'newLead',
+                        companyId: profile.companyId,
+                        lead: {
+                            id: leadId,
+                            companyName: leadData.companyName,
+                            contactName: leadData.contactName,
+                            email: leadData.email,
+                            value: leadData.value,
+                            industry: leadData.industry,
+                            status: leadData.status || 'New',
+                        },
+                    }),
+                }).catch((err) => console.error('Discord notification failed:', err));
             }
 
             toast.success('Lead created successfully!');
@@ -655,9 +677,9 @@ export default function LeadsClient() {
         <div className="p-8 min-h-screen">
             {/* Header */}
             <header className="mb-6">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
                             Leads Pipeline
                         </h1>
                         <p className="text-slate-500 text-sm mt-1">
@@ -666,23 +688,23 @@ export default function LeadsClient() {
                                 : 'Demo Mode - Log in to save data'}
                         </p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                         <button
                             onClick={handleExportCSV}
-                            className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white"
+                            className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white text-sm px-3 py-2"
                             title="Export leads to CSV"
                         >
-                            <Download size={16} /> Export
+                            <Download size={16} /> <span className="hidden xs:inline">Export</span>
                         </button>
                         <button
                             onClick={() => setIsImportModalOpen(true)}
-                            className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white"
+                            className="glass-button flex items-center gap-2 border-slate-700 text-slate-400 hover:text-white text-sm px-3 py-2"
                             title="Import leads from CSV"
                         >
-                            <Upload size={16} /> Import
+                            <Upload size={16} /> <span className="hidden xs:inline">Import</span>
                         </button>
-                        <button onClick={() => setIsAddModalOpen(true)} className="glass-button">
-                            + Add New Lead
+                        <button onClick={() => setIsAddModalOpen(true)} className="glass-button text-sm px-3 py-2">
+                            + <span className="hidden xs:inline">Add New</span> Lead
                         </button>
                     </div>
                 </div>
@@ -956,21 +978,78 @@ export default function LeadsClient() {
                                     >
                                         ✨ Email
                                     </button>
+                                    {lead.phone && (
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                if (!user) {
+                                                    toast.info('Log in to make calls');
+                                                    return;
+                                                }
+                                                // Initiate Twilio click-to-call
+                                                toast.loading('Connecting call...', { id: 'call-' + lead.id });
+                                                try {
+                                                    const token = await user.getIdToken();
+                                                    const res = await fetch('/api/twilio/call', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/json',
+                                                            Authorization: `Bearer ${token}`,
+                                                        },
+                                                        body: JSON.stringify({
+                                                            userId: user.uid,
+                                                            leadId: lead.id,
+                                                            to: lead.phone,
+                                                        }),
+                                                    });
+                                                    const data = await res.json();
+                                                    if (res.ok) {
+                                                        toast.success(`Calling ${lead.contactName}...`, { id: 'call-' + lead.id });
+                                                    } else {
+                                                        toast.error(data.error || 'Failed to initiate call', { id: 'call-' + lead.id });
+                                                    }
+                                                } catch {
+                                                    toast.error('Failed to connect call', { id: 'call-' + lead.id });
+                                                }
+                                            }}
+                                            className="px-3 py-2 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 transition-all"
+                                            title={`Call ${lead.phone}`}
+                                        >
+                                            📞
+                                        </button>
+                                    )}
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if (!user) {
-                                                toast.info('Log in to track calls');
+                                                toast.info('Log in to log calls');
                                                 return;
                                             }
                                             setSelectedLead(lead);
                                             setIsCallModalOpen(true);
                                         }}
-                                        className="px-3 py-2 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 transition-all"
+                                        className="px-3 py-2 text-xs bg-slate-500/10 hover:bg-slate-500/20 border border-slate-500/30 rounded-lg text-slate-400 transition-all"
                                         title="Log Call"
                                     >
-                                        📞
+                                        📝
                                     </button>
+                                    {lead.phone && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!user) {
+                                                    toast.info('Log in to send SMS');
+                                                    return;
+                                                }
+                                                setSelectedLead(lead);
+                                                setIsSMSModalOpen(true);
+                                            }}
+                                            className="px-3 py-2 text-xs bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 rounded-lg text-teal-400 transition-all"
+                                            title="Send SMS"
+                                        >
+                                            💬
+                                        </button>
+                                    )}
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -1025,6 +1104,46 @@ export default function LeadsClient() {
                                             }
                                         />
                                         {reauditingLeads.has(lead.id) ? '' : '🔍'}
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!user) {
+                                                toast.info('Log in to edit leads');
+                                                return;
+                                            }
+                                            setSelectedLead(lead);
+                                            setIsQuickEditOpen(true);
+                                        }}
+                                        className="px-3 py-2 text-xs bg-slate-500/10 hover:bg-slate-500/20 border border-slate-500/30 rounded-lg text-slate-400 transition-all"
+                                        title="Edit Lead"
+                                    >
+                                        <Pencil size={12} />
+                                    </button>
+                                    <button
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (!user) {
+                                                toast.info('Log in to delete leads');
+                                                return;
+                                            }
+                                            const confirm = window.confirm(
+                                                `Delete ${lead.companyName}? This cannot be undone.`
+                                            );
+                                            if (!confirm) return;
+                                            try {
+                                                await LeadsService.deleteLead(user.uid, lead.id);
+                                                toast.success('Lead deleted');
+                                                loadLeads();
+                                            } catch (error) {
+                                                console.error('Delete failed', error);
+                                                toast.error('Failed to delete lead');
+                                            }
+                                        }}
+                                        className="px-3 py-2 text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 transition-all"
+                                        title="Delete Lead"
+                                    >
+                                        <Trash2 size={12} />
                                     </button>
                                 </div>
 
@@ -1408,6 +1527,17 @@ export default function LeadsClient() {
                                     setSelectedLead(null);
                                 }}
                                 onSuccess={handleActivitySuccess}
+                            />
+
+                            <SMSModal
+                                isOpen={isSMSModalOpen}
+                                onClose={() => {
+                                    setIsSMSModalOpen(false);
+                                    setSelectedLead(null);
+                                }}
+                                leadId={selectedLead.id}
+                                leadName={selectedLead.contactName || selectedLead.companyName}
+                                leadPhone={selectedLead.phone || ''}
                             />
                         </>
                     )}

@@ -77,8 +77,11 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('[Discovery Leads] Error fetching discovered leads:', error);
 
-        // Check if it's a missing index error
+        // Return error details for debugging
         const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        
+        // Check if it's a missing index error
         if (errorMessage.includes('index')) {
             console.error(
                 '[Discovery Leads] Missing Firestore index. Run: firebase deploy --only firestore:indexes'
@@ -87,18 +90,20 @@ export async function GET(request: NextRequest) {
                 {
                     error: 'Database configuration issue. Please contact support.',
                     _debug: 'Missing Firestore composite index for discoveredLeads',
+                    _error: errorMessage,
                 },
                 { status: 500 }
             );
         }
 
-        // Return empty state for other errors
+        // Return error details for debugging (other errors)
         return NextResponse.json({
             leads: [],
             total: 0,
             limit: 50,
             offset: 0,
-            _error: 'Discovery not configured',
+            _error: errorMessage || 'Discovery not configured',
+            _stack: errorStack,
         });
     }
 }

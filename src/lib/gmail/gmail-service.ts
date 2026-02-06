@@ -264,12 +264,15 @@ export async function getLeadEmails(userId: string, leadId: string): Promise<Ema
 // SEND EMAIL VIA GMAIL API
 // ============================================
 
+import { generateTrackingPixelHtml } from '@/lib/email/tracking';
+
 export async function sendEmail(
     userId: string,
     to: string,
     subject: string,
     body: string,
-    leadId: string
+    leadId: string,
+    options?: { enableTracking?: boolean; baseUrl?: string }
 ): Promise<string> {
     const accessToken = await getValidAccessToken(userId);
     if (!accessToken) {
@@ -280,15 +283,49 @@ export async function sendEmail(
     const userDoc = await getDoc(doc(getFirebaseDb(), 'users', userId, 'integrations', 'gmail'));
     const userEmail = userDoc.exists() ? userDoc.data().email : '';
 
-    // Create RFC 2822 formatted email with From header
+    // Generate a unique email ID for tracking
+    const emailId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Default to enabling tracking, use production URL or localhost
+    const enableTracking = options?.enableTracking !== false;
+    const baseUrl = options?.baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    // Convert plain text to HTML and add tracking pixel if enabled
+    let htmlBody = body
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+    
+    htmlBody = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+${htmlBody}
+${enableTracking ? generateTrackingPixelHtml(baseUrl, userId, leadId, emailId) : ''}
+</body>
+</html>`;
+
+    // Create multipart email with both plain text and HTML
+    const boundary = `boundary_${Date.now()}`;
     const email = [
         `From: ${userEmail}`,
         `To: ${to}`,
         `Subject: ${subject}`,
-        'Content-Type: text/plain; charset=utf-8',
         'MIME-Version: 1.0',
+        `Content-Type: multipart/alternative; boundary="${boundary}"`,
+        '',
+        `--${boundary}`,
+        'Content-Type: text/plain; charset=utf-8',
         '',
         body,
+        '',
+        `--${boundary}`,
+        'Content-Type: text/html; charset=utf-8',
+        '',
+        htmlBody,
+        '',
+        `--${boundary}--`,
     ].join('\r\n');
 
     // Base64 encode (URL-safe) - using btoa for browser compatibility
@@ -313,10 +350,10 @@ export async function sendEmail(
 
     const result = await response.json();
 
-    // Log the sent email (reuse userEmail from earlier)
-
+    // Log the sent email with tracking info
     await setDoc(doc(getFirebaseDb(), 'users', userId, 'emailMessages', result.id), {
         id: result.id,
+        internalId: emailId,
         threadId: result.threadId,
         leadId,
         direction: 'sent',
@@ -326,6 +363,7 @@ export async function sendEmail(
         snippet: body.substring(0, 200),
         body,
         timestamp: Date.now(),
+        trackingEnabled: enableTracking,
     });
 
     return result.id;

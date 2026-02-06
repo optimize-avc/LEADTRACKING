@@ -180,6 +180,7 @@ function SidebarContent({
                                         src={user.photoURL}
                                         alt={user.displayName || 'User'}
                                         fill
+                                        sizes="36px"
                                         className="rounded-full border border-white/10 shadow-lg object-cover"
                                     />
                                 </div>

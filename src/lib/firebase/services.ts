@@ -279,11 +279,12 @@ export interface EmailThread {
     leadId: string;
     subject: string;
     body: string;
-    status: 'sent' | 'replied';
+    status: 'draft' | 'sent' | 'replied';
     sentAt: number;
     repliedAt?: number;
     replyContent?: string;
     aiGenerated: boolean;
+    messageId?: string; // Gmail message ID for tracking
 }
 
 export const EmailThreadsService = {
